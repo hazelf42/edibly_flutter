@@ -1,12 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:rxdart/rxdart.dart';
 
-class Post {
-  dynamic key;
-  dynamic value;
-
-  Post(this.key, this.value);
-}
+import 'package:edibly/screens/post/post.dart';
 
 class FeedBloc {
   FeedBloc() {
@@ -28,19 +23,6 @@ class FeedBloc {
 
   /// Stream getters
   Stream<List<Post>> get posts => _posts.stream;
-
-  /// Void functions
-  void likePostByUser(String postId, String uid) {
-    _firebaseDatabase.reference().child('likes').child(postId).update({
-      uid: 1,
-    });
-  }
-
-  void unlikePostByUser(String postId, String uid) {
-    _firebaseDatabase.reference().child('likes').child(postId).update({
-      uid: 0,
-    });
-  }
 
   /// Other functions
   void clearPosts() {
@@ -123,10 +105,6 @@ class FeedBloc {
         _posts.add(posts);
       });
     }
-  }
-
-  Stream<Event> isPostLikedByUser(String postId, String uid) {
-    return _firebaseDatabase.reference().child('likes').child(postId).child(uid).onValue;
   }
 
   /// Dispose function

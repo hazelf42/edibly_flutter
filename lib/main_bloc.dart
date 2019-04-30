@@ -5,6 +5,7 @@ import 'package:rxdart/rxdart.dart';
 
 import 'package:edibly/bloc_helper/validators.dart';
 import 'package:edibly/values/pref_keys.dart';
+import 'package:flutter/foundation.dart';
 
 enum Diet {
   VEGETARIAN,
@@ -71,17 +72,34 @@ class MainBloc extends Object with Validators {
   }
 
   /// Other functions
-  Future<FirebaseUser> getCurrentUser() async {
+  Future<FirebaseUser> getCurrentFirebaseUser() async {
     final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
     return await _firebaseAuth.currentUser();
   }
 
-  Stream<Event> getUserInfo(String uid) {
+  Stream<Event> getUser(String uid) {
     return _firebaseDatabase.reference().child('userProfiles/$uid').onValue;
   }
 
   Stream<Event> getRestaurantInfo(String key) {
     return _firebaseDatabase.reference().child('restaurants').child('$key').onValue;
+  }
+
+  /// Post like functions
+  void likePostByUser({@required String postKey, @required String uid}) {
+    _firebaseDatabase.reference().child('likes').child(postKey).update({
+      uid: 1,
+    });
+  }
+
+  void unlikePostByUser({@required String postKey, @required String uid}) {
+    _firebaseDatabase.reference().child('likes').child(postKey).update({
+      uid: 0,
+    });
+  }
+
+  Stream<Event> isPostLikedByUser({@required String postKey, @required String uid}) {
+    return _firebaseDatabase.reference().child('likes').child(postKey).child(uid).onValue;
   }
 
   /// Dispose function

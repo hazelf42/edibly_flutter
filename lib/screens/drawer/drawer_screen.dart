@@ -20,9 +20,11 @@ class DrawerScreen extends StatelessWidget {
 
   DrawerScreen(this._firebaseUser);
 
-  Widget _userInfo(DrawerBloc bloc) {
+  Widget _userInfo(DrawerBloc drawerBloc) {
     return StreamBuilder<Event>(
-      stream: bloc.getCurrentUserInfo(_firebaseUser.uid),
+      stream: drawerBloc.getUser(
+        uid: _firebaseUser.uid,
+      ),
       builder: (context, snapshot) {
         Map<dynamic, dynamic> map = snapshot.hasData ? snapshot?.data?.snapshot?.value : null;
         return Container(
@@ -81,12 +83,12 @@ class DrawerScreen extends StatelessWidget {
     );
   }
 
-  Widget _oldPasswordField(DrawerBloc bloc, AppLocalizations localizations) {
+  Widget _oldPasswordField(DrawerBloc drawerBloc, AppLocalizations localizations) {
     return StreamBuilder<String>(
-      stream: bloc.oldPassword,
+      stream: drawerBloc.oldPassword,
       builder: (context, oldPasswordSnapshot) {
         return StreamBuilder<UpdatePasswordState>(
-          stream: bloc.updatePasswordState,
+          stream: drawerBloc.updatePasswordState,
           builder: (context, updatePasswordStateSnapshot) {
             return TextField(
               decoration: InputDecoration(
@@ -101,7 +103,7 @@ class DrawerScreen extends StatelessWidget {
                     oldPasswordSnapshot.hasError && oldPasswordSnapshot.error == AppError.EMPTY ? localizations.errorEmptyPassword : null,
               ),
               keyboardType: TextInputType.emailAddress,
-              onChanged: bloc.setOldPassword,
+              onChanged: drawerBloc.setOldPassword,
               enabled: updatePasswordStateSnapshot.data == UpdatePasswordState.TRYING ? false : true,
               obscureText: true,
             );
@@ -111,12 +113,12 @@ class DrawerScreen extends StatelessWidget {
     );
   }
 
-  Widget _newPasswordField(DrawerBloc bloc, AppLocalizations localizations) {
+  Widget _newPasswordField(DrawerBloc drawerBloc, AppLocalizations localizations) {
     return StreamBuilder<String>(
-      stream: bloc.newPassword,
+      stream: drawerBloc.newPassword,
       builder: (context, newPasswordSnapshot) {
         return StreamBuilder<UpdatePasswordState>(
-          stream: bloc.updatePasswordState,
+          stream: drawerBloc.updatePasswordState,
           builder: (context, updatePasswordStateSnapshot) {
             return TextField(
               decoration: InputDecoration(
@@ -130,7 +132,7 @@ class DrawerScreen extends StatelessWidget {
                 errorText:
                     newPasswordSnapshot.hasError && newPasswordSnapshot.error == AppError.EMPTY ? localizations.errorEmptyPassword : null,
               ),
-              onChanged: bloc.setNewPassword,
+              onChanged: drawerBloc.setNewPassword,
               enabled: updatePasswordStateSnapshot.data == UpdatePasswordState.TRYING ? false : true,
               obscureText: true,
             );
@@ -140,9 +142,9 @@ class DrawerScreen extends StatelessWidget {
     );
   }
 
-  Widget _submitButton(DrawerBloc bloc, AppLocalizations localizations) {
+  Widget _submitButton(DrawerBloc drawerBloc, AppLocalizations localizations) {
     return StreamBuilder<UpdatePasswordState>(
-      stream: bloc.updatePasswordState,
+      stream: drawerBloc.updatePasswordState,
       builder: (context, snapshot) {
         if (snapshot.data == UpdatePasswordState.SUCCESSFUL) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -164,7 +166,9 @@ class DrawerScreen extends StatelessWidget {
               )
             : FlatButton(
                 onPressed: () {
-                  bloc.updatePassword(_firebaseUser);
+                  drawerBloc.updatePassword(
+                    firebaseUser: _firebaseUser,
+                  );
                 },
                 child: SingleLineText(localizations.reset.toUpperCase()),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -173,7 +177,7 @@ class DrawerScreen extends StatelessWidget {
     );
   }
 
-  void _logOut(BuildContext context, DrawerBloc bloc, AppLocalizations localizations) {
+  void _logOut(BuildContext context, DrawerBloc drawerBloc, AppLocalizations localizations) {
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -191,7 +195,7 @@ class DrawerScreen extends StatelessWidget {
             FlatButton(
               child: Text(localizations.logOut.toUpperCase()),
               onPressed: () {
-                bloc.logOutCurrentUser();
+                drawerBloc.logOut();
                 Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (context) => LoginScreen(),
@@ -260,7 +264,7 @@ class DrawerScreen extends StatelessWidget {
     });
   }
 
-  void _showUpdatePasswordDialog(BuildContext context, DrawerBloc bloc, AppLocalizations localizations) {
+  void _showUpdatePasswordDialog(BuildContext context, DrawerBloc drawerBloc, AppLocalizations localizations) {
     String updatePasswordStateToString(UpdatePasswordState resetPasswordState) {
       switch (resetPasswordState) {
         case UpdatePasswordState.EMPTY_PASSWORD:
@@ -280,33 +284,36 @@ class DrawerScreen extends StatelessWidget {
         return AlertDialog(
           contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
           title: SingleLineText(localizations.resetPassword),
-          content: ListView(
-            shrinkWrap: true,
-            children: <Widget>[
-              _oldPasswordField(bloc, localizations),
-              SizedBox(height: 16.0),
-              _newPasswordField(bloc, localizations),
-              StreamBuilder<UpdatePasswordState>(
-                stream: bloc.updatePasswordState,
-                builder: (context, snapshot) {
-                  return snapshot.hasError
-                      ? Column(children: <Widget>[
-                          SizedBox(
-                            height: 16.0,
-                          ),
-                          Text(
-                            updatePasswordStateToString(snapshot.error),
-                            style: TextStyle(
-                              color: Theme.of(context).errorColor,
-                              fontSize: 13.0,
+          content: Container(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: <Widget>[
+                _oldPasswordField(drawerBloc, localizations),
+                SizedBox(height: 16.0),
+                _newPasswordField(drawerBloc, localizations),
+                StreamBuilder<UpdatePasswordState>(
+                  stream: drawerBloc.updatePasswordState,
+                  builder: (context, snapshot) {
+                    return snapshot.hasError
+                        ? Column(children: <Widget>[
+                            SizedBox(
+                              height: 16.0,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ])
-                      : SizedBox();
-                },
-              ),
-            ],
+                            Text(
+                              updatePasswordStateToString(snapshot.error),
+                              style: TextStyle(
+                                color: Theme.of(context).errorColor,
+                                fontSize: 13.0,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ])
+                        : SizedBox();
+                  },
+                ),
+              ],
+            ),
           ),
           actions: <Widget>[
             FlatButton(
@@ -315,7 +322,7 @@ class DrawerScreen extends StatelessWidget {
                 Navigator.of(context).pop();
               },
             ),
-            _submitButton(bloc, localizations),
+            _submitButton(drawerBloc, localizations),
           ],
         );
       },
@@ -338,9 +345,9 @@ class DrawerScreen extends StatelessWidget {
               );
             });
       }
-      bloc.setOldPassword('');
-      bloc.setNewPassword('');
-      bloc.setUpdatePasswordState(UpdatePasswordState.IDLE);
+      drawerBloc.setOldPassword('');
+      drawerBloc.setNewPassword('');
+      drawerBloc.setUpdatePasswordState(UpdatePasswordState.IDLE);
     });
   }
 

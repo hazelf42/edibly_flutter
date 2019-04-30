@@ -6,9 +6,8 @@ import 'package:edibly/screens/feed/feed_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/values/app_colors.dart';
+import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/main_bloc.dart';
-
-// TODO
 
 class HomeScreen extends StatelessWidget {
   final FirebaseUser _firebaseUser;
@@ -18,7 +17,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final MainBloc mainBloc = Provider.of<MainBloc>(context);
-    final AppLocalizations appLocalizations = AppLocalizations.of(context);
+    final AppLocalizations localizations = AppLocalizations.of(context);
     final bool darkModeEnabled = Theme.of(context).brightness == Brightness.dark;
     return StreamBuilder<int>(
       stream: mainBloc.bottomNavigationBarCurrentIndex,
@@ -27,7 +26,7 @@ class HomeScreen extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              AppLocalizations.of(context).appName,
+              localizations.appName,
             ),
           ),
           drawer: DrawerScreen(_firebaseUser),
@@ -38,15 +37,15 @@ class HomeScreen extends StatelessWidget {
             items: [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home),
-                title: Text(appLocalizations.home),
+                title: SingleLineText(localizations.home),
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.location_on),
-                title: Text(appLocalizations.map),
+                title: SingleLineText(localizations.map),
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.bookmark),
-                title: Text(appLocalizations.bookmarks),
+                title: SingleLineText(localizations.bookmarks),
               ),
             ],
             onTap: mainBloc.setBottomNavigationBarCurrentIndex,

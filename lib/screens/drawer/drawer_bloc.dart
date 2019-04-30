@@ -1,5 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -51,7 +52,7 @@ class DrawerBloc {
     _updatePasswordState.add(UpdatePasswordState.IDLE);
   }
 
-  void updatePassword(FirebaseUser firebaseUser) {
+  void updatePassword({@required FirebaseUser firebaseUser}) {
     final oldPassword = _oldPassword.value;
     final newPassword = _newPassword.value;
     final updatePasswordState = _updatePasswordState.value;
@@ -101,11 +102,11 @@ class DrawerBloc {
   }
 
   /// Other functions
-  Stream<Event> getCurrentUserInfo(String uid) {
+  Stream<Event> getUser({@required String uid}) {
     return _firebaseDatabase.reference().child('userProfiles/$uid').onValue;
   }
 
-  Future<void> logOutCurrentUser() async {
+  Future<void> logOut() async {
     final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
     return _firebaseAuth.signOut();
   }

@@ -8,12 +8,12 @@ import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';
 
 class LoginScreen extends StatelessWidget {
-  Widget emailField(LoginBloc bloc, AppLocalizations localizations) {
+  Widget emailField(LoginBloc loginBloc, AppLocalizations localizations) {
     return StreamBuilder<String>(
-      stream: bloc.email,
+      stream: loginBloc.email,
       builder: (context, emailSnapshot) {
         return StreamBuilder<LoginState>(
-          stream: bloc.loginState,
+          stream: loginBloc.loginState,
           builder: (context, loginStateSnapshot) {
             return TextField(
               decoration: InputDecoration(
@@ -28,7 +28,7 @@ class LoginScreen extends StatelessWidget {
                 hintText: localizations.emailExampleText,
               ),
               keyboardType: TextInputType.emailAddress,
-              onChanged: bloc.setEmail,
+              onChanged: loginBloc.setEmail,
               enabled: loginStateSnapshot.data == LoginState.TRYING ? false : true,
             );
           },
@@ -37,12 +37,12 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget passwordField(LoginBloc bloc, AppLocalizations localizations) {
+  Widget passwordField(LoginBloc loginBloc, AppLocalizations localizations) {
     return StreamBuilder<String>(
-      stream: bloc.password,
+      stream: loginBloc.password,
       builder: (context, passwordSnapshot) {
         return StreamBuilder<LoginState>(
-          stream: bloc.loginState,
+          stream: loginBloc.loginState,
           builder: (context, loginStateSnapshot) {
             return TextField(
               decoration: InputDecoration(
@@ -56,7 +56,7 @@ class LoginScreen extends StatelessWidget {
                 errorText: passwordSnapshot.hasError && passwordSnapshot.error == AppError.EMPTY ? localizations.errorEmptyPassword : null,
               ),
               obscureText: true,
-              onChanged: bloc.setPassword,
+              onChanged: loginBloc.setPassword,
               enabled: loginStateSnapshot.data == LoginState.TRYING ? false : true,
             );
           },
@@ -65,7 +65,7 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget submitButton(LoginBloc bloc, AppLocalizations localizations) {
+  Widget submitButton(LoginBloc loginBloc, AppLocalizations localizations) {
     String loginStateToString(LoginState loginState) {
       switch (loginState) {
         case LoginState.INCORRECT_CREDENTIALS:
@@ -78,11 +78,11 @@ class LoginScreen extends StatelessWidget {
     }
 
     return StreamBuilder<LoginState>(
-      stream: bloc.loginState,
+      stream: loginBloc.loginState,
       builder: (context, snapshot) {
         if (snapshot.data == LoginState.SUCCESSFUL) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            bloc.getCurrentUser().then((user) {
+            loginBloc.getCurrentFirebaseUser().then((user) {
               if (user != null) {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
@@ -112,7 +112,7 @@ class LoginScreen extends StatelessWidget {
             snapshot.data == LoginState.TRYING
                 ? CircularProgressIndicator()
                 : RaisedButton(
-                    onPressed: bloc.logIn,
+                    onPressed: loginBloc.logIn,
                     child: SingleLineText(localizations.logIn),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -122,15 +122,15 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget forgotPasswordButton(LoginBloc bloc, AppLocalizations localizations) {
+  Widget forgotPasswordButton(LoginBloc loginBloc, AppLocalizations localizations) {
     return StreamBuilder<LoginState>(
-      stream: bloc.loginState,
+      stream: loginBloc.loginState,
       builder: (context, snapshot) {
         return FlatButton(
           onPressed: snapshot.data == LoginState.TRYING
               ? null
               : () {
-                  showForgotPasswordDialog(context, bloc, localizations);
+                  showForgotPasswordDialog(context, loginBloc, localizations);
                 },
           child: SingleLineText(localizations.forgotPassword),
         );
@@ -138,7 +138,7 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  void showForgotPasswordDialog(BuildContext context, LoginBloc bloc, AppLocalizations localizations) {
+  void showForgotPasswordDialog(BuildContext context, LoginBloc loginBloc, AppLocalizations localizations) {
     String forgotPasswordStateToString(ForgotPasswordState forgotPasswordState) {
       switch (forgotPasswordState) {
         case ForgotPasswordState.EMPTY_EMAIL:
@@ -157,7 +157,7 @@ class LoginScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return StreamBuilder<ForgotPasswordState>(
-            stream: bloc.forgotPasswordState,
+            stream: loginBloc.forgotPasswordState,
             builder: (context, snapshot) {
               if (snapshot.data == ForgotPasswordState.SUCCESSFUL) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -192,7 +192,7 @@ class LoginScreen extends StatelessWidget {
                       ),
                       keyboardType: TextInputType.emailAddress,
                       onChanged: (value) {
-                        bloc.setForgotPasswordState(ForgotPasswordState.IDLE);
+                        loginBloc.setForgotPasswordState(ForgotPasswordState.IDLE);
                       },
                       enabled: snapshot.data == ForgotPasswordState.TRYING ? false : true,
                     ),
@@ -211,7 +211,9 @@ class LoginScreen extends StatelessWidget {
                     onPressed: snapshot.data == ForgotPasswordState.TRYING
                         ? null
                         : () {
-                            bloc.resetPassword(emailController.text);
+                            loginBloc.resetPassword(
+                              email: emailController.text,
+                            );
                           },
                   )
                 ],
@@ -225,7 +227,7 @@ class LoginScreen extends StatelessWidget {
         );
         Scaffold.of(context).showSnackBar(snackBar);
       }
-      bloc.setForgotPasswordState(ForgotPasswordState.IDLE);
+      loginBloc.setForgotPasswordState(ForgotPasswordState.IDLE);
     });
   }
 
@@ -235,7 +237,7 @@ class LoginScreen extends StatelessWidget {
       packageBuilder: (context) => LoginBloc(),
       child: Builder(
         builder: (context) {
-          final LoginBloc bloc = Provider.of<LoginBloc>(context);
+          final LoginBloc loginBloc = Provider.of<LoginBloc>(context);
           final AppLocalizations localizations = AppLocalizations.of(context);
           return Scaffold(
             appBar: AppBar(
@@ -247,13 +249,13 @@ class LoginScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20.0),
                 shrinkWrap: true,
                 children: <Widget>[
-                  emailField(bloc, localizations),
+                  emailField(loginBloc, localizations),
                   SizedBox(height: 16.0),
-                  passwordField(bloc, localizations),
+                  passwordField(loginBloc, localizations),
                   SizedBox(height: 16.0),
-                  submitButton(bloc, localizations),
+                  submitButton(loginBloc, localizations),
                   SizedBox(height: 16.0),
-                  forgotPasswordButton(bloc, localizations),
+                  forgotPasswordButton(loginBloc, localizations),
                 ],
               ),
             ),

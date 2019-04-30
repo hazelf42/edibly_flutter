@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -43,12 +44,12 @@ class LoginBloc extends Object with Validators {
   Function(ForgotPasswordState) get setForgotPasswordState => _forgotPasswordState.add;
 
   /// Functions
-  Future<FirebaseUser> getCurrentUser() async {
+  Future<FirebaseUser> getCurrentFirebaseUser() async {
     final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
     return await _firebaseAuth.currentUser();
   }
 
-  void resetPassword(String email) {
+  void resetPassword({@required String email}) {
     ForgotPasswordState forgotPasswordState = _forgotPasswordState.value;
 
     if (forgotPasswordState == ForgotPasswordState.TRYING) return;
