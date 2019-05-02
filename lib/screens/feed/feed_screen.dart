@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'package:edibly/screens/post/post_widget.dart';
+import 'package:edibly/screens/post/post_preview_widget.dart';
 import 'package:edibly/screens/feed/feed_bloc.dart';
 import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/screens/post/post.dart';
+import 'package:edibly/models/data.dart';
 import 'package:edibly/main_bloc.dart';
 
 class FeedScreen extends StatelessWidget {
@@ -22,7 +22,7 @@ class FeedScreen extends StatelessWidget {
               return Container(
                 color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
                 alignment: Alignment.center,
-                child: StreamBuilder<List<Post>>(
+                child: StreamBuilder<List<Data>>(
                   stream: feedBloc.posts,
                   builder: (context, postsSnapshot) {
                     if (firebaseUserSnapshot?.data == null || postsSnapshot?.data == null || postsSnapshot.data.isEmpty) {
@@ -32,7 +32,7 @@ class FeedScreen extends StatelessWidget {
                     return RefreshIndicator(
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(
-                          vertical: 3.0,
+                          vertical: 5.0,
                           horizontal: 6.0,
                         ),
                         itemCount: postsSnapshot.data.length,
@@ -48,15 +48,25 @@ class FeedScreen extends StatelessWidget {
                               child: CircularProgressIndicator(),
                             );
                           }
-                          return PostWidget(
-                            uid: firebaseUserSnapshot?.data?.uid,
-                            post: postsSnapshot.data.elementAt(position),
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 5.0,
+                              horizontal: 4.0,
+                            ),
+                            child: Card(
+                              margin: EdgeInsets.zero,
+                              child: PostPreviewWidget(
+                                uid: firebaseUserSnapshot?.data?.uid,
+                                post: postsSnapshot.data.elementAt(position),
+                              ),
+                            ),
                           );
                         },
                       ),
                       onRefresh: () {
                         feedBloc.clearPosts();
                         feedBloc.getPosts();
+                        return Future.delayed(Duration(seconds: 1));
                       },
                     );
                   },

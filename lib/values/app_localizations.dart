@@ -32,7 +32,11 @@ class AppLocalizations {
 
   String get comment => Intl.message('Comment');
 
+  String get comments => Intl.message('Comments');
+
   String get wroteReview => Intl.message('wrote a review');
+
+  String get wroteComment => Intl.message('wrote a comment');
 
   String get addedTip => Intl.message('added a tip');
 

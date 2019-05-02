@@ -1,7 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:rxdart/rxdart.dart';
 
-import 'package:edibly/screens/post/post.dart';
+import 'package:edibly/models/data.dart';
 
 class FeedBloc {
   FeedBloc() {
@@ -19,10 +19,10 @@ class FeedBloc {
   int _currentPage = 0;
 
   /// Subjects
-  final _posts = BehaviorSubject<List<Post>>();
+  final _posts = BehaviorSubject<List<Data>>();
 
   /// Stream getters
-  Stream<List<Post>> get posts => _posts.stream;
+  Stream<List<Data>> get posts => _posts.stream;
 
   /// Other functions
   void clearPosts() {
@@ -32,7 +32,9 @@ class FeedBloc {
     _currentPage = 0;
   }
 
-  void getPosts() {
+  void getPosts() async {
+    await Future.delayed(Duration(seconds: 3));
+
     /// if page is not fully loaded the return
     if (_fetchStarted && _postsInCurrentPage < POSTS_PER_PAGE) {
       return;
@@ -48,7 +50,7 @@ class FeedBloc {
     _fetchStarted = true;
 
     /// make sure we have an array to put things in
-    List<Post> posts = _posts.value;
+    List<Data> posts = _posts.value;
     if (posts == null) posts = [];
 
     /// if this is still the first page
@@ -66,7 +68,7 @@ class FeedBloc {
         posts.remove(null);
 
         /// insert newly acquired post to the start of new page
-        posts.insert(_currentPage * POSTS_PER_PAGE, Post(event?.snapshot?.key, event?.snapshot?.value));
+        posts.insert(_currentPage * POSTS_PER_PAGE, Data(event?.snapshot?.key, event?.snapshot?.value));
 
         /// if this was the last post in requested page, then show a circular loader at the end of page
         if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
@@ -95,7 +97,7 @@ class FeedBloc {
         /// do not insert duplicate posts
         if (event?.snapshot?.key != posts[_currentPage * POSTS_PER_PAGE - 1].key) {
           /// insert newly acquired post to the start of new page
-          posts.insert(_currentPage * POSTS_PER_PAGE, Post(event?.snapshot?.key, event?.snapshot?.value));
+          posts.insert(_currentPage * POSTS_PER_PAGE, Data(event?.snapshot?.key, event?.snapshot?.value));
         }
 
         /// if this was the last post in requested page, then show a circular loader at the end of page
