@@ -36,8 +36,6 @@ class PostBloc {
   }
 
   void getComments() async {
-    await Future.delayed(Duration(seconds: 3));
-
     /// if page is not fully loaded the return
     if (_fetchStarted && _commentsInCurrentPage < COMMENTS_PER_PAGE) {
       return;

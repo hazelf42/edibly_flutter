@@ -14,14 +14,10 @@ import 'package:edibly/main_bloc.dart';
 class PostPreviewWidget extends StatelessWidget {
   final String uid;
   final Data post;
-  final bool clickable;
-  final bool showCommentButton;
 
   PostPreviewWidget({
     @required this.uid,
     @required this.post,
-    this.clickable = true,
-    this.showCommentButton = true,
   });
 
   List<String> dynamicTagArrayToTagList(dynamic dynamicTagArray) {
@@ -188,7 +184,7 @@ class PostPreviewWidget extends StatelessWidget {
 
   Widget _tags() {
     if (post.value['tagArray'] == null || post.value['tagArray'].toString().isEmpty) {
-      Container();
+      return Container();
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,18 +250,16 @@ class PostPreviewWidget extends StatelessWidget {
     return GestureDetector(
       key: Key(post.key),
       behavior: HitTestBehavior.translucent,
-      onTap: clickable
-          ? () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => PostCommentsWidget(
-                          uid: uid,
-                          post: post,
-                        )),
-              );
-            }
-          : null,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => PostCommentsWidget(
+                    uid: uid,
+                    post: post,
+                  )),
+        );
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
@@ -314,13 +308,11 @@ class PostPreviewWidget extends StatelessWidget {
                   Container(
                     width: 8.0,
                   ),
-                  showCommentButton
-                      ? BoldFlatButton(
-                          onPressed: () {},
-                          text: localizations.comment.toUpperCase(),
-                          textColor: AppColors.primarySwatch.shade900,
-                        )
-                      : Container(),
+                  BoldFlatButton(
+                    onPressed: () {},
+                    text: localizations.comment.toUpperCase(),
+                    textColor: AppColors.primarySwatch.shade900,
+                  ),
                 ],
               ),
             ),

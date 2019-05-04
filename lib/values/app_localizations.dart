@@ -85,6 +85,8 @@ class AppLocalizations {
 
   String get send => Intl.message('Send');
 
+  String get address => Intl.message('Address');
+
   String get reset => Intl.message('Reset');
 
   String get cancel => Intl.message('Cancel');

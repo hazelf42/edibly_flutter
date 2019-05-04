@@ -81,7 +81,7 @@ class MainBloc extends Object with Validators {
     return _firebaseDatabase.reference().child('userProfiles/$uid').onValue;
   }
 
-  Stream<Event> getRestaurantInfo(String key) {
+  Stream<Event> getRestaurant(String key) {
     return _firebaseDatabase.reference().child('restaurants').child('$key').onValue;
   }
 
