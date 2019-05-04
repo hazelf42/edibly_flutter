@@ -91,7 +91,7 @@ class ProfileScreen extends StatelessWidget {
                   child: StreamBuilder<List<Data>>(
                     stream: feedBloc.posts,
                     builder: (context, postsSnapshot) {
-                      if (firebaseUserSnapshot?.data == null || postsSnapshot?.data == null || postsSnapshot.data.isEmpty) {
+                      if (firebaseUserSnapshot?.data == null || postsSnapshot?.data == null) {
                         feedBloc.getPosts();
                         return CircularProgressIndicator();
                       }
@@ -104,9 +104,40 @@ class ProfileScreen extends StatelessWidget {
                           itemCount: postsSnapshot.data.length + 1,
                           itemBuilder: (context, position) {
                             if (position == 0) {
-                              return _author(
-                                mainBloc: mainBloc,
-                                localizations: localizations,
+                              return Column(
+                                children: <Widget>[
+                                  _author(
+                                    mainBloc: mainBloc,
+                                    localizations: localizations,
+                                  ),
+                                  postsSnapshot.data.isEmpty
+                                      ? Column(
+                                          children: <Widget>[
+                                            Divider(
+                                              height: 10.0,
+                                            ),
+                                            Container(
+                                              height: 12.0,
+                                            ),
+                                            Icon(
+                                              Icons.warning,
+                                              color: Theme.of(context).hintColor,
+                                              size: 48.0,
+                                            ),
+                                            Container(
+                                              height: 12.0,
+                                            ),
+                                            Text(
+                                              localizations.noPostsByUserText,
+                                              style: TextStyle(
+                                                fontSize: 18.0,
+                                                color: Theme.of(context).hintColor,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : Container(),
+                                ],
                               );
                             }
                             if (postsSnapshot.data.elementAt(position - 1) == null) {

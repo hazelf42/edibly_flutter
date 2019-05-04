@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info/package_info.dart';
 import 'package:flutter/material.dart';
 
+import 'package:edibly/screens/profile/profile_screen.dart';
 import 'package:edibly/screens/drawer/drawer_bloc.dart';
 import 'package:edibly/screens/login/login_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
@@ -367,7 +368,16 @@ class DrawerScreen extends StatelessWidget {
                 Container(height: MediaQuery.of(context).padding.top + 8.0),
                 _userInfo(drawerBloc),
                 MenuItem(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileScreen(
+                              uid: _firebaseUser.uid,
+                            ),
+                      ),
+                    );
+                  },
                   iconData: Icons.account_circle,
                   string: localizations.myProfile,
                 ),

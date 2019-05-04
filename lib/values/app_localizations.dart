@@ -119,6 +119,8 @@ class AppLocalizations {
 
   String get accountNotFound => Intl.message('This email is not tied to any account.');
 
+  String get noPostsByUserText => Intl.message('User has no posts yet.');
+
   String versionInfo(String version) {
     return Intl.message(
       'Version $version',
