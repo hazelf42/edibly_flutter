@@ -46,6 +46,8 @@ class AppLocalizations {
 
   String get myProfile => Intl.message('My profile');
 
+  String get profile => Intl.message('Profile');
+
   String get darkMode => Intl.message('Dark mode');
 
   String get vegan => Intl.message('Vegan');

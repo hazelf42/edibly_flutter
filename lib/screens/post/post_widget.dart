@@ -4,6 +4,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as TimeAgo;
 
+import 'package:edibly/screens/profile/profile_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/screens/post/post_bloc.dart';
 import 'package:edibly/bloc_helper/provider.dart';
@@ -198,7 +199,7 @@ class PostCommentWidget extends StatelessWidget {
                                     ),
                                   ),
                                   SingleLineText(
-                                    ' (${authorValue['dietName']})',
+                                    ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
                                     style: TextStyle(
                                       color: Theme.of(context).hintColor,
                                       fontSize: 14,
@@ -212,7 +213,7 @@ class PostCommentWidget extends StatelessWidget {
                               height: 4.0,
                             ),
                             SingleLineText(
-                              '${localizations.wroteComment} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((comment.value['timeStamp']).toInt() * 1000))}',
+                              '${localizations.wroteComment} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(comment.value['timeStamp'].toString())).toInt() * 1000))}',
                               style: TextStyle(
                                 color: Theme.of(context).hintColor,
                                 fontSize: 12,
@@ -273,78 +274,89 @@ class PostWidget extends StatelessWidget {
       stream: mainBloc.getUser(post.value['reviewingUserId'].toString()),
       builder: (context, snapshot) {
         Map<dynamic, dynamic> authorValue = snapshot?.data?.snapshot?.value;
-        return Container(
-          padding: const EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
-          child: Row(
-            children: <Widget>[
-              CircleAvatar(
-                radius: 24.0,
-                backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl']),
-                child: authorValue == null
-                    ? SizedBox(
-                        width: 46.0,
-                        height: 46.0,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                        ),
-                      )
-                    : null,
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfileScreen(uid: post.value['reviewingUserId']),
               ),
-              Container(
-                width: 16.0,
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    authorValue == null
-                        ? Container()
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              SingleChildScrollView(
-                                physics: NeverScrollableScrollPhysics(),
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: <Widget>[
-                                    SingleLineText(
-                                      '${authorValue['firstName']} ${authorValue['lastName']}',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    SingleLineText(
-                                      ' (${authorValue['dietName']})',
-                                      style: TextStyle(
-                                        color: Theme.of(context).hintColor,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                height: 4.0,
-                              ),
-                              SingleLineText(
-                                '${post.value['postType'] == 0 ? localizations.wroteReview : localizations.addedTip} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((post.value['timeStamp'] as double).toInt() * 1000))}',
-                                style: TextStyle(
-                                  color: Theme.of(context).hintColor,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
+            );
+          },
+          behavior: HitTestBehavior.translucent,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
+            child: Row(
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 24.0,
+                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl']),
+                  child: authorValue == null
+                      ? SizedBox(
+                          width: 46.0,
+                          height: 46.0,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.0,
                           ),
-                  ],
+                        )
+                      : null,
                 ),
-              ),
-              Container(
-                width: 24.0,
-              ),
-            ],
+                Container(
+                  width: 16.0,
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      authorValue == null
+                          ? Container()
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                SingleChildScrollView(
+                                  physics: NeverScrollableScrollPhysics(),
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: <Widget>[
+                                      SingleLineText(
+                                        '${authorValue['firstName']} ${authorValue['lastName']}',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      SingleLineText(
+                                        ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                                        style: TextStyle(
+                                          color: Theme.of(context).hintColor,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  height: 4.0,
+                                ),
+                                SingleLineText(
+                                  '${post.value['postType'] == 0 ? localizations.wroteReview : localizations.addedTip} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timeStamp'].toString())).toInt() * 1000))}',
+                                  style: TextStyle(
+                                    color: Theme.of(context).hintColor,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 24.0,
+                ),
+              ],
+            ),
           ),
         );
       },

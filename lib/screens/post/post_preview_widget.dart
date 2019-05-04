@@ -78,7 +78,7 @@ class PostPreviewWidget extends StatelessWidget {
                                       ),
                                     ),
                                     SingleLineText(
-                                      ' (${authorValue['dietName']})',
+                                      ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
                                       style: TextStyle(
                                         color: Theme.of(context).hintColor,
                                         fontSize: 14,
@@ -92,7 +92,7 @@ class PostPreviewWidget extends StatelessWidget {
                                 height: 4.0,
                               ),
                               SingleLineText(
-                                '${post.value['postType'] == 0 ? localizations.wroteReview : localizations.addedTip} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((post.value['timeStamp'] as double).toInt() * 1000))}',
+                                '${post.value['postType'] == 0 ? localizations.wroteReview : localizations.addedTip} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timeStamp'].toString())).toInt() * 1000))}',
                                 style: TextStyle(
                                   color: Theme.of(context).hintColor,
                                   fontSize: 12,
