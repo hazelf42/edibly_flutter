@@ -127,6 +127,8 @@ class AppLocalizations {
 
   String get noRestaurantsFound => Intl.message('0 restaurants found.');
 
+  String get noBookmarksFound => Intl.message('0 bookmarks found.');
+
   String get filters => Intl.message('Filters');
 
   String get rating => Intl.message('Rating');

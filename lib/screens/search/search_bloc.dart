@@ -2,13 +2,17 @@ import 'dart:math';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:location/location.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:edibly/models/data.dart';
 
 class SearchBloc {
-  SearchBloc() {
+  final FirebaseUser firebaseUser;
+
+  SearchBloc({@required this.firebaseUser}) {
     _firebaseDatabase.setPersistenceEnabled(true);
     _firebaseDatabase.setPersistenceCacheSizeBytes(10000000);
   }
@@ -21,6 +25,7 @@ class SearchBloc {
   final _distanceSlider = BehaviorSubject<double>();
   final _allRestaurants = BehaviorSubject<List<Data>>();
   final _filteredRestaurants = BehaviorSubject<List<Data>>();
+  final _bookmarkedRestaurants = BehaviorSubject<List<Data>>();
 
   /// Variables
   int _filterRestaurantsCallCounter = 0;
@@ -38,17 +43,19 @@ class SearchBloc {
 
   Stream<List<Data>> get filteredRestaurants => _filteredRestaurants.stream;
 
+  Stream<List<Data>> get bookmarkedRestaurants => _bookmarkedRestaurants.stream;
+
   /// Setters
   void setDistanceFilterValue() {
     double distanceFilterValue = _distanceSlider.value;
-    if(distanceFilterValue == null) distanceFilterValue = -1;
+    if (distanceFilterValue == null) distanceFilterValue = -1;
     if (distanceFilterValue >= 30) distanceFilterValue = -1;
     _distanceFilterValue = distanceFilterValue;
   }
 
   void setRatingFilterValue() {
     double ratingFilterValue = _ratingSlider.value;
-    if(ratingFilterValue == null) ratingFilterValue = -1;
+    if (ratingFilterValue == null) ratingFilterValue = -1;
     if (ratingFilterValue == 0) ratingFilterValue = -1;
     _ratingFilterValue = ratingFilterValue;
   }
@@ -81,7 +88,7 @@ class SearchBloc {
   }
 
   void filterRestaurants(String keyword) async {
-    if(keyword == null) keyword = _keyword;
+    if (keyword == null) keyword = _keyword;
     _keyword = keyword;
 
     print('keyword: $keyword');
@@ -160,11 +167,45 @@ class SearchBloc {
     return 12742 * asin(sqrt(a));
   }
 
+  void getBookmarkedRestaurants() async {
+    _bookmarkedRestaurants.add(null);
+    _firebaseDatabase.reference().child('starredRestaurants').child(firebaseUser.uid).onValue.listen((event) async {
+      print(event?.snapshot?.value?.toString());
+      List<String> bookmarkKeys = [];
+      List<Data> restaurantsWithRating = [];
+      List<Data> restaurantsWithoutRating = [];
+      if (event?.snapshot?.value != null) {
+        Map<dynamic, dynamic> bookmarks = event.snapshot.value;
+        bookmarks.forEach((key, value) {
+          if (value.toString() == '1') bookmarkKeys.add(key);
+        });
+      }
+
+      await Future.forEach(bookmarkKeys, (String restaurantKey) async {
+        DataSnapshot restaurantSnapshot = await _firebaseDatabase.reference().child('restaurants').child(restaurantKey).once();
+        restaurantsWithoutRating.add(Data(restaurantSnapshot.key, restaurantSnapshot.value));
+        return null;
+      });
+
+      await Future.forEach(restaurantsWithoutRating, (Data dataWithoutRating) async {
+        DataSnapshot ratingSnapshot = await _firebaseDatabase.reference().child('restaurantRatings').child(dataWithoutRating.key).once();
+        Data dataWithRating = Data(dataWithoutRating.key, dataWithoutRating.value);
+        try {
+          dataWithRating.value['rating'] = ratingSnapshot?.value;
+          restaurantsWithRating.add(dataWithRating);
+        } catch (_) {}
+        return null;
+      });
+      _bookmarkedRestaurants.add(restaurantsWithRating);
+    });
+  }
+
   /// Dispose function
   void dispose() {
     _ratingSlider.close();
     _distanceSlider.close();
     _allRestaurants.close();
     _filteredRestaurants.close();
+    _bookmarkedRestaurants.close();
   }
 }

@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'package:edibly/screens/search/bookmarks/bookmarks_screen.dart';
 import 'package:edibly/screens/drawer/drawer_screen.dart';
 import 'package:edibly/screens/search/search_screen.dart';
 import 'package:edibly/screens/feed/feed_screen.dart';
@@ -22,8 +23,7 @@ class HomeScreen extends StatelessWidget {
       case 1:
         return SearchScreen(firebaseUser: firebaseUser);
       default: // case 2
-        // TODO replace this
-        return SearchScreen(firebaseUser: firebaseUser);
+        return BookmarksScreen(firebaseUser: firebaseUser);
     }
   }
 
