@@ -87,6 +87,10 @@ class AppLocalizations {
 
   String get send => Intl.message('Send');
 
+  String get search => Intl.message('Search');
+
+  String get searchExampleText => Intl.message('e.g. Veggie burgers, brunch, Indian...');
+
   String get address => Intl.message('Address');
 
   String get reset => Intl.message('Reset');
@@ -120,6 +124,43 @@ class AppLocalizations {
   String get accountNotFound => Intl.message('This email is not tied to any account.');
 
   String get noPostsByUserText => Intl.message('User has no posts yet.');
+
+  String get noRestaurantsFound => Intl.message('0 restaurants found.');
+
+  String get filters => Intl.message('Filters');
+
+  String get rating => Intl.message('Rating');
+
+  String get distance => Intl.message('Distance');
+
+  String get addReview => Intl.message('Add review');
+
+  String get searchScreenFooterTitleText => Intl.message('That is all for now.');
+
+  String get searchScreenFooterDescriptionText => Intl.message(
+      'Our database is small, but growing! Adding a review for a new restaurant is quick and easy. We will do the rest on our end.');
+
+  String ratingText(int rating) {
+    if (rating == 0) {
+      return Intl.message('Any rating');
+    } else {
+      return Intl.message(
+        '$rating or above',
+        args: [rating],
+      );
+    }
+  }
+
+  String distanceText(int distance) {
+    if (distance == 30) {
+      return Intl.message('Any distance');
+    } else {
+      return Intl.message(
+        'Less than $distance km away',
+        args: [distance],
+      );
+    }
+  }
 
   String versionInfo(String version) {
     return Intl.message(

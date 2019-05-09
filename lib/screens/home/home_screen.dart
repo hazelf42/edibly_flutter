@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edibly/screens/drawer/drawer_screen.dart';
+import 'package:edibly/screens/search/search_screen.dart';
 import 'package:edibly/screens/feed/feed_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
@@ -10,9 +11,21 @@ import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/main_bloc.dart';
 
 class HomeScreen extends StatelessWidget {
-  final FirebaseUser _firebaseUser;
+  final FirebaseUser firebaseUser;
 
-  HomeScreen(this._firebaseUser);
+  HomeScreen({@required this.firebaseUser});
+
+  Widget _body(int bottomNavigationCurrentIndex) {
+    switch (bottomNavigationCurrentIndex) {
+      case 0:
+        return FeedScreen();
+      case 1:
+        return SearchScreen(firebaseUser: firebaseUser);
+      default: // case 2
+        // TODO replace this
+        return SearchScreen(firebaseUser: firebaseUser);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +42,8 @@ class HomeScreen extends StatelessWidget {
               localizations.appName,
             ),
           ),
-          drawer: DrawerScreen(_firebaseUser),
-          body: FeedScreen(),
+          drawer: DrawerScreen(firebaseUser),
+          body: _body(snapshot?.data),
           bottomNavigationBar: BottomNavigationBar(
             fixedColor: darkModeEnabled ? null : AppColors.primarySwatch.shade700,
             currentIndex: snapshot.data,

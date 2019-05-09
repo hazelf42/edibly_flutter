@@ -59,7 +59,7 @@ class _AppWidget extends StatelessWidget {
                               child: CircularProgressIndicator(),
                             ),
                           )
-                        : (firebaseUserSnapshot.data != null ? HomeScreen(firebaseUserSnapshot.data) : LoginScreen()),
+                        : (firebaseUserSnapshot.data != null ? HomeScreen(firebaseUser: firebaseUserSnapshot.data) : LoginScreen()),
                     debugShowCheckedModeBanner: false,
                   );
                 },

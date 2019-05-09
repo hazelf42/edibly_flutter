@@ -86,7 +86,7 @@ class LoginScreen extends StatelessWidget {
               if (user != null) {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (_) => HomeScreen(user),
+                    builder: (_) => HomeScreen(firebaseUser: user),
                   ),
                 );
               }
