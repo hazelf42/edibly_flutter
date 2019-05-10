@@ -127,6 +127,8 @@ class AppLocalizations {
 
   String get noRestaurantsFound => Intl.message('0 restaurants found.');
 
+  String get restaurant => Intl.message('Restaurant');
+
   String get noBookmarksFound => Intl.message('0 bookmarks found.');
 
   String get filters => Intl.message('Filters');
@@ -135,7 +137,21 @@ class AppLocalizations {
 
   String get distance => Intl.message('Distance');
 
+  String get menu => Intl.message('Menu');
+
+  String get reviews => Intl.message('Reviews');
+
+  String get featuredTip => Intl.message('Featured tip');
+
+  String get tips => Intl.message('Tips');
+
+  String get photos => Intl.message('Photos');
+
   String get addReview => Intl.message('Add review');
+
+  String get addTip => Intl.message('Add tip');
+
+  String get addPhoto => Intl.message('Add photo');
 
   String get searchScreenFooterTitleText => Intl.message('That is all for now.');
 

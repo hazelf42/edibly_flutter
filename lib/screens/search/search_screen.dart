@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
 import 'package:edibly/screens/search/restaurant_preview_widget.dart';
+import 'package:edibly/screens/restaurant/restaurant_screen.dart';
 import 'package:edibly/screens/search/search_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
@@ -17,6 +18,7 @@ class SearchScreen extends StatelessWidget {
   SearchScreen({@required this.firebaseUser});
 
   Widget _map({
+    @required BuildContext context,
     @required AsyncSnapshot<LatLng> currentLocationSnapshot,
     @required AsyncSnapshot<List<Data>> allRestaurantsSnapshot,
   }) {
@@ -32,6 +34,17 @@ class SearchScreen extends StatelessWidget {
           infoWindow: InfoWindow(
             title: data.value['name'],
             snippet: data.value['address'],
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RestaurantScreen(
+                        firebaseUserId: firebaseUser.uid,
+                        restaurantKey: data.key,
+                      ),
+                ),
+              );
+            },
           ),
         ));
       });
@@ -259,6 +272,7 @@ class SearchScreen extends StatelessWidget {
                                   );
                                 } else if (position == 0) {
                                   return _map(
+                                    context: context,
                                     currentLocationSnapshot: currentLocationSnapshot,
                                     allRestaurantsSnapshot: allRestaurantsSnapshot,
                                   );

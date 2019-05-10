@@ -4,6 +4,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as TimeAgo;
 
+import 'package:edibly/screens/restaurant/restaurant_screen.dart';
 import 'package:edibly/screens/profile/profile_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/screens/post/post_bloc.dart';
@@ -549,16 +550,35 @@ class PostWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                post.value['restaurantName'],
-                style: Theme.of(context).textTheme.title,
-              ),
-              _restaurant(
-                mainBloc: mainBloc,
-                localizations: localizations,
-              ),
-              _rating(
-                context: context,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RestaurantScreen(
+                            firebaseUserId: uid,
+                            restaurantKey: post.value['restaurantKey'],
+                          ),
+                    ),
+                  );
+                },
+                behavior: HitTestBehavior.translucent,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Text(
+                      post.value['restaurantName'],
+                      style: Theme.of(context).textTheme.title,
+                    ),
+                    _restaurant(
+                      mainBloc: mainBloc,
+                      localizations: localizations,
+                    ),
+                    _rating(
+                      context: context,
+                    ),
+                  ],
+                ),
               ),
               _description(),
               _tags(),
