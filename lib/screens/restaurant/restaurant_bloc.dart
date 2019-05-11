@@ -25,9 +25,6 @@ class RestaurantBloc {
   /// Stream getters
   Stream<Data> get restaurant => _restaurant.stream;
 
-  /// Setters
-  Function(Data value) get setRatingSliderValue => _restaurant.add;
-
   /// Other functions
   void getRestaurant() async {
     _firebaseDatabase.reference().child('restaurants').child(restaurantKey).onValue.listen((event) async {

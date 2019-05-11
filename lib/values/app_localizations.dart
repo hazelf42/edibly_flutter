@@ -125,6 +125,8 @@ class AppLocalizations {
 
   String get noPostsByUserText => Intl.message('User has no posts yet.');
 
+  String get noReviewsText => Intl.message('No reviews here yet.');
+
   String get noRestaurantsFound => Intl.message('0 restaurants found.');
 
   String get restaurant => Intl.message('Restaurant');

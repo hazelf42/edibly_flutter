@@ -3,6 +3,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:edibly/screens/restaurant/reviews/restaurant_reviews_screen.dart';
+import 'package:edibly/screens/restaurant/photos/restaurant_photos_screen.dart';
 import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
@@ -373,7 +375,16 @@ class RestaurantScreen extends StatelessWidget {
                             ),
                           ),
                           ListTile(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => RestaurantReviewsScreen(
+                                        restaurantName: restaurantSnapshot.data.value['name'],
+                                        restaurantKey: restaurantKey,
+                                      ),
+                                ),
+                              );
+                            },
                             title: SingleLineText(localizations.reviews),
                             leading: Icon(Icons.comment),
                             trailing: Icon(
@@ -393,7 +404,16 @@ class RestaurantScreen extends StatelessWidget {
                             ),
                           ),
                           ListTile(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => RestaurantPhotosScreen(
+                                        restaurantName: restaurantSnapshot.data.value['name'],
+                                        restaurantKey: restaurantKey,
+                                      ),
+                                ),
+                              );
+                            },
                             title: SingleLineText(localizations.photos),
                             leading: Icon(Icons.collections),
                             trailing: Icon(
