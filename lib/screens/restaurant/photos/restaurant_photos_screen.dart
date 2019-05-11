@@ -2,6 +2,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edibly/screens/restaurant/photos/restaurant_photos_bloc.dart';
+import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
@@ -17,6 +18,7 @@ class RestaurantPhotosScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppLocalizations localizations = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: SingleLineText(restaurantName),
@@ -36,6 +38,29 @@ class RestaurantPhotosScreen extends StatelessWidget {
                       restaurantPhotosBloc.getRestaurantPhotos();
                     }
                     return CircularProgressIndicator();
+                  } else if (restaurantSnapshot?.data != null && restaurantSnapshot.data.value == null) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(
+                            Icons.warning,
+                            color: Theme.of(context).hintColor,
+                            size: 48.0,
+                          ),
+                          Container(
+                            height: 12.0,
+                          ),
+                          Text(
+                            localizations.noPhotosText,
+                            style: TextStyle(
+                              fontSize: 18.0,
+                              color: Theme.of(context).hintColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   } else {
                     Map<dynamic, dynamic> restaurantPhotosMap = restaurantSnapshot.data.value;
                     return GridView.builder(

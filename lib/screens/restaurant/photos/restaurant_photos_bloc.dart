@@ -31,6 +31,8 @@ class RestaurantPhotosBloc {
           Data restaurantPhotosData = Data(event.snapshot.key, event.snapshot.value);
           _restaurantPhotos..add(restaurantPhotosData);
         } catch (_) {}
+      } else {
+        _restaurantPhotos..add(Data(null, null));
       }
     });
   }

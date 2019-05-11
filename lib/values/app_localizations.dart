@@ -127,6 +127,10 @@ class AppLocalizations {
 
   String get noReviewsText => Intl.message('No reviews here yet.');
 
+  String get noTipsText => Intl.message('No tips here yet.');
+
+  String get noPhotosText => Intl.message('No photos here yet.');
+
   String get noRestaurantsFound => Intl.message('0 restaurants found.');
 
   String get restaurant => Intl.message('Restaurant');

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:edibly/screens/restaurant/reviews/restaurant_reviews_screen.dart';
 import 'package:edibly/screens/restaurant/photos/restaurant_photos_screen.dart';
+import 'package:edibly/screens/restaurant/tips/restaurant_tips_screen.dart';
 import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
@@ -394,7 +395,16 @@ class RestaurantScreen extends StatelessWidget {
                             ),
                           ),
                           ListTile(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => RestaurantTipsScreen(
+                                        restaurantName: restaurantSnapshot.data.value['name'],
+                                        restaurantKey: restaurantKey,
+                                      ),
+                                ),
+                              );
+                            },
                             title: SingleLineText(localizations.tips),
                             leading: Icon(Icons.info),
                             trailing: Icon(
