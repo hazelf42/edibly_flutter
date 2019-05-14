@@ -42,7 +42,9 @@ class _AppWidget extends StatelessWidget {
                       primaryColorBrightness: AppColors.primaryColorBrightness,
                       accentColor: AppColors.primarySwatch.shade300,
                       toggleableActiveColor: AppColors.primarySwatch.shade300,
-                      brightness: snapshot.hasData && snapshot.data ? Brightness.dark : Brightness.light,
+                      brightness: snapshot.hasData
+                          ? (snapshot.data == true ? Brightness.dark : Brightness.light)
+                          : MainBloc.darkModeEnabledDefaultValue,
                     ),
                     localizationsDelegates: [
                       const AppLocalizationsDelegate(),

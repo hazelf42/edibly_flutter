@@ -68,6 +68,10 @@ class AppLocalizations {
 
   String get resetPasswordSuccessText => Intl.message('We have sent you an email containing a link to reset your password.');
 
+  String get tipAddedSuccessText => Intl.message('Thanks for the tip.');
+
+  String get photoAddedSuccessText => Intl.message('Thanks for the photo.');
+
   String get updatePasswordSuccessText => Intl.message('We have updated your password.');
 
   String get forgotPassword => Intl.message('Forgot password?');
@@ -105,11 +109,15 @@ class AppLocalizations {
 
   String get errorEmptyPassword => Intl.message('Password cannot be empty.');
 
+  String get errorEmptyTextField => Intl.message('Text field cannot be empty.');
+
   String get errorInvalidPassword => Intl.message('Password is too short.');
 
   String get errorWrongPassword => Intl.message('Wrong password.');
 
   String get emailExampleText => Intl.message('you@example.com');
+
+  String get tipExampleText => Intl.message('e.g. \"You can substitute a veggie patty for any burger.');
 
   String get password => Intl.message('Password');
 
@@ -128,6 +136,14 @@ class AppLocalizations {
   String get noReviewsText => Intl.message('No reviews here yet.');
 
   String get noTipsText => Intl.message('No tips here yet.');
+
+  String get nothingHereText => Intl.message('Nothing here yet.');
+
+  String get noVeganOptionsText => Intl.message('Either there are no vegan options, or an error has occured.');
+
+  String get noVegetarianOptionsText => Intl.message('Either there are no vegetarian options, or an error has occured.');
+
+  String get showVegetarianOptions => Intl.message('Show vegetarian options');
 
   String get noPhotosText => Intl.message('No photos here yet.');
 
@@ -157,12 +173,28 @@ class AppLocalizations {
 
   String get addTip => Intl.message('Add tip');
 
+  String get add => Intl.message('Add');
+
+  String get appetizers => Intl.message('Appetizers');
+
+  String get entrees => Intl.message('Entrees');
+
+  String get sides => Intl.message('Sides');
+
   String get addPhoto => Intl.message('Add photo');
+
+  String get pickFromGallery => Intl.message('Pick from gallery');
+
+  String get takePicture => Intl.message('Take a picture');
 
   String get searchScreenFooterTitleText => Intl.message('That is all for now.');
 
   String get searchScreenFooterDescriptionText => Intl.message(
       'Our database is small, but growing! Adding a review for a new restaurant is quick and easy. We will do the rest on our end.');
+
+  String get vegetarianUponRequest => Intl.message('Vegetarian upon request');
+
+  String get veganUponRequest => Intl.message('Vegan upon request');
 
   String ratingText(int rating) {
     if (rating == 0) {

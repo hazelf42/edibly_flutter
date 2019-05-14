@@ -22,8 +22,10 @@ dependencies:
   smooth_star_rating: ^1.0.2
   firebase_database: ^2.0.3
   intl_translation: ^0.17.2
+  firebase_storage: 2.1.1+2
   flutter_linkify: ^2.1.0
   firebase_auth: ^0.8.4+5
+  image_picker: ^0.6.0+3
   package_info: ^0.4.0
   url_launcher: ^5.0.2
   photo_view: ^0.3.1
@@ -31,6 +33,7 @@ dependencies:
   timeago: ^2.0.14
   rxdart: ^0.21.0
   intl: ^0.15.7
+  uuid: ^2.0.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec

@@ -358,6 +358,7 @@ class DrawerScreen extends StatelessWidget {
       packageBuilder: (context) => DrawerBloc(),
       child: Builder(
         builder: (context) {
+          final bool darkModeEnabled = Theme.of(context).brightness == Brightness.dark;
           final MainBloc mainBloc = Provider.of<MainBloc>(context);
           final DrawerBloc drawerBloc = Provider.of<DrawerBloc>(context);
           final AppLocalizations localizations = AppLocalizations.of(context);
@@ -440,9 +441,9 @@ class DrawerScreen extends StatelessWidget {
                   iconData: Icons.invert_colors,
                   string: AppLocalizations.of(context).darkMode,
                   onTap: () {
-                    mainBloc.toggleDarkMode();
+                    mainBloc.setDarkModeEnabled(!darkModeEnabled);
                   },
-                  value: Theme.of(context).brightness == Brightness.dark,
+                  value: darkModeEnabled,
                 ),
               ],
             ),

@@ -90,11 +90,6 @@ class SearchBloc {
   void filterRestaurants(String keyword) async {
     if (keyword == null) keyword = _keyword;
     _keyword = keyword;
-
-    print('keyword: $keyword');
-    print('rating: $_ratingFilterValue');
-    print('distance: $_distanceFilterValue');
-
     int currentFilterRestaurantsCallCount = _filterRestaurantsCallCounter++;
     _filteredRestaurants.add(null);
     List<Data> filteredRestaurants = [];
@@ -170,7 +165,6 @@ class SearchBloc {
   void getBookmarkedRestaurants() async {
     _bookmarkedRestaurants.add(null);
     _firebaseDatabase.reference().child('starredRestaurants').child(firebaseUser.uid).onValue.listen((event) async {
-      print(event?.snapshot?.value?.toString());
       List<String> bookmarkKeys = [];
       List<Data> restaurantsWithRating = [];
       List<Data> restaurantsWithoutRating = [];

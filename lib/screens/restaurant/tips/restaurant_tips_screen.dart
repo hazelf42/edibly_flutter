@@ -2,7 +2,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edibly/screens/restaurant/tips/restaurant_tips_bloc.dart';
-import 'package:edibly/screens/post/post_preview_widget.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';

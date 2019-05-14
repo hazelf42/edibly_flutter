@@ -37,26 +37,30 @@ class RestaurantPreviewWidget extends StatelessWidget {
     }
     return Container(
       margin: const EdgeInsets.only(top: 4.0),
-      child: Row(
-        children: <Widget>[
-          SmoothStarRating(
-            allowHalfRating: true,
-            starCount: 10,
-            rating: value['numRating'] / 1.0,
-            size: 16.0,
-            color: AppColors.primarySwatch.shade900,
-            borderColor: AppColors.primarySwatch.shade900,
-          ),
-          Container(
-            width: 8.0,
-          ),
-          SingleLineText(
-            value['numRating'].toString(),
-            style: TextStyle(
-              color: Theme.of(context).hintColor,
+      child: SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: <Widget>[
+            SmoothStarRating(
+              allowHalfRating: true,
+              starCount: 10,
+              rating: value['numRating'] / 1.0,
+              size: 16.0,
+              color: AppColors.primarySwatch.shade900,
+              borderColor: AppColors.primarySwatch.shade900,
             ),
-          ),
-        ],
+            Container(
+              width: 8.0,
+            ),
+            SingleLineText(
+              double.parse(value['numRating'].toString()).toStringAsFixed(1),
+              style: TextStyle(
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

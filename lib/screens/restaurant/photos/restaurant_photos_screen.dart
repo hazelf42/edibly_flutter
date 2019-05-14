@@ -68,6 +68,7 @@ class RestaurantPhotosScreen extends StatelessWidget {
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
                       itemBuilder: (context, position) {
                         return GestureDetector(
+                          key: Key(restaurantPhotosMap.entries.elementAt(position).key),
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => RestaurantPhotoScreen(

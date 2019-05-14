@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edibly/screens/restaurant/reviews/restaurant_reviews_screen.dart';
+import 'package:edibly/screens/restaurant/dishes/restaurant_dishes_screen.dart';
 import 'package:edibly/screens/restaurant/photos/restaurant_photos_screen.dart';
 import 'package:edibly/screens/restaurant/tips/restaurant_tips_screen.dart';
 import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
@@ -34,6 +38,210 @@ class RestaurantScreen extends StatelessWidget {
     return tagList;
   }
 
+  void _showAddTipDialog({
+    @required BuildContext context,
+    @required RestaurantBloc restaurantBloc,
+    @required AppLocalizations localizations,
+  }) {
+    TextEditingController textController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StreamBuilder<AddTipState>(
+            stream: restaurantBloc.addTipState,
+            builder: (context, snapshot) {
+              if (snapshot.data == AddTipState.SUCCESSFUL) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Navigator.of(context).pop(true);
+                });
+              }
+              return AlertDialog(
+                title: Text(localizations.addTip),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    TextField(
+                      maxLength: 140,
+                      controller: textController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        errorText: snapshot.hasError ? localizations.errorEmptyTextField : null,
+                        hintText: localizations.tipExampleText,
+                        isDense: true,
+                      ),
+                      keyboardType: TextInputType.text,
+                      onChanged: (value) {
+                        restaurantBloc.setAddTipState(AddTipState.IDLE);
+                      },
+                      maxLines: 2,
+                      enabled: snapshot.data == AddTipState.TRYING ? false : true,
+                      buildCounter: (context, {currentLength, maxLength, isFocused}) {
+                        return SingleLineText('$currentLength / $maxLength');
+                      },
+                    ),
+                  ],
+                ),
+                contentPadding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 0.0),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text(localizations.cancel.toUpperCase()),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: Text(localizations.add.toUpperCase()),
+                    onPressed: snapshot.data == AddTipState.TRYING
+                        ? null
+                        : () {
+                            restaurantBloc.addTip(
+                              tip: textController.text,
+                            );
+                          },
+                  )
+                ],
+              );
+            });
+      },
+    ).then((tipAdded) {
+      if (tipAdded is bool && tipAdded) {
+        final snackBar = SnackBar(
+          content: Text(localizations.tipAddedSuccessText),
+        );
+        Scaffold.of(context).showSnackBar(snackBar);
+      }
+      restaurantBloc.setAddTipState(AddTipState.IDLE);
+    });
+  }
+
+  void _showAddImageDialog({
+    @required BuildContext context,
+    @required RestaurantBloc restaurantBloc,
+    @required AppLocalizations localizations,
+    @required String restaurantName,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StreamBuilder<PickedPhotoUploadState>(
+            stream: restaurantBloc.pickedPhotoUploadState,
+            builder: (context, pickedPhotoStateSnapshot) {
+              if (pickedPhotoStateSnapshot.data == PickedPhotoUploadState.SUCCESSFUL) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Navigator.of(context).pop(true);
+                });
+              }
+              return StreamBuilder<File>(
+                stream: restaurantBloc.pickedPhoto,
+                builder: (context, pickedPhotoSnapshot) {
+                  return AlertDialog(
+                    title: Text(localizations.addPhoto),
+                    content: Row(
+                      children: <Widget>[
+                        pickedPhotoSnapshot.hasData
+                            ? Image.file(
+                                pickedPhotoSnapshot?.data,
+                                width: 84.0,
+                                height: 84.0,
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppColors.primarySwatch.shade400,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.image,
+                                  color: AppColors.primarySwatch.shade400,
+                                ),
+                                width: 84.0,
+                                height: 84.0,
+                              ),
+                        Container(width: 12.0, height: 1.0),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              BoldFlatButton(
+                                text: localizations.takePicture,
+                                onPressed: () {
+                                  _getImage(
+                                    imageSource: ImageSource.camera,
+                                    restaurantBloc: restaurantBloc,
+                                  );
+                                },
+                              ),
+                              BoldFlatButton(
+                                text: localizations.pickFromGallery,
+                                onPressed: () {
+                                  _getImage(
+                                    imageSource: ImageSource.gallery,
+                                    restaurantBloc: restaurantBloc,
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    contentPadding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 0.0),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text(localizations.cancel.toUpperCase()),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      pickedPhotoStateSnapshot.data == PickedPhotoUploadState.TRYING
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24.0,
+                              ),
+                              child: SizedBox(
+                                width: 24.0,
+                                height: 24.0,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3.0,
+                                ),
+                              ),
+                            )
+                          : FlatButton(
+                              child: Text(localizations.add.toUpperCase()),
+                              onPressed: !pickedPhotoSnapshot.hasData
+                                  ? null
+                                  : () {
+                                      restaurantBloc.uploadPhoto(restaurantName: restaurantName);
+                                    },
+                            )
+                    ],
+                  );
+                },
+              );
+            });
+      },
+    ).then((tipAdded) {
+      if (tipAdded is bool && tipAdded) {
+        final snackBar = SnackBar(
+          content: Text(localizations.photoAddedSuccessText),
+        );
+        Scaffold.of(context).showSnackBar(snackBar);
+      }
+      restaurantBloc.setPickedPhotoUploadState(PickedPhotoUploadState.IDLE);
+      restaurantBloc.setPickedPhoto(null);
+    });
+  }
+
+  Future _getImage({
+    @required ImageSource imageSource,
+    @required RestaurantBloc restaurantBloc,
+  }) async {
+    var image = await ImagePicker.pickImage(source: imageSource);
+    if (image != null) restaurantBloc.setPickedPhoto(image);
+  }
+
   Widget _rating({@required BuildContext context, @required dynamic value}) {
     if (value == null || value['numRating'] == null) {
       return Container();
@@ -54,7 +262,7 @@ class RestaurantScreen extends StatelessWidget {
             width: 8.0,
           ),
           SingleLineText(
-            value['numRating'].toString(),
+            double.parse(value['numRating'].toString()).toStringAsFixed(1),
             style: TextStyle(
               color: Theme.of(context).hintColor,
             ),
@@ -187,7 +395,12 @@ class RestaurantScreen extends StatelessWidget {
     );
   }
 
-  Widget _buttonBar({@required AppLocalizations localizations}) {
+  Widget _buttonBar({
+    @required BuildContext context,
+    @required RestaurantBloc restaurantBloc,
+    @required AppLocalizations localizations,
+    @required String restaurantName,
+  }) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -202,7 +415,13 @@ class RestaurantScreen extends StatelessWidget {
           ),
           Container(width: 16.0),
           RaisedButton(
-            onPressed: () {},
+            onPressed: () {
+              _showAddTipDialog(
+                context: context,
+                restaurantBloc: restaurantBloc,
+                localizations: localizations,
+              );
+            },
             child: Text(
               localizations.addTip.toUpperCase(),
               style: TextStyle(fontSize: 13.0),
@@ -210,7 +429,14 @@ class RestaurantScreen extends StatelessWidget {
           ),
           Container(width: 16.0),
           RaisedButton(
-            onPressed: () {},
+            onPressed: () {
+              _showAddImageDialog(
+                context: context,
+                restaurantBloc: restaurantBloc,
+                localizations: localizations,
+                restaurantName: restaurantName,
+              );
+            },
             child: Text(
               localizations.addPhoto.toUpperCase(),
               style: TextStyle(fontSize: 13.0),
@@ -364,9 +590,23 @@ class RestaurantScreen extends StatelessWidget {
                             restaurant: restaurantSnapshot?.data,
                           ),
                           Container(height: 6.0),
-                          _buttonBar(localizations: localizations),
+                          _buttonBar(
+                            context: context,
+                            restaurantBloc: restaurantBloc,
+                            localizations: localizations,
+                            restaurantName: restaurantSnapshot.data.value['name'],
+                          ),
                           ListTile(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => RestaurantDishesScreen(
+                                        restaurantName: restaurantSnapshot.data.value['name'],
+                                        restaurantKey: restaurantKey,
+                                      ),
+                                ),
+                              );
+                            },
                             title: SingleLineText(localizations.menu),
                             leading: Icon(Icons.restaurant_menu),
                             trailing: Icon(

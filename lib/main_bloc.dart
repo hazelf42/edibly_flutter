@@ -29,7 +29,7 @@ class MainBloc extends Object with Validators {
 
   /// Subjects
   final _bottomNavigationBarCurrentIndex = BehaviorSubject<int>.seeded(bottomNavigationBarCurrentIndexDefaultValue);
-  final _darkModeEnabled = BehaviorSubject<bool>.seeded(darkModeEnabledDefaultValue);
+  final _darkModeEnabled = BehaviorSubject<bool>();
   final _glutenFree = BehaviorSubject<bool>.seeded(glutenFreeDefaultValue);
   final _diet = BehaviorSubject<Diet>.seeded(dietDefaultValue);
 
@@ -47,10 +47,10 @@ class MainBloc extends Object with Validators {
     _bottomNavigationBarCurrentIndex.add(value);
   }
 
-  void toggleDarkMode() async {
-    _darkModeEnabled.add(!_darkModeEnabled.value);
+  void setDarkModeEnabled(bool darkModeEnabled) async {
+    _darkModeEnabled.add(darkModeEnabled);
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    preferences.setBool(PrefKeys.darkModeEnabled, _darkModeEnabled.value);
+    preferences.setBool(PrefKeys.darkModeEnabled, darkModeEnabled);
   }
 
   void toggleGlutenFree(String uid) {
