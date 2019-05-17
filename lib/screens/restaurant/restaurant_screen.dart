@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:image_picker/image_picker.dart';
@@ -38,10 +39,11 @@ class RestaurantScreen extends StatelessWidget {
     return tagList;
   }
 
-  void _showAddTipDialog({
+  static void showAddTipDialog({
     @required BuildContext context,
     @required RestaurantBloc restaurantBloc,
     @required AppLocalizations localizations,
+    @required String restaurantName,
   }) {
     TextEditingController textController = TextEditingController();
     showDialog(
@@ -96,6 +98,7 @@ class RestaurantScreen extends StatelessWidget {
                         : () {
                             restaurantBloc.addTip(
                               tip: textController.text,
+                              restaurantName: restaurantName,
                             );
                           },
                   )
@@ -114,7 +117,7 @@ class RestaurantScreen extends StatelessWidget {
     });
   }
 
-  void _showAddImageDialog({
+  static void showAddImageDialog({
     @required BuildContext context,
     @required RestaurantBloc restaurantBloc,
     @required AppLocalizations localizations,
@@ -141,8 +144,8 @@ class RestaurantScreen extends StatelessWidget {
                         pickedPhotoSnapshot.hasData
                             ? Image.file(
                                 pickedPhotoSnapshot?.data,
-                                width: 84.0,
-                                height: 84.0,
+                                width: 90.0,
+                                height: 90.0,
                               )
                             : Container(
                                 decoration: BoxDecoration(
@@ -155,8 +158,8 @@ class RestaurantScreen extends StatelessWidget {
                                   Icons.image,
                                   color: AppColors.primarySwatch.shade400,
                                 ),
-                                width: 84.0,
-                                height: 84.0,
+                                width: 90.0,
+                                height: 90.0,
                               ),
                         Container(width: 12.0, height: 1.0),
                         Expanded(
@@ -164,8 +167,9 @@ class RestaurantScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
-                              BoldFlatButton(
-                                text: localizations.takePicture,
+                              RaisedButton(
+                                color: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
+                                child: SingleLineText(localizations.takePicture),
                                 onPressed: () {
                                   _getImage(
                                     imageSource: ImageSource.camera,
@@ -173,8 +177,9 @@ class RestaurantScreen extends StatelessWidget {
                                   );
                                 },
                               ),
-                              BoldFlatButton(
-                                text: localizations.pickFromGallery,
+                              RaisedButton(
+                                color: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
+                                child: SingleLineText(localizations.pickFromGallery),
                                 onPressed: () {
                                   _getImage(
                                     imageSource: ImageSource.gallery,
@@ -234,7 +239,7 @@ class RestaurantScreen extends StatelessWidget {
     });
   }
 
-  Future _getImage({
+  static Future _getImage({
     @required ImageSource imageSource,
     @required RestaurantBloc restaurantBloc,
   }) async {
@@ -242,44 +247,53 @@ class RestaurantScreen extends StatelessWidget {
     if (image != null) restaurantBloc.setPickedPhoto(image);
   }
 
-  Widget _rating({@required BuildContext context, @required dynamic value}) {
-    if (value == null || value['numRating'] == null) {
-      return Container();
-    }
-    return Container(
-      margin: const EdgeInsets.only(top: 4.0),
-      child: Row(
-        children: <Widget>[
-          SmoothStarRating(
-            allowHalfRating: true,
-            starCount: 10,
-            rating: value['numRating'] / 1.0,
-            size: 16.0,
-            color: AppColors.primarySwatch.shade900,
-            borderColor: AppColors.primarySwatch.shade900,
-          ),
-          Container(
-            width: 8.0,
-          ),
-          SingleLineText(
-            double.parse(value['numRating'].toString()).toStringAsFixed(1),
-            style: TextStyle(
-              color: Theme.of(context).hintColor,
+  Widget _rating({@required BuildContext context, @required RestaurantBloc restaurantBloc}) {
+    return StreamBuilder<Data>(
+        stream: restaurantBloc.rating,
+        builder: (context, snapshot) {
+          if (snapshot?.data == null) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              restaurantBloc.getRating();
+            }
+            return Container();
+          }
+          if (snapshot?.data?.value == null) return Container();
+          return Container(
+            margin: const EdgeInsets.only(top: 4.0),
+            child: Row(
+              children: <Widget>[
+                SmoothStarRating(
+                  allowHalfRating: true,
+                  starCount: 10,
+                  rating: snapshot.data.value['numRating'] / 1.0,
+                  size: 16.0,
+                  color: AppColors.primarySwatch.shade900,
+                  borderColor: AppColors.primarySwatch.shade900,
+                ),
+                Container(
+                  width: 8.0,
+                ),
+                SingleLineText(
+                  double.parse(snapshot.data.value['numRating'].toString()).toStringAsFixed(1),
+                  style: TextStyle(
+                    color: Theme.of(context).hintColor,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-    );
+          );
+        });
   }
 
   Widget _address({@required Data restaurant}) {
-    if (restaurant?.value == null || restaurant.value['address'] == null) {
+    if (restaurant?.value == null ||
+        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']) == null) {
       return Container();
     }
     return Container(
       margin: const EdgeInsets.only(top: 4.0),
       child: Text(
-        restaurant.value['address'].toString().trim() ?? '',
+        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']).toString().trim() ?? '',
       ),
     );
   }
@@ -288,41 +302,42 @@ class RestaurantScreen extends StatelessWidget {
     if (value == null || value['tagDict'] == null || value['tagDict'].toString().isEmpty) {
       return Container();
     }
+    List<Data> tags = dynamicTagArrayToTagList(value['tagDict']);
+    tags.sort((a, b) => b.value - a.value);
     return Container(
-      margin: const EdgeInsets.only(top: 12.0),
-      child: Wrap(
-        spacing: 6.0,
-        runSpacing: 6.0,
-        children: dynamicTagArrayToTagList(value['tagDict']).map((tag) {
-          return Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: 4.0,
-              horizontal: 8.0,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).chipTheme.backgroundColor,
-              borderRadius: BorderRadius.circular(16.0),
-            ),
-            child: SingleLineText(
-              '${tag.key} (${tag.value})',
-              style: TextStyle(
-                fontSize: 12.0,
-              ),
-            ),
-          );
-        }).toList(),
+      height: 32.0,
+      margin: const EdgeInsets.only(top: 12.0, right: 12.0),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        separatorBuilder: (context, position) {
+          return Container(width: 8.0, height: 1.0);
+        },
+        itemCount: tags.length,
+        itemBuilder: (context, position) {
+          return CustomTag('${tags.elementAt(position).key} (${tags.elementAt(position).value})');
+        },
       ),
     );
   }
 
   Widget _coverImage({@required Data restaurant}) {
-    if (restaurant == null || restaurant.value['photoURL'] == null || restaurant.value['photoURL'].toString().isEmpty) {
-      return Container();
-    }
-    return Image.network(
-      restaurant.value['photoURL'],
-      height: 150.0,
-      fit: BoxFit.cover,
+    if (restaurant == null) return Container();
+    String photoUrl = restaurant.value['photoUrl'] ?? restaurant.value['photoURL'];
+    if (photoUrl == null || photoUrl.isEmpty) return Container();
+    return Container(
+      color: Colors.white,
+      child: CachedNetworkImage(
+        imageUrl: photoUrl,
+        height: 150.0,
+        fit: BoxFit.cover,
+        placeholder: (context, imageUrl) {
+          return Container(
+            height: 120.0,
+            alignment: Alignment.center,
+            child: CircularProgressIndicator(),
+          );
+        },
+      ),
     );
   }
 
@@ -372,7 +387,7 @@ class RestaurantScreen extends StatelessWidget {
                         ),
                         _rating(
                           context: context,
-                          value: restaurant.value['rating'],
+                          restaurantBloc: restaurantBloc,
                         ),
                         _address(restaurant: restaurant),
                       ],
@@ -401,68 +416,162 @@ class RestaurantScreen extends StatelessWidget {
     @required AppLocalizations localizations,
     @required String restaurantName,
   }) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Container(width: 16.0),
           RaisedButton(
+            color: AppColors.primarySwatch.shade400,
             onPressed: () {},
             child: Text(
               localizations.addReview.toUpperCase(),
-              style: TextStyle(fontSize: 13.0),
+              style: TextStyle(
+                fontSize: 13.0,
+                color: Colors.white,
+              ),
             ),
           ),
-          Container(width: 16.0),
-          RaisedButton(
-            onPressed: () {
-              _showAddTipDialog(
-                context: context,
-                restaurantBloc: restaurantBloc,
-                localizations: localizations,
-              );
-            },
-            child: Text(
-              localizations.addTip.toUpperCase(),
-              style: TextStyle(fontSize: 13.0),
-            ),
-          ),
-          Container(width: 16.0),
-          RaisedButton(
-            onPressed: () {
-              _showAddImageDialog(
-                context: context,
-                restaurantBloc: restaurantBloc,
-                localizations: localizations,
-                restaurantName: restaurantName,
-              );
-            },
-            child: Text(
-              localizations.addPhoto.toUpperCase(),
-              style: TextStyle(fontSize: 13.0),
-            ),
-          ),
-          Container(width: 16.0),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: RaisedButton(
+                  color: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
+                  onPressed: () {
+                    showAddTipDialog(
+                      context: context,
+                      restaurantBloc: restaurantBloc,
+                      localizations: localizations,
+                      restaurantName: restaurantName,
+                    );
+                  },
+                  child: Text(
+                    localizations.addTip.toUpperCase(),
+                    style: TextStyle(fontSize: 13.0),
+                  ),
+                ),
+              ),
+              Container(width: 16.0),
+              Expanded(
+                child: RaisedButton(
+                  color: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
+                  onPressed: () {
+                    showAddImageDialog(
+                      context: context,
+                      restaurantBloc: restaurantBloc,
+                      localizations: localizations,
+                      restaurantName: restaurantName,
+                    );
+                  },
+                  child: Text(
+                    localizations.addPhoto.toUpperCase(),
+                    style: TextStyle(fontSize: 13.0),
+                  ),
+                ),
+              ),
+            ],
+          )
         ],
       ),
     );
   }
 
+  Widget _firstOneToAddTip({
+    @required BuildContext context,
+    @required MainBloc mainBloc,
+    @required RestaurantBloc restaurantBloc,
+    @required AppLocalizations localizations,
+    @required Data restaurant,
+  }) {
+    return StreamBuilder<AddTipState>(
+        stream: restaurantBloc.addTipState,
+        builder: (context, snapshot) {
+          if (snapshot.data == AddTipState.SUCCESSFUL) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final snackBar = SnackBar(
+                content: Text(localizations.tipAddedSuccessText),
+              );
+              Scaffold.of(context).showSnackBar(snackBar);
+              restaurantBloc.setAddTipState(AddTipState.IDLE);
+              restaurantBloc.getRestaurant();
+            });
+          } else if (snapshot.data == AddTipState.TRYING) {
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+              child: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    localizations.beTheFirstToLeaveTip,
+                    style: TextStyle(fontSize: 20.0),
+                  ),
+                  Container(height: 4.0),
+                  Text(
+                    localizations.beTheFirstToLeaveTipHelpText,
+                  ),
+                  Container(height: 6.0),
+                  TextField(
+                    buildCounter: (context, {currentLength, maxLength, isFocused}) => Container(),
+                    maxLength: 140,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      errorText: snapshot.hasError ? localizations.errorEmptyTextField : null,
+                      hintText: localizations.tipExampleText,
+                      isDense: true,
+                    ),
+                    keyboardType: TextInputType.text,
+                    onChanged: (value) {
+                      restaurantBloc.setAddTipState(AddTipState.IDLE);
+                    },
+                    onSubmitted: (tip) {
+                      if (tip != null && tip.isNotEmpty) {
+                        restaurantBloc.addTip(
+                          tip: tip,
+                          restaurantName: restaurant.value['name'],
+                        );
+                      }
+                    },
+                    maxLines: 1,
+                    enabled: snapshot.data == AddTipState.TRYING ? false : true,
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
   Widget _featuredTip({
     @required BuildContext context,
     @required MainBloc mainBloc,
+    @required RestaurantBloc restaurantBloc,
     @required AppLocalizations localizations,
     @required Data restaurant,
   }) {
     if (restaurant == null || restaurant.value['featured_tip'] == null || restaurant.value['featured_tip'].toString().isEmpty) {
-      return Container();
+      return _firstOneToAddTip(
+        context: context,
+        mainBloc: mainBloc,
+        restaurantBloc: restaurantBloc,
+        localizations: localizations,
+        restaurant: restaurant,
+      );
     }
-    Map<dynamic, dynamic> featuredTipMap = restaurant.value['featured_tip'];
-    if (featuredTipMap == null) return Container();
-    featuredTipMap = featuredTipMap.values.elementAt(0);
-    if (featuredTipMap == null) return Container();
+    dynamic featuredTip = restaurant.value['featured_tip'];
     return StreamBuilder<Event>(
-      stream: mainBloc.getUser(featuredTipMap['tipUserId'].toString()),
+      stream: mainBloc.getUser(featuredTip['tipUserId'].toString()),
       builder: (context, snapshot) {
         Map<dynamic, dynamic> authorValue = snapshot?.data?.snapshot?.value;
         return Card(
@@ -485,7 +594,7 @@ class RestaurantScreen extends StatelessWidget {
                   children: <Widget>[
                     CircleAvatar(
                       radius: 18.0,
-                      backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl']),
+                      backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL']),
                       child: authorValue == null
                           ? SizedBox(
                               width: 34.0,
@@ -528,11 +637,11 @@ class RestaurantScreen extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                featuredTipMap['description'] != null
+                                featuredTip['description'] != null
                                     ? Container(
                                         margin: const EdgeInsets.only(top: 4.0),
                                         child: Text(
-                                          featuredTipMap['description'],
+                                          featuredTip['description'],
                                           style: TextStyle(fontSize: 13.0),
                                         ),
                                       )
@@ -546,6 +655,55 @@ class RestaurantScreen extends StatelessWidget {
                   ],
                 ),
               ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _photos({@required BuildContext context, @required String restaurantName, @required RestaurantBloc restaurantBloc}) {
+    return StreamBuilder<List<Data>>(
+      stream: restaurantBloc.lastThreePhotos,
+      builder: (context, snapshot) {
+        if (snapshot?.data == null) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            restaurantBloc.getLastThreeRestaurantPhotos();
+          }
+          return Container();
+        }
+        if (snapshot.data.isEmpty) return Container();
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => RestaurantPhotosScreen(
+                      firebaseUserId: firebaseUserId,
+                      restaurantName: restaurantName,
+                      restaurantKey: restaurantKey,
+                    ),
+              ),
+            );
+          },
+          child: Container(
+            height: 120.0,
+            child: GridView.builder(
+              itemCount: snapshot.data.length > 3 ? 3 : snapshot.data.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+              itemBuilder: (context, position) {
+                return CachedNetworkImage(
+                  key: Key(snapshot.data.elementAt(position).key),
+                  imageUrl: snapshot.data.elementAt(position).value['imageUrl'],
+                  fit: BoxFit.cover,
+                  placeholder: (context, imageUrl) {
+                    return Container(
+                      height: 120.0,
+                      alignment: Alignment.center,
+                      child: CircularProgressIndicator(),
+                    );
+                  },
+                );
+              },
             ),
           ),
         );
@@ -586,6 +744,7 @@ class RestaurantScreen extends StatelessWidget {
                           _featuredTip(
                             context: context,
                             mainBloc: mainBloc,
+                            restaurantBloc: restaurantBloc,
                             localizations: localizations,
                             restaurant: restaurantSnapshot?.data,
                           ),
@@ -639,6 +798,7 @@ class RestaurantScreen extends StatelessWidget {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) => RestaurantTipsScreen(
+                                        firebaseUserId: firebaseUserId,
                                         restaurantName: restaurantSnapshot.data.value['name'],
                                         restaurantKey: restaurantKey,
                                       ),
@@ -658,6 +818,7 @@ class RestaurantScreen extends StatelessWidget {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) => RestaurantPhotosScreen(
+                                        firebaseUserId: firebaseUserId,
                                         restaurantName: restaurantSnapshot.data.value['name'],
                                         restaurantKey: restaurantKey,
                                       ),
@@ -671,6 +832,11 @@ class RestaurantScreen extends StatelessWidget {
                               size: 16.0,
                               color: Theme.of(context).disabledColor,
                             ),
+                          ),
+                          _photos(
+                            context: context,
+                            restaurantName: restaurantSnapshot.data.value['name'],
+                            restaurantBloc: restaurantBloc,
                           ),
                         ],
                       );

@@ -2,6 +2,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edibly/screens/restaurant/tips/restaurant_tips_bloc.dart';
+import 'package:edibly/screens/restaurant/restaurant_screen.dart';
+import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';
@@ -9,10 +11,12 @@ import 'package:edibly/models/data.dart';
 import 'package:edibly/main_bloc.dart';
 
 class RestaurantTipsScreen extends StatelessWidget {
+  final String firebaseUserId;
   final String restaurantName;
   final String restaurantKey;
 
   RestaurantTipsScreen({
+    @required this.firebaseUserId,
     @required this.restaurantName,
     @required this.restaurantKey,
   });
@@ -24,12 +28,15 @@ class RestaurantTipsScreen extends StatelessWidget {
       appBar: AppBar(
         title: SingleLineText(localizations.tips),
       ),
-      body: DisposableProvider<RestaurantTipsBloc>(
-        packageBuilder: (context) => RestaurantTipsBloc(
-              restaurantKey: restaurantKey,
-            ),
+      body: MultiProvider(
+        providers: [
+          DisposableProvider<RestaurantBloc>(
+              packageBuilder: (context) => RestaurantBloc(firebaseUserId: firebaseUserId, restaurantKey: restaurantKey)),
+          DisposableProvider<RestaurantTipsBloc>(packageBuilder: (context) => RestaurantTipsBloc(restaurantKey: restaurantKey)),
+        ],
         child: Builder(
           builder: (context) {
+            final RestaurantBloc restaurantBloc = Provider.of<RestaurantBloc>(context);
             final RestaurantTipsBloc restaurantReviewsBloc = Provider.of<RestaurantTipsBloc>(context);
             return Container(
               color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
@@ -62,6 +69,20 @@ class RestaurantTipsScreen extends StatelessWidget {
                               fontSize: 18.0,
                               color: Theme.of(context).hintColor,
                             ),
+                          ),
+                          Container(
+                            height: 12.0,
+                          ),
+                          RaisedButton(
+                            onPressed: () {
+                              RestaurantScreen.showAddTipDialog(
+                                context: context,
+                                restaurantBloc: restaurantBloc,
+                                localizations: localizations,
+                                restaurantName: restaurantName,
+                              );
+                            },
+                            child: SingleLineText(localizations.addTip.toUpperCase()),
                           ),
                         ],
                       ),
@@ -133,7 +154,7 @@ class TipWidget extends StatelessWidget {
           children: <Widget>[
             CircleAvatar(
               radius: 18.0,
-              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl']),
+              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL']),
               child: authorValue == null
                   ? SizedBox(
                       width: 36.0,

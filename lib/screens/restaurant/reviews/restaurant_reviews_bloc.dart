@@ -72,7 +72,11 @@ class RestaurantReviewsBloc {
         DataSnapshot dataSnapshot = await _firebaseDatabase.reference().child('feedPosts').child(event?.snapshot?.key).once();
 
         /// insert newly acquired review to the start of new page
-        reviews.insert(_currentPage * REVIEWS_PER_PAGE, Data(dataSnapshot?.key, dataSnapshot?.value));
+        if (dataSnapshot?.key != null && dataSnapshot?.value != null) {
+          reviews.insert(_currentPage * REVIEWS_PER_PAGE, Data(dataSnapshot?.key, dataSnapshot?.value));
+        } else {
+          _reviewsInCurrentPage--;
+        }
 
         /// if this was the last review in requested page, then show a circular loader at the end of page
         if (_reviewsInCurrentPage == REVIEWS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) reviews.add(null);
@@ -106,7 +110,11 @@ class RestaurantReviewsBloc {
           DataSnapshot dataSnapshot = await _firebaseDatabase.reference().child('feedPosts').child(event?.snapshot?.key).once();
 
           /// insert newly acquired review to the start of new page
-          reviews.insert(_currentPage * REVIEWS_PER_PAGE, Data(dataSnapshot?.key, dataSnapshot?.value));
+          if (dataSnapshot?.key != null && dataSnapshot?.value != null) {
+            reviews.insert(_currentPage * REVIEWS_PER_PAGE, Data(dataSnapshot?.key, dataSnapshot?.value));
+          } else {
+            _reviewsInCurrentPage--;
+          }
         }
 
         /// if this was the last review in requested page, then show a circular loader at the end of page

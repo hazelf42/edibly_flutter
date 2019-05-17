@@ -33,7 +33,7 @@ class SearchScreen extends StatelessWidget {
           ),
           infoWindow: InfoWindow(
             title: data.value['name'],
-            snippet: data.value['address'],
+            snippet: data.value['address'] ?? data.value['address1'] ?? data.value['address2'],
             onTap: () {
               Navigator.push(
                 context,

@@ -41,18 +41,24 @@ class RestaurantBloc {
 
   /// Subjects
   final _pickedPhotoUploadState = BehaviorSubject<PickedPhotoUploadState>();
+  final _lastThreePhotos = BehaviorSubject<List<Data>>();
   final _addTipState = BehaviorSubject<AddTipState>();
   final _pickedPhoto = BehaviorSubject<File>();
   final _restaurant = BehaviorSubject<Data>();
+  final _rating = BehaviorSubject<Data>();
 
   /// Stream getters
   Stream<PickedPhotoUploadState> get pickedPhotoUploadState => _pickedPhotoUploadState.stream;
+
+  Stream<List<Data>> get lastThreePhotos => _lastThreePhotos.stream;
 
   Stream<AddTipState> get addTipState => _addTipState.stream;
 
   Stream<File> get pickedPhoto => _pickedPhoto.stream;
 
   Stream<Data> get restaurant => _restaurant.stream;
+
+  Stream<Data> get rating => _rating.stream;
 
   /// Setters
   Function(PickedPhotoUploadState) get setPickedPhotoUploadState => _pickedPhotoUploadState.add;
@@ -63,22 +69,25 @@ class RestaurantBloc {
 
   /// Other functions
   void getRestaurant() async {
+    _restaurant.add(null);
     _firebaseDatabase.reference().child('restaurants').child(restaurantKey).onValue.listen((event) async {
       if (event?.snapshot?.value != null) {
         try {
           Data restaurantData = Data(event.snapshot.key, event.snapshot.value);
-          DataSnapshot ratingSnapshot = await _firebaseDatabase.reference().child('restaurantRatings').child(restaurantKey).once();
-          restaurantData.value['rating'] = ratingSnapshot?.value;
-          DataSnapshot tipsSnapshot =
-              await _firebaseDatabase.reference().child('restaurantTips').child(restaurantKey).orderByKey().limitToLast(1).once();
-          restaurantData.value['featured_tip'] = tipsSnapshot?.value;
-          _restaurant..add(restaurantData);
+          Query tipsQuery = _firebaseDatabase.reference().child('restaurantTips').child(restaurantKey).orderByKey().limitToLast(1);
+          tipsQuery.onChildAdded.listen((event) {
+            DataSnapshot tipsSnapshot = event?.snapshot;
+            restaurantData.value['featured_tip'] = tipsSnapshot?.value;
+          });
+          tipsQuery.onValue.listen((_) async {
+            _restaurant..add(restaurantData);
+          });
         } catch (_) {}
       }
     });
   }
 
-  void addTip({@required String tip}) {
+  void addTip({@required String tip, @required String restaurantName}) {
     AddTipState addTipState = _addTipState.value;
 
     if (addTipState == AddTipState.TRYING) return;
@@ -96,7 +105,36 @@ class RestaurantBloc {
         'tipUserId': firebaseUserId,
         'description': tip,
         'isATest': false,
-      }).then((_) {
+      }).then((_) async {
+        DatabaseReference feedPostReference = _firebaseDatabase.reference().child('feedPosts').push();
+        await feedPostReference.set({
+          'description': tip,
+          'tagArray': null,
+          'otherTags': null,
+          'restaurantName': restaurantName,
+          'restaurantKey': restaurantKey,
+          'numRating': null,
+          'imageUrl': null,
+          'postType': 2,
+          'comments': null,
+          'reviewingUserId': firebaseUserId,
+          'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
+          'isATest': false,
+        });
+        await _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(feedPostReference.key).set({
+          'description': tip,
+          'tagArray': null,
+          'otherTags': null,
+          'restaurantName': restaurantName,
+          'restaurantKey': restaurantKey,
+          'numRating': null,
+          'imageUrl': null,
+          'postType': 2,
+          'comments': null,
+          'reviewingUserId': firebaseUserId,
+          'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
+          'isATest': false,
+        });
         _addTipState.add(AddTipState.SUCCESSFUL);
       }).catchError((error) {
         _addTipState.addError(AddTipState.FAILED);
@@ -173,6 +211,27 @@ class RestaurantBloc {
     return _firebaseDatabase.reference().child('starredRestaurants').child(uid).child(restaurantKey).onValue;
   }
 
+  void getLastThreeRestaurantPhotos() async {
+    _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).orderByKey().limitToLast(3).onValue.listen((event) {
+      List<Data> photos = [];
+      if (event?.snapshot?.value != null) {
+        Map<dynamic, dynamic> photosMap = event.snapshot.value;
+        photosMap.forEach((key, value) {
+          photos.add(Data(key, value));
+        });
+      }
+      _lastThreePhotos.add(photos);
+    });
+  }
+
+  void getRating() async {
+    _firebaseDatabase.reference().child('restaurantRatings').child(restaurantKey).onValue.listen((event) {
+      if (event?.snapshot?.key != null && event?.snapshot?.value != null) {
+        _rating.add(Data(event.snapshot.key, event.snapshot.value));
+      }
+    });
+  }
+
   void setRestaurantBookmarkValue(String uid, String restaurantKey, bool value) {
     _firebaseDatabase.reference().child('starredRestaurants').child(uid).child(restaurantKey).set(value ? 1 : 0);
   }
@@ -180,8 +239,10 @@ class RestaurantBloc {
   /// Dispose function
   void dispose() {
     _pickedPhotoUploadState.close();
+    _lastThreePhotos.close();
     _addTipState.close();
     _pickedPhoto.close();
     _restaurant.close();
+    _rating.close();
   }
 }

@@ -36,6 +36,8 @@ class AppLocalizations {
 
   String get wroteReview => Intl.message('wrote a review');
 
+  String get addedPhoto => Intl.message('added a photo');
+
   String get wroteComment => Intl.message('wrote a comment');
 
   String get addedTip => Intl.message('added a tip');
@@ -118,6 +120,10 @@ class AppLocalizations {
   String get emailExampleText => Intl.message('you@example.com');
 
   String get tipExampleText => Intl.message('e.g. \"You can substitute a veggie patty for any burger.');
+
+  String get beTheFirstToLeaveTip => Intl.message('Be the first to leave a tip.');
+
+  String get beTheFirstToLeaveTipHelpText => Intl.message('Helpful hint for eating here? Share it below.');
 
   String get password => Intl.message('Password');
 

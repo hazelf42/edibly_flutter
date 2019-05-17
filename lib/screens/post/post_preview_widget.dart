@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,22 @@ class PostPreviewWidget extends StatelessWidget {
     return tagList;
   }
 
+  String _postTypeToText({
+    @required int postType,
+    @required AppLocalizations localizations,
+  }) {
+    switch (postType) {
+      case 0:
+        return localizations.wroteReview;
+      case 1:
+        return localizations.addedPhoto;
+      case 2:
+        return localizations.addedTip;
+      default:
+        return '';
+    }
+  }
+
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
     return StreamBuilder<Event>(
       stream: mainBloc.getUser(post.value['reviewingUserId'].toString()),
@@ -41,7 +58,7 @@ class PostPreviewWidget extends StatelessWidget {
             children: <Widget>[
               CircleAvatar(
                 radius: 24.0,
-                backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl']),
+                backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL']),
                 child: authorValue == null
                     ? SizedBox(
                         width: 46.0,
@@ -92,7 +109,10 @@ class PostPreviewWidget extends StatelessWidget {
                                 height: 4.0,
                               ),
                               SingleLineText(
-                                '${post.value['postType'] == 0 ? localizations.wroteReview : localizations.addedTip} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timeStamp'].toString())).toInt() * 1000))}',
+                                '${_postTypeToText(
+                                  postType: post.value['postType'],
+                                  localizations: localizations,
+                                )} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timeStamp'].toString())).toInt() * 1000))}',
                                 style: TextStyle(
                                   color: Theme.of(context).hintColor,
                                   fontSize: 12,
@@ -120,10 +140,17 @@ class PostPreviewWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Image.network(
-          photoURL,
+        CachedNetworkImage(
+          imageUrl: photoURL,
           height: 120.0,
           fit: BoxFit.cover,
+          placeholder: (context, imageUrl) {
+            return Container(
+              height: 120.0,
+              alignment: Alignment.center,
+              child: CircularProgressIndicator(),
+            );
+          },
         ),
         Container(
           height: 12.0,
@@ -186,23 +213,20 @@ class PostPreviewWidget extends StatelessWidget {
     if (post.value['tagArray'] == null || post.value['tagArray'].toString().isEmpty) {
       return Container();
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Container(
-          height: 12.0,
-        ),
-        Wrap(
-          spacing: 8.0,
-          runSpacing: 8.0,
-          children: dynamicTagArrayToTagList(post.value['tagArray']).map((tag) {
-            return Chip(
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              label: SingleLineText(tag),
-            );
-          }).toList(),
-        ),
-      ],
+    List<String> tags = dynamicTagArrayToTagList(post.value['tagArray']);
+    return Container(
+      height: 32.0,
+      margin: const EdgeInsets.only(top: 12.0),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        separatorBuilder: (context, position) {
+          return Container(width: 8.0, height: 1.0);
+        },
+        itemCount: tags.length,
+        itemBuilder: (context, position) {
+          return CustomTag(tags.elementAt(position));
+        },
+      ),
     );
   }
 
@@ -269,7 +293,7 @@ class PostPreviewWidget extends StatelessWidget {
           ),
           _photo(
             mainBloc: mainBloc,
-            photoURL: post.value['imageUrl'],
+            photoURL: post.value['imageUrl'] ?? post.value['imageURL'],
           ),
           Container(
             padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 0.0),
@@ -277,7 +301,7 @@ class PostPreviewWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  post.value['restaurantName'],
+                  post.value['restaurantName'] ?? '',
                   style: Theme.of(context).textTheme.title,
                 ),
                 _rating(

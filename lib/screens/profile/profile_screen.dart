@@ -27,7 +27,7 @@ class ProfileScreen extends StatelessWidget {
             children: <Widget>[
               CircleAvatar(
                 radius: 36.0,
-                backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl']),
+                backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL']),
                 child: authorValue == null
                     ? SizedBox(
                         width: 70.0,

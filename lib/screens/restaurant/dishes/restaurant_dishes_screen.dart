@@ -210,10 +210,13 @@ class RestaurantDishesScreen extends StatelessWidget {
 
                         return DefaultTabController(
                           length: 3,
+                          initialIndex: 1,
                           child: Scaffold(
                             appBar: AppBar(
                               title: SingleLineText(restaurantName),
                               bottom: TabBar(
+                                indicatorWeight: 3.0,
+                                indicatorColor: Theme.of(context).brightness == Brightness.dark ? null : Colors.white,
                                 tabs: [
                                   Tab(icon: Icon(Icons.local_pizza), text: localizations.appetizers),
                                   Tab(icon: Icon(Icons.restaurant), text: localizations.entrees),

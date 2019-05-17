@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:edibly/values/app_colors.dart';
+
 class SingleLineText extends StatelessWidget {
   final String data;
   final TextStyle style;
@@ -85,6 +87,37 @@ class BoldFlatIconButton extends StatelessWidget {
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: textColor,
+        ),
+      ),
+    );
+  }
+}
+
+class CustomTag extends StatelessWidget {
+  final String text;
+
+  CustomTag(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: 4.0,
+          horizontal: 8.0,
+        ),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6.0),
+            border: Border.all(
+              width: 1.5,
+              color: AppColors.primarySwatch.shade600,
+            )),
+        child: SingleLineText(
+          text,
+          style: TextStyle(
+            color: AppColors.primarySwatch.shade600,
+            fontSize: 13.0,
+          ),
         ),
       ),
     );

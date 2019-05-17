@@ -62,6 +62,13 @@ class RestaurantReviewsScreen extends StatelessWidget {
                               color: Theme.of(context).hintColor,
                             ),
                           ),
+                          Container(
+                            height: 12.0,
+                          ),
+                          RaisedButton(
+                            onPressed: () {},
+                            child: SingleLineText(localizations.addReview.toUpperCase()),
+                          ),
                         ],
                       ),
                     );

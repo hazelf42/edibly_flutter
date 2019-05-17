@@ -1,17 +1,22 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edibly/screens/restaurant/photos/restaurant_photos_bloc.dart';
+import 'package:edibly/screens/restaurant/restaurant_screen.dart';
+import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 
 class RestaurantPhotosScreen extends StatelessWidget {
+  final String firebaseUserId;
   final String restaurantName;
   final String restaurantKey;
 
   RestaurantPhotosScreen({
+    @required this.firebaseUserId,
     @required this.restaurantName,
     @required this.restaurantKey,
   });
@@ -23,10 +28,15 @@ class RestaurantPhotosScreen extends StatelessWidget {
       appBar: AppBar(
         title: SingleLineText(restaurantName),
       ),
-      body: DisposableProvider<RestaurantPhotosBloc>(
-        packageBuilder: (context) => RestaurantPhotosBloc(restaurantKey: restaurantKey),
+      body: MultiProvider(
+        providers: [
+          DisposableProvider<RestaurantBloc>(
+              packageBuilder: (context) => RestaurantBloc(firebaseUserId: firebaseUserId, restaurantKey: restaurantKey)),
+          DisposableProvider<RestaurantPhotosBloc>(packageBuilder: (context) => RestaurantPhotosBloc(restaurantKey: restaurantKey)),
+        ],
         child: Builder(
           builder: (context) {
+            final RestaurantBloc restaurantBloc = Provider.of<RestaurantBloc>(context);
             final RestaurantPhotosBloc restaurantPhotosBloc = Provider.of<RestaurantPhotosBloc>(context);
             return Container(
               alignment: Alignment.center,
@@ -58,6 +68,20 @@ class RestaurantPhotosScreen extends StatelessWidget {
                               color: Theme.of(context).hintColor,
                             ),
                           ),
+                          Container(
+                            height: 12.0,
+                          ),
+                          RaisedButton(
+                            onPressed: () {
+                              RestaurantScreen.showAddImageDialog(
+                                context: context,
+                                restaurantBloc: restaurantBloc,
+                                localizations: localizations,
+                                restaurantName: restaurantName,
+                              );
+                            },
+                            child: SingleLineText(localizations.addPhoto.toUpperCase()),
+                          ),
                         ],
                       ),
                     );
@@ -77,9 +101,16 @@ class RestaurantPhotosScreen extends StatelessWidget {
                                   ),
                             ));
                           },
-                          child: Image.network(
-                            restaurantPhotosMap.entries.elementAt(position).value['imageUrl'],
+                          child: CachedNetworkImage(
+                            imageUrl: restaurantPhotosMap.entries.elementAt(position).value['imageUrl'],
                             fit: BoxFit.cover,
+                            placeholder: (context, imageUrl) {
+                              return Container(
+                                height: 120.0,
+                                alignment: Alignment.center,
+                                child: CircularProgressIndicator(),
+                              );
+                            },
                           ),
                         );
                       },

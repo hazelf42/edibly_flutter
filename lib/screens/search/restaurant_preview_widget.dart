@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -66,13 +67,14 @@ class RestaurantPreviewWidget extends StatelessWidget {
   }
 
   Widget _address() {
-    if (restaurant?.value == null || restaurant.value['address'] == null) {
+    if (restaurant?.value == null ||
+        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']) == null) {
       return Container();
     }
     return Container(
       margin: const EdgeInsets.only(top: 4.0),
       child: Text(
-        restaurant.value['address'].toString().trim() ?? '',
+        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']).toString().trim() ?? '',
       ),
     );
   }
@@ -81,30 +83,39 @@ class RestaurantPreviewWidget extends StatelessWidget {
     if (value == null || value['tagDict'] == null || value['tagDict'].toString().isEmpty) {
       return Container();
     }
+    List<Data> tags = dynamicTagArrayToTagList(value['tagDict']);
+    tags.sort((a, b) => b.value - a.value);
     return Container(
-      margin: const EdgeInsets.only(top: 6.0),
-      child: Wrap(
-        spacing: 6.0,
-        runSpacing: 6.0,
-        children: dynamicTagArrayToTagList(value['tagDict']).map((tag) {
-          return Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: 4.0,
-              horizontal: 8.0,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).chipTheme.backgroundColor,
-              borderRadius: BorderRadius.circular(16.0),
-            ),
-            child: SingleLineText(
-              '${tag.key} (${tag.value})',
-              style: TextStyle(
-                fontSize: 12.0,
-              ),
-            ),
-          );
-        }).toList(),
+      height: 32.0,
+      margin: const EdgeInsets.only(top: 6.0, right: 12.0),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        separatorBuilder: (context, position) {
+          return Container(width: 8.0, height: 1.0);
+        },
+        itemCount: tags.length,
+        itemBuilder: (context, position) {
+          return CustomTag('${tags.elementAt(position).key} (${tags.elementAt(position).value})');
+        },
       ),
+    );
+  }
+
+  Widget _bookmarkButton({@required SearchBloc searchBloc}) {
+    return StreamBuilder<Event>(
+      stream: searchBloc.getRestaurantBookmarkValue(firebaseUser.uid, restaurant.key),
+      builder: (context, bookmarkValueSnapshot) {
+        bool bookmarked = bookmarkValueSnapshot?.data?.snapshot?.value == 1;
+        return IconButton(
+          icon: Icon(
+            bookmarked ? Icons.bookmark : Icons.bookmark_border,
+            color: bookmarked ? AppColors.primarySwatch.shade600 : Theme.of(context).disabledColor,
+          ),
+          onPressed: () {
+            searchBloc.setRestaurantBookmarkValue(firebaseUser.uid, restaurant.key, !bookmarked);
+          },
+        );
+      },
     );
   }
 
@@ -138,13 +149,24 @@ class RestaurantPreviewWidget extends StatelessWidget {
                 width: 70.0,
                 height: 70.0,
                 color: Colors.white,
-                child: FadeInImage(
-                  image: restaurant.value['photoUrl'] != null
-                      ? (NetworkImage(restaurant.value['photoUrl'] ?? ''))
-                      : AssetImage('assets/drawables/ic_launcher.png'),
-                  placeholder: AssetImage('assets/drawables/ic_launcher.png'),
+                child: CachedNetworkImage(
+                  imageUrl: restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '',
                   width: 70.0,
                   height: 70.0,
+                  errorWidget: (context, imageUrl, error) {
+                    return Container(
+                      height: 120.0,
+                      alignment: Alignment.center,
+                      child: Image.asset('assets/drawables/ic_launcher.png'),
+                    );
+                  },
+                  placeholder: (context, imageUrl) {
+                    return Container(
+                      height: 120.0,
+                      alignment: Alignment.center,
+                      child: CircularProgressIndicator(),
+                    );
+                  },
                 ),
               ),
             ),
@@ -155,18 +177,32 @@ class RestaurantPreviewWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Text(
-                      restaurant.value['name'] ?? '',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15.0,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                restaurant.value['name'] ?? '',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15.0,
+                                ),
+                              ),
+                              _rating(
+                                context: context,
+                                value: restaurant.value['rating'],
+                              ),
+                              _address(),
+                            ],
+                          ),
+                        ),
+                        _bookmarkButton(searchBloc: searchBloc),
+                      ],
                     ),
-                    _rating(
-                      context: context,
-                      value: restaurant.value['rating'],
-                    ),
-                    _address(),
                     _tags(
                       context: context,
                       value: restaurant.value['rating'],
@@ -174,21 +210,6 @@ class RestaurantPreviewWidget extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-            StreamBuilder<Event>(
-              stream: searchBloc.getRestaurantBookmarkValue(firebaseUser.uid, restaurant.key),
-              builder: (context, bookmarkValueSnapshot) {
-                bool bookmarked = bookmarkValueSnapshot?.data?.snapshot?.value == 1;
-                return IconButton(
-                  icon: Icon(
-                    bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    color: bookmarked ? AppColors.primarySwatch.shade600 : Theme.of(context).disabledColor,
-                  ),
-                  onPressed: () {
-                    searchBloc.setRestaurantBookmarkValue(firebaseUser.uid, restaurant.key, !bookmarked);
-                  },
-                );
-              },
             ),
           ],
         ),

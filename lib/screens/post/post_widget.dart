@@ -163,7 +163,7 @@ class PostCommentWidget extends StatelessWidget {
           children: <Widget>[
             CircleAvatar(
               radius: 18.0,
-              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl']),
+              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL']),
               child: authorValue == null
                   ? SizedBox(
                       width: 36.0,
@@ -291,7 +291,7 @@ class PostWidget extends StatelessWidget {
               children: <Widget>[
                 CircleAvatar(
                   radius: 24.0,
-                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl']),
+                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL']),
                   child: authorValue == null
                       ? SizedBox(
                           width: 46.0,
@@ -369,13 +369,15 @@ class PostWidget extends StatelessWidget {
       stream: mainBloc.getRestaurant(post.value['restaurantKey'].toString()),
       builder: (context, snapshot) {
         Map<dynamic, dynamic> restaurantValue = snapshot?.data?.snapshot?.value;
-        if (restaurantValue == null || restaurantValue['address'] == null || restaurantValue['address'].toString().isEmpty) {
+        if (restaurantValue == null ||
+            (restaurantValue['address'] ?? restaurantValue['address1'] ?? restaurantValue['address2']) == null ||
+            (restaurantValue['address'] ?? restaurantValue['address1'] ?? restaurantValue['address2']).toString().isEmpty) {
           return Container();
         }
         return Container(
           padding: const EdgeInsets.fromLTRB(0.0, 8.0, 0.0, 0.0),
           child: Text(
-            '${localizations.address}: ${restaurantValue['address']}',
+            '${localizations.address}: ${(restaurantValue['address'] ?? restaurantValue['address1'] ?? restaurantValue['address2'])}',
             style: TextStyle(
               fontStyle: FontStyle.italic,
             ),
@@ -472,23 +474,20 @@ class PostWidget extends StatelessWidget {
     if (post.value['tagArray'] == null || post.value['tagArray'].toString().isEmpty) {
       return Container();
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Container(
-          height: 12.0,
-        ),
-        Wrap(
-          spacing: 8.0,
-          runSpacing: 8.0,
-          children: dynamicTagArrayToTagList(post.value['tagArray']).map((tag) {
-            return Chip(
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              label: SingleLineText(tag),
-            );
-          }).toList(),
-        ),
-      ],
+    List<String> tags = dynamicTagArrayToTagList(post.value['tagArray']);
+    return Container(
+      height: 32.0,
+      margin: const EdgeInsets.only(top: 12.0),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        separatorBuilder: (context, position) {
+          return Container(width: 8.0, height: 1.0);
+        },
+        itemCount: tags.length,
+        itemBuilder: (context, position) {
+          return CustomTag(tags.elementAt(position));
+        },
+      ),
     );
   }
 

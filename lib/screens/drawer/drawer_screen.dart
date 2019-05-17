@@ -34,7 +34,7 @@ class DrawerScreen extends StatelessWidget {
             children: <Widget>[
               CircleAvatar(
                 radius: 24.0,
-                backgroundImage: map == null ? null : NetworkImage(map['photoUrl']),
+                backgroundImage: map == null ? null : NetworkImage(map['photoUrl'] ?? map['photoURL']),
                 child: map == null
                     ? SizedBox(
                         width: 46.0,
