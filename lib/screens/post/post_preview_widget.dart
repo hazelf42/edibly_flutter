@@ -4,7 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as TimeAgo;
 
-import 'package:edibly/screens/post/post_widget.dart';
+import 'package:edibly/screens/post/post_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/values/app_colors.dart';

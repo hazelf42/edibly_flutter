@@ -95,8 +95,55 @@ class BoldFlatIconButton extends StatelessWidget {
 
 class CustomTag extends StatelessWidget {
   final String text;
+  final bool disabled;
+  final bool selected;
+  final double fontSize;
 
-  CustomTag(this.text);
+  CustomTag(
+    this.text, {
+    this.disabled = false,
+    this.selected = false,
+    this.fontSize = 13.0,
+  });
+
+  BoxDecoration _boxDecoration({@required BuildContext context}) {
+    if (disabled) {
+      return BoxDecoration(
+        borderRadius: BorderRadius.circular(6.0),
+        border: Border.all(
+          width: 1.5,
+          color: Theme.of(context).disabledColor,
+        ),
+      );
+    } else if (selected) {
+      return BoxDecoration(
+        borderRadius: BorderRadius.circular(6.0),
+        border: Border.all(
+          width: 1.5,
+          color: AppColors.primarySwatch.shade600,
+        ),
+        color: AppColors.primarySwatch.shade600,
+      );
+    } else {
+      return BoxDecoration(
+        borderRadius: BorderRadius.circular(6.0),
+        border: Border.all(
+          width: 1.5,
+          color: AppColors.primarySwatch.shade600,
+        ),
+      );
+    }
+  }
+
+  Color _textColor({@required BuildContext context}) {
+    if (disabled) {
+      return Theme.of(context).disabledColor;
+    } else if (selected) {
+      return Colors.white;
+    } else {
+      return AppColors.primarySwatch.shade600;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,17 +153,12 @@ class CustomTag extends StatelessWidget {
           vertical: 4.0,
           horizontal: 8.0,
         ),
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6.0),
-            border: Border.all(
-              width: 1.5,
-              color: AppColors.primarySwatch.shade600,
-            )),
+        decoration: _boxDecoration(context: context),
         child: SingleLineText(
           text,
           style: TextStyle(
-            color: AppColors.primarySwatch.shade600,
-            fontSize: 13.0,
+            color: _textColor(context: context),
+            fontSize: fontSize,
           ),
         ),
       ),

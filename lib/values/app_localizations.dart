@@ -72,6 +72,8 @@ class AppLocalizations {
 
   String get tipAddedSuccessText => Intl.message('Thanks for the tip.');
 
+  String get reviewAddedSuccessText => Intl.message('Thanks for the review.');
+
   String get photoAddedSuccessText => Intl.message('Thanks for the photo.');
 
   String get updatePasswordSuccessText => Intl.message('We have updated your password.');
@@ -131,6 +133,8 @@ class AppLocalizations {
 
   String get newPassword => Intl.message('New password');
 
+  String get next => Intl.message('Next');
+
   String get incorrectCredentials => Intl.message('Username or password is incorrect.');
 
   String get networkRequestFailed => Intl.message('Something went wrong. Check your Internet connection and try again.');
@@ -144,6 +148,8 @@ class AppLocalizations {
   String get noTipsText => Intl.message('No tips here yet.');
 
   String get nothingHereText => Intl.message('Nothing here yet.');
+
+  String get other => Intl.message('Other');
 
   String get noVeganOptionsText => Intl.message('Either there are no vegan options, or an error has occured.');
 
@@ -179,6 +185,8 @@ class AppLocalizations {
 
   String get addTip => Intl.message('Add tip');
 
+  String get addTags => Intl.message('Add tags (max: 3)');
+
   String get add => Intl.message('Add');
 
   String get appetizers => Intl.message('Appetizers');
@@ -188,6 +196,8 @@ class AppLocalizations {
   String get sides => Intl.message('Sides');
 
   String get addPhoto => Intl.message('Add photo');
+
+  String get rateTheRestaurant => Intl.message('Rate the restaurant *');
 
   String get pickFromGallery => Intl.message('Pick from gallery');
 
@@ -232,6 +242,17 @@ class AppLocalizations {
   }
 
   String get aboutText => Intl.message('Learn more about Edibly at ${Constants.website}.');
+
+  List<String> get tagArray {
+    return [
+      Intl.message('Variety'),
+      Intl.message('Great Food'),
+      Intl.message('Service'),
+      Intl.message('Atmosphere'),
+      Intl.message('Price'),
+      Intl.message('Healthy'),
+    ];
+  }
 }
 
 class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

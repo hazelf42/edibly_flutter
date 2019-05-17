@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:edibly/screens/restaurant/reviews/restaurant_reviews_bloc.dart';
+import 'package:edibly/screens/new_post/new_post_screen.dart';
 import 'package:edibly/screens/post/post_preview_widget.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
@@ -8,10 +9,12 @@ import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 
 class RestaurantReviewsScreen extends StatelessWidget {
+  final String firebaseUserId;
   final String restaurantName;
   final String restaurantKey;
 
   RestaurantReviewsScreen({
+    @required this.firebaseUserId,
     @required this.restaurantName,
     @required this.restaurantKey,
   });
@@ -66,7 +69,23 @@ class RestaurantReviewsScreen extends StatelessWidget {
                             height: 12.0,
                           ),
                           RaisedButton(
-                            onPressed: () {},
+                            onPressed: () async{
+                              final addedNewPost = await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => NewPostScreen(
+                                    firebaseUserId: firebaseUserId,
+                                    restaurantName: restaurantName,
+                                    restaurantKey: restaurantKey,
+                                  ),
+                                ),
+                              );
+                              if (addedNewPost != null && addedNewPost is bool && addedNewPost) {
+                                final snackBar = SnackBar(
+                                  content: Text(localizations.reviewAddedSuccessText),
+                                );
+                                Scaffold.of(context).showSnackBar(snackBar);
+                              }
+                            },
                             child: SingleLineText(localizations.addReview.toUpperCase()),
                           ),
                         ],

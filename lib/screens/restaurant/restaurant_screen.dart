@@ -12,6 +12,7 @@ import 'package:edibly/screens/restaurant/dishes/restaurant_dishes_screen.dart';
 import 'package:edibly/screens/restaurant/photos/restaurant_photos_screen.dart';
 import 'package:edibly/screens/restaurant/tips/restaurant_tips_screen.dart';
 import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
+import 'package:edibly/screens/new_post/new_post_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/values/app_colors.dart';
@@ -423,7 +424,23 @@ class RestaurantScreen extends StatelessWidget {
         children: <Widget>[
           RaisedButton(
             color: AppColors.primarySwatch.shade400,
-            onPressed: () {},
+            onPressed: () async {
+              final addedNewPost = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => NewPostScreen(
+                        firebaseUserId: firebaseUserId,
+                        restaurantName: restaurantName,
+                        restaurantKey: restaurantKey,
+                      ),
+                ),
+              );
+              if (addedNewPost != null && addedNewPost is bool && addedNewPost) {
+                final snackBar = SnackBar(
+                  content: Text(localizations.reviewAddedSuccessText),
+                );
+                Scaffold.of(context).showSnackBar(snackBar);
+              }
+            },
             child: Text(
               localizations.addReview.toUpperCase(),
               style: TextStyle(
@@ -779,6 +796,7 @@ class RestaurantScreen extends StatelessWidget {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) => RestaurantReviewsScreen(
+                                        firebaseUserId: firebaseUserId,
                                         restaurantName: restaurantSnapshot.data.value['name'],
                                         restaurantKey: restaurantKey,
                                       ),

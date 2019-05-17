@@ -97,7 +97,7 @@ class PostCommentsWidget extends StatelessWidget {
                             itemCount: (postsSnapshot.data == null ? 0 : postsSnapshot.data.length) + 1,
                             itemBuilder: (context, position) {
                               if (position == 0) {
-                                return PostWidget(
+                                return PostScreen(
                                   uid: uid,
                                   post: post,
                                 );
@@ -251,11 +251,11 @@ class PostCommentWidget extends StatelessWidget {
   }
 }
 
-class PostWidget extends StatelessWidget {
+class PostScreen extends StatelessWidget {
   final String uid;
   final Data post;
 
-  PostWidget({
+  PostScreen({
     @required this.uid,
     @required this.post,
   });
