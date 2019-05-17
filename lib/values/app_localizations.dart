@@ -203,6 +203,8 @@ class AppLocalizations {
 
   String get takePicture => Intl.message('Take a picture');
 
+  String get yourCanWriteYourReviewHere => Intl.message('You can write your review here.');
+
   String get searchScreenFooterTitleText => Intl.message('That is all for now.');
 
   String get searchScreenFooterDescriptionText => Intl.message(
