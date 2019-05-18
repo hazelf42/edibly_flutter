@@ -40,7 +40,7 @@ class NewPostDescriptionScreen extends StatelessWidget {
             allowHalfRating: true,
             starCount: 5,
             rating: rating / 2.0 - 0.1,
-            size: (MediaQuery.of(context).size.width - 64.0) / 10,
+            size: 24.0,
             color: AppColors.primarySwatch.shade900,
             borderColor: AppColors.primarySwatch.shade900,
           ),
@@ -51,7 +51,7 @@ class NewPostDescriptionScreen extends StatelessWidget {
               (rating / 2.0).toStringAsFixed(1),
               style: TextStyle(
                 color: AppColors.primarySwatch.shade900,
-                fontSize: (MediaQuery.of(context).size.width - 64.0) / 12.5,
+                fontSize: 20.0,
               ),
               textAlign: TextAlign.center,
             ),
@@ -70,6 +70,7 @@ class NewPostDescriptionScreen extends StatelessWidget {
       ),
       body: DisposableProvider<NewPostBloc>(
         packageBuilder: (context) => NewPostBloc(
+              firebaseUserId: firebaseUserId,
               restaurantKey: restaurantKey,
             ),
         child: Builder(

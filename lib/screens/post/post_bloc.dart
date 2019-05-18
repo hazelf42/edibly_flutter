@@ -139,7 +139,7 @@ class PostBloc {
   void addComment(String comment, String uid) {
     DatabaseReference reference = _firebaseDatabase.reference().child('comments').child(post.key).push();
     var value = {
-      'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
+      'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
       'postId': post.key,
       'commentText': comment,
       'userId': uid,

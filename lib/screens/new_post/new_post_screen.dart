@@ -11,8 +11,10 @@ import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/values/app_colors.dart';
 import 'package:edibly/custom/widgets.dart';
+import 'package:edibly/models/data.dart';
 
 class NewPostScreen extends StatelessWidget {
+  final TextEditingController tagEditingController = TextEditingController();
   final String firebaseUserId;
   final String restaurantName;
   final String restaurantKey;
@@ -78,10 +80,13 @@ class NewPostScreen extends StatelessWidget {
     @required NewPostBloc newPostBloc,
     @required AppLocalizations localizations,
   }) {
-    var tagArray = localizations.tagArray;
-    return StreamBuilder<List<String>>(
+    return StreamBuilder<List<Data>>(
       stream: newPostBloc.tags,
       builder: (context, snapshot) {
+        if (snapshot?.data == null) {
+          newPostBloc.addTags(localizations.tagArray);
+          return Container();
+        }
         return Container(
           height: 32.0,
           child: ListView.separated(
@@ -89,7 +94,7 @@ class NewPostScreen extends StatelessWidget {
             separatorBuilder: (context, position) {
               return Container(width: 8.0, height: 1.0);
             },
-            itemCount: tagArray.length + 1,
+            itemCount: snapshot.data.length + 1,
             itemBuilder: (context, position) {
               if (position == 0) {
                 return Center(
@@ -105,6 +110,11 @@ class NewPostScreen extends StatelessWidget {
                       ),
                     ),
                     child: TextField(
+                      controller: tagEditingController,
+                      onSubmitted: (newTag) {
+                        newPostBloc.addTag(newTag);
+                        tagEditingController.clear();
+                      },
                       textAlign: TextAlign.center,
                       decoration: InputDecoration(
                         hintText: localizations.other,
@@ -122,20 +132,20 @@ class NewPostScreen extends StatelessWidget {
                   ),
                 );
               }
-              String tag = tagArray.elementAt(position - 1);
+              Data tag = snapshot.data.elementAt(position - 1);
               return GestureDetector(
                 onTap: () {
-                  if ((snapshot?.data ?? []).contains(tag)) {
-                    newPostBloc.removeTag(tag);
+                  if (snapshot.data.where((t) => t.key == tag.key && t.value == true).isNotEmpty) {
+                    newPostBloc.removeTag(tag.key);
                   } else {
-                    newPostBloc.addTag(tag);
+                    newPostBloc.addTag(tag.key);
                   }
                 },
                 behavior: HitTestBehavior.translucent,
                 child: CustomTag(
-                  tag,
-                  disabled: !(snapshot?.data ?? []).contains(tag),
-                  selected: (snapshot?.data ?? []).contains(tag),
+                  tag.key,
+                  disabled: !(snapshot?.data ?? []).where((t) => t.key == tag.key && t.value == true).isNotEmpty,
+                  selected: (snapshot?.data ?? []).where((t) => t.key == tag.key && t.value == true).isNotEmpty,
                   fontSize: 16.0,
                 ),
               );
@@ -155,6 +165,7 @@ class NewPostScreen extends StatelessWidget {
       ),
       body: DisposableProvider<NewPostBloc>(
         packageBuilder: (context) => NewPostBloc(
+              firebaseUserId: firebaseUserId,
               restaurantKey: restaurantKey,
             ),
         child: Builder(
@@ -221,26 +232,28 @@ class NewPostScreen extends StatelessWidget {
                     ),
                     Container(width: 12.0),
                     Expanded(
-                      child: StreamBuilder(builder: (context, photoSnapshot) {
-                        return photoSnapshot.hasData
-                            ? Image.file(
-                                photoSnapshot?.data,
-                              )
-                            : Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.primarySwatch.shade400,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.image,
-                                  color: AppColors.primarySwatch.shade400,
-                                ),
-                                width: 90.0,
-                                height: 90.0,
-                              );
-                      }),
+                      child: StreamBuilder(
+                          stream: newPostBloc.photo,
+                          builder: (context, photoSnapshot) {
+                            return photoSnapshot.hasData
+                                ? Image.file(
+                                    photoSnapshot?.data,
+                                    height: 90.0,
+                                  )
+                                : Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: AppColors.primarySwatch.shade400,
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      Icons.image,
+                                      color: AppColors.primarySwatch.shade400,
+                                    ),
+                                    height: 90.0,
+                                  );
+                          }),
                     ),
                   ],
                 ),
@@ -268,7 +281,11 @@ class NewPostScreen extends StatelessWidget {
                           : () {
                               double rating = snapshot.data ?? 0;
                               File photo = newPostBloc.photoValue();
-                              List<String> tags = newPostBloc.tagsValue() ?? [];
+                              List<Data> tags = newPostBloc.tagsValue() ?? [];
+                              List<String> selectedTags = [];
+                              tags.forEach((tag) {
+                                if (tag.value) selectedTags.add(tag.key);
+                              });
                               if (rating != 0) {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
@@ -279,7 +296,7 @@ class NewPostScreen extends StatelessWidget {
                                         restaurantKey: restaurantKey,
                                         rating: rating,
                                         photo: photo,
-                                        tags: tags,
+                                        tags: selectedTags,
                                       );
                                     },
                                   ),

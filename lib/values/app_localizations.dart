@@ -189,6 +189,8 @@ class AppLocalizations {
 
   String get addTip => Intl.message('Add tip');
 
+  String get addDish => Intl.message('Add a dish');
+
   String get addTags => Intl.message('Add tags (max: 3)');
 
   String get add => Intl.message('Add');
@@ -217,6 +219,10 @@ class AppLocalizations {
   String get vegetarianUponRequest => Intl.message('Vegetarian upon request');
 
   String get veganUponRequest => Intl.message('Vegan upon request');
+
+  String get reviewDishesQuestionText => Intl.message('What did you have to eat?');
+
+  String get reviewDishesHelpText => Intl.message('Swipe right to upvote, left to downvote, tap to deselect.');
 
   String ratingText(int rating) {
     if (rating == 0) {

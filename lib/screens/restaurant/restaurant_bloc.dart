@@ -113,7 +113,7 @@ class RestaurantBloc {
         'postType': 2,
         'comments': null,
         'reviewingUserId': firebaseUserId,
-        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
+        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
         'isATest': false,
       }).then((_) async {
         await _firebaseDatabase.reference().child('restaurantTips').child(restaurantKey).child(feedPostReference.key).set({
@@ -132,7 +132,7 @@ class RestaurantBloc {
           'postType': 2,
           'comments': null,
           'reviewingUserId': firebaseUserId,
-          'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
+          'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
           'isATest': false,
         });
         _addTipState.add(AddTipState.SUCCESSFUL);
@@ -169,7 +169,7 @@ class RestaurantBloc {
       await _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).push().set({
         'imageUrl': downloadUrl,
         'userId': firebaseUserId,
-        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
+        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
         'isATest': false,
       });
       DatabaseReference feedPostReference = _firebaseDatabase.reference().child('feedPosts').push();
@@ -184,7 +184,7 @@ class RestaurantBloc {
         'postType': 1,
         'comments': null,
         'reviewingUserId': firebaseUserId,
-        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
+        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
         'isATest': false,
       });
       await _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(feedPostReference.key).set({
@@ -198,7 +198,7 @@ class RestaurantBloc {
         'postType': 1,
         'comments': null,
         'reviewingUserId': firebaseUserId,
-        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
+        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
         'isATest': false,
       });
       _pickedPhotoUploadState.add(PickedPhotoUploadState.SUCCESSFUL);
@@ -226,6 +226,7 @@ class RestaurantBloc {
 
   void getRating() async {
     _firebaseDatabase.reference().child('restaurantRatings').child(restaurantKey).onValue.listen((event) {
+      print(event?.snapshot?.value?.toString());
       if (event?.snapshot?.key != null && event?.snapshot?.value != null) {
         _rating.add(Data(event.snapshot.key, event.snapshot.value));
       }
