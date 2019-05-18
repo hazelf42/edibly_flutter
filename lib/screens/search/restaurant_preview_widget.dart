@@ -45,8 +45,8 @@ class RestaurantPreviewWidget extends StatelessWidget {
           children: <Widget>[
             SmoothStarRating(
               allowHalfRating: true,
-              starCount: 10,
-              rating: value['numRating'] / 1.0,
+              starCount: 5,
+              rating: value['numRating'] / 2.0 - 0.1,
               size: 16.0,
               color: AppColors.primarySwatch.shade900,
               borderColor: AppColors.primarySwatch.shade900,
@@ -55,7 +55,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              double.parse(value['numRating'].toString()).toStringAsFixed(1),
+              (double.parse(value['numRating'].toString()) / 2.0).toStringAsFixed(1),
               style: TextStyle(
                 color: Theme.of(context).hintColor,
               ),

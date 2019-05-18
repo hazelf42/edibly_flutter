@@ -283,9 +283,9 @@ class DishWidget extends StatelessWidget {
           children: <Widget>[
             SmoothStarRating(
               allowHalfRating: true,
-              starCount: 10,
+              starCount: 5,
               rating:
-                  (dish.value['rating']['isGoodCount'] / (dish.value['rating']['isBadCount'] + dish.value['rating']['isGoodCount'])) * 10,
+                  (dish.value['rating']['isGoodCount'] / (dish.value['rating']['isBadCount'] + dish.value['rating']['isGoodCount'])) * 5,
               size: 16.0,
               color: AppColors.primarySwatch.shade900,
               borderColor: AppColors.primarySwatch.shade900,
@@ -294,7 +294,7 @@ class DishWidget extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              ((dish.value['rating']['isGoodCount'] / (dish.value['rating']['isBadCount'] + dish.value['rating']['isGoodCount'])) * 10
+              ((dish.value['rating']['isGoodCount'] / (dish.value['rating']['isBadCount'] + dish.value['rating']['isGoodCount'])) * 5
                       as double)
                   .toStringAsFixed(1),
               style: TextStyle(

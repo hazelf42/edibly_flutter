@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
@@ -17,6 +19,7 @@ class ProfileBloc {
 
   /// Local  variables
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
+  StreamSubscription onChildAddedListener;
   bool _fetchStarted = false;
   int _postsInCurrentPage = 0;
   int _currentPage = 0;
@@ -48,11 +51,13 @@ class ProfileBloc {
     }
 
     /// started fetching a page
+    onChildAddedListener?.cancel();
     _fetchStarted = true;
 
     /// make sure we have an array to put things in
     List<Data> posts = _posts.value;
     if (posts == null) posts = [];
+    int oldPostsLength = posts.where((post) => post != null).length;
 
     /// if this is still the first page
     if (posts == null || posts.isEmpty) {
@@ -62,7 +67,7 @@ class ProfileBloc {
 
       /// network request
       Query query = _firebaseDatabase.reference().child('postsByUser/$uid').orderByKey().limitToLast(POSTS_PER_PAGE);
-      query.onChildAdded.listen((event) {
+      onChildAddedListener = query.onChildAdded.listen((event) {
         /// increment number of posts in current page
         _postsInCurrentPage++;
 
@@ -70,7 +75,7 @@ class ProfileBloc {
         posts.remove(null);
 
         /// insert newly acquired post to the start of new page
-        posts.insert(_currentPage * POSTS_PER_PAGE, Data(event?.snapshot?.key, event?.snapshot?.value));
+        posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
 
         /// if this was the last post in requested page, then show a circular loader at the end of page
         if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
@@ -79,6 +84,13 @@ class ProfileBloc {
         _posts.add(posts);
       });
       query.onValue.listen((event) {
+        _posts.add(posts);
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+
+        /// publish an update to the stream
         _posts.add(posts);
       });
     }
@@ -91,7 +103,7 @@ class ProfileBloc {
           .orderByKey()
           .endAt(posts.lastWhere((post) => post != null).key.toString())
           .limitToLast(POSTS_PER_PAGE + 1);
-      query.onChildAdded.listen((event) {
+      onChildAddedListener = query.onChildAdded.listen((event) {
         /// increment number of posts in current page
         _postsInCurrentPage++;
 
@@ -99,9 +111,9 @@ class ProfileBloc {
         posts.remove(null);
 
         /// do not insert duplicate posts
-        if (event?.snapshot?.key != posts[_currentPage * POSTS_PER_PAGE - 1].key) {
+        if (event?.snapshot?.key != posts[oldPostsLength - 1].key) {
           /// insert newly acquired post to the start of new page
-          posts.insert(_currentPage * POSTS_PER_PAGE, Data(event?.snapshot?.key, event?.snapshot?.value));
+          posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
         }
 
         /// if this was the last post in requested page, then show a circular loader at the end of page
@@ -112,12 +124,20 @@ class ProfileBloc {
       });
       query.onValue.listen((event) {
         _posts.add(posts);
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+
+        /// publish an update to the stream
+        _posts.add(posts);
       });
     }
   }
 
   /// Dispose function
   void dispose() {
+    onChildAddedListener?.cancel();
     _posts.close();
   }
 }

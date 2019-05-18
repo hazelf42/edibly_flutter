@@ -89,6 +89,8 @@ class AppLocalizations {
 
   String get logOutConfirmationText => Intl.message('Are you sure you want to log out?');
 
+  String get deleteConfirmationText => Intl.message('Are you sure you want delete this item?');
+
   String get about => Intl.message('About');
 
   String get email => Intl.message('Email');
@@ -134,6 +136,8 @@ class AppLocalizations {
   String get newPassword => Intl.message('New password');
 
   String get next => Intl.message('Next');
+
+  String get delete => Intl.message('Delete');
 
   String get incorrectCredentials => Intl.message('Username or password is incorrect.');
 

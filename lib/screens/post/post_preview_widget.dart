@@ -173,8 +173,8 @@ class PostPreviewWidget extends StatelessWidget {
           children: <Widget>[
             SmoothStarRating(
               allowHalfRating: true,
-              starCount: 10,
-              rating: post.value['numRating'] / 1.0,
+              starCount: 5,
+              rating: post.value['numRating'] / 2.0 - 0.1,
               size: 16.0,
               color: AppColors.primarySwatch.shade900,
               borderColor: AppColors.primarySwatch.shade900,
@@ -183,7 +183,7 @@ class PostPreviewWidget extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              post.value['numRating'].toString(),
+              (post.value['numRating'] / 2.0 as double).toStringAsFixed(1),
               style: TextStyle(
                 color: Theme.of(context).hintColor,
               ),
@@ -278,7 +278,7 @@ class PostPreviewWidget extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => PostCommentsWidget(
+              builder: (context) => PostScreen(
                     uid: uid,
                     post: post,
                   )),
@@ -333,7 +333,16 @@ class PostPreviewWidget extends StatelessWidget {
                     width: 8.0,
                   ),
                   BoldFlatButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => PostScreen(
+                                  uid: uid,
+                                  post: post,
+                                )),
+                      );
+                    },
                     text: localizations.comment.toUpperCase(),
                     textColor: AppColors.primarySwatch.shade900,
                   ),

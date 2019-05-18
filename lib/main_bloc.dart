@@ -1,11 +1,12 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:edibly/bloc_helper/validators.dart';
 import 'package:edibly/values/pref_keys.dart';
-import 'package:flutter/foundation.dart';
+import 'package:edibly/models/data.dart';
 
 enum Diet {
   VEGETARIAN,
@@ -83,6 +84,18 @@ class MainBloc extends Object with Validators {
 
   Stream<Event> getRestaurant(String key) {
     return _firebaseDatabase.reference().child('restaurants').child('$key').onValue;
+  }
+
+  void deletePost({
+    @required Data post,
+    @required String firebaseUserId,
+  }) {
+    _firebaseDatabase.reference().child('reviews').child(post.value['restaurantKey']).child(post.key).remove();
+    _firebaseDatabase.reference().child('dishReviews').child(post.value['restaurantKey']).child(post.key).remove();
+    _firebaseDatabase.reference().child('restaurantImages').child(post.value['restaurantKey']).child(post.key).remove();
+    _firebaseDatabase.reference().child('feedPosts').child(post.key).remove();
+    _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(post.key).remove();
+    _firebaseDatabase.reference().child('restaurantTips').child(post.value['restaurantKey']).child(post.key).remove();
   }
 
   /// Post like functions

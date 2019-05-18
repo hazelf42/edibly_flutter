@@ -43,24 +43,26 @@ class NewPostScreen extends StatelessWidget {
             children: <Widget>[
               SmoothStarRating(
                 allowHalfRating: true,
-                starCount: 10,
-                rating: snapshot?.data ?? 0,
-                size: (MediaQuery.of(context).size.width - 64.0) / 10,
+                starCount: 5,
+                rating: (snapshot?.data ?? 0).toDouble() / 2.0 - 0.1,
+                size: (MediaQuery.of(context).size.width - 80.0) / 5,
                 color: AppColors.primarySwatch.shade900,
                 borderColor: AppColors.primarySwatch.shade900,
                 onRatingChanged: (rating) {
-                  if (rating < 1) rating = 1;
-                  newPostBloc.setRating(rating.floor().toDouble());
+                  rating *= 2;
+                  int ratingInt = rating.floor();
+                  if (ratingInt < 2) ratingInt = 2;
+                  newPostBloc.setRating(ratingInt.toDouble());
                 },
               ),
               Container(
                 margin: const EdgeInsets.only(left: 8.0),
-                width: 32.0,
+                width: 48.0,
                 child: SingleLineText(
-                  (snapshot?.data ?? 0).toStringAsFixed(0),
+                  ((snapshot?.data ?? 0) / 2.0).toStringAsFixed(1),
                   style: TextStyle(
                     color: AppColors.primarySwatch.shade900,
-                    fontSize: (MediaQuery.of(context).size.width - 64.0) / 12.5,
+                    fontSize: (MediaQuery.of(context).size.width - 80.0) / 12.5,
                   ),
                   textAlign: TextAlign.center,
                 ),

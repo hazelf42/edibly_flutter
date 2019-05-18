@@ -38,8 +38,8 @@ class NewPostDescriptionScreen extends StatelessWidget {
         children: <Widget>[
           SmoothStarRating(
             allowHalfRating: true,
-            starCount: 10,
-            rating: rating,
+            starCount: 5,
+            rating: rating / 2.0 - 0.1,
             size: (MediaQuery.of(context).size.width - 64.0) / 10,
             color: AppColors.primarySwatch.shade900,
             borderColor: AppColors.primarySwatch.shade900,
@@ -48,7 +48,7 @@ class NewPostDescriptionScreen extends StatelessWidget {
             margin: const EdgeInsets.only(left: 8.0),
             width: 32.0,
             child: SingleLineText(
-              rating.toStringAsFixed(0),
+              (rating / 2.0).toStringAsFixed(1),
               style: TextStyle(
                 color: AppColors.primarySwatch.shade900,
                 fontSize: (MediaQuery.of(context).size.width - 64.0) / 12.5,

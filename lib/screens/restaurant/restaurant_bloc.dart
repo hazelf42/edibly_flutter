@@ -101,24 +101,24 @@ class RestaurantBloc {
     }
 
     if (!tipIsEmpty) {
-      _firebaseDatabase.reference().child('restaurantTips').child(restaurantKey).push().set({
-        'tipUserId': firebaseUserId,
+      DatabaseReference feedPostReference = _firebaseDatabase.reference().child('feedPosts').push();
+      feedPostReference.set({
         'description': tip,
+        'tagArray': null,
+        'otherTags': null,
+        'restaurantName': restaurantName,
+        'restaurantKey': restaurantKey,
+        'numRating': null,
+        'imageUrl': null,
+        'postType': 2,
+        'comments': null,
+        'reviewingUserId': firebaseUserId,
+        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
         'isATest': false,
       }).then((_) async {
-        DatabaseReference feedPostReference = _firebaseDatabase.reference().child('feedPosts').push();
-        await feedPostReference.set({
+        await _firebaseDatabase.reference().child('restaurantTips').child(restaurantKey).child(feedPostReference.key).set({
+          'tipUserId': firebaseUserId,
           'description': tip,
-          'tagArray': null,
-          'otherTags': null,
-          'restaurantName': restaurantName,
-          'restaurantKey': restaurantKey,
-          'numRating': null,
-          'imageUrl': null,
-          'postType': 2,
-          'comments': null,
-          'reviewingUserId': firebaseUserId,
-          'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
           'isATest': false,
         });
         await _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(feedPostReference.key).set({

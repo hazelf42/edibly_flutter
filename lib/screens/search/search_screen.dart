@@ -9,6 +9,7 @@ import 'package:edibly/screens/restaurant/restaurant_screen.dart';
 import 'package:edibly/screens/search/search_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
+import 'package:edibly/values/app_colors.dart';
 import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 
@@ -22,6 +23,7 @@ class SearchScreen extends StatelessWidget {
     @required AsyncSnapshot<LatLng> currentLocationSnapshot,
     @required AsyncSnapshot<List<Data>> allRestaurantsSnapshot,
   }) {
+    // ignore: sdk_version_set_literal
     Set<Marker> markers = {};
     if (allRestaurantsSnapshot?.data != null) {
       allRestaurantsSnapshot.data.forEach((data) {
@@ -218,7 +220,11 @@ class SearchScreen extends StatelessWidget {
           Container(height: 12.0),
           RaisedButton(
             onPressed: () {},
-            child: Text(localizations.addReview),
+            color: AppColors.primarySwatch.shade400,
+            child: Text(
+              localizations.addReview,
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

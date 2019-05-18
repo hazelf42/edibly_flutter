@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
@@ -17,6 +19,7 @@ class PostBloc {
 
   /// Local  variables
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
+  StreamSubscription onChildAddedListener;
   bool _fetchStarted = false;
   int _commentsInCurrentPage = 0;
   int _currentPage = 0;
@@ -48,11 +51,13 @@ class PostBloc {
     }
 
     /// started fetching a page
+    onChildAddedListener?.cancel();
     _fetchStarted = true;
 
     /// make sure we have an array to put things in
     List<Data> comments = _comments.value;
     if (comments == null) comments = [];
+    int oldCommentsLength = comments.where((comment) => comment != null).length;
 
     /// if this is still the first page
     if (comments == null || comments.isEmpty) {
@@ -62,7 +67,7 @@ class PostBloc {
 
       /// network request
       Query query = _firebaseDatabase.reference().child('comments').child(post.key.toString()).orderByKey().limitToFirst(COMMENTS_PER_PAGE);
-      query.onChildAdded.listen((event) {
+      onChildAddedListener = query.onChildAdded.listen((event) {
         /// increment number of comments in current page
         _commentsInCurrentPage++;
 
@@ -80,6 +85,13 @@ class PostBloc {
       });
       query.onValue.listen((event) {
         _comments.add(comments);
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        comments.removeWhere((comment) => comment != null && comment.key == (event?.snapshot?.key ?? ''));
+
+        /// publish an update to the stream
+        _comments.add(comments);
       });
     }
 
@@ -92,7 +104,7 @@ class PostBloc {
           .orderByKey()
           .startAt(comments.lastWhere((comment) => comment != null).key.toString())
           .limitToFirst(COMMENTS_PER_PAGE + 1);
-      query.onChildAdded.listen((event) {
+      onChildAddedListener = query.onChildAdded.listen((event) {
         /// increment number of comments in current page
         _commentsInCurrentPage++;
 
@@ -100,7 +112,7 @@ class PostBloc {
         comments.remove(null);
 
         /// do not insert duplicate comments
-        if (event?.snapshot?.key != comments[_currentPage * COMMENTS_PER_PAGE - 1].key) {
+        if (event?.snapshot?.key != comments[oldCommentsLength - 1].key) {
           /// insert newly acquired comment to the start of new page
           comments.add(Data(event?.snapshot?.key, event?.snapshot?.value));
         }
@@ -113,21 +125,37 @@ class PostBloc {
       });
       query.onValue.listen((event) {
         _comments.add(comments);
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        comments.removeWhere((comment) => comment != null && comment.key == (event?.snapshot?.key ?? ''));
+
+        /// publish an update to the stream
+        _comments.add(comments);
       });
     }
   }
 
   void addComment(String comment, String uid) {
-    _firebaseDatabase.reference().child('comments').child(post.key).push().set({
+    DatabaseReference reference = _firebaseDatabase.reference().child('comments').child(post.key).push();
+    var value = {
       'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000,
       'postId': post.key,
       'commentText': comment,
       'userId': uid,
-    });
+    };
+    reference.set(value);
+    List<Data> comments = _comments.value;
+    if (comments == null) comments = [];
+    if (comments.length == 0 || comments.last != null) {
+      comments.add(Data(reference.key, value));
+      _comments.add(comments);
+    }
   }
 
   /// Dispose function
   void dispose() {
+    onChildAddedListener?.cancel();
     _comments.close();
   }
 }

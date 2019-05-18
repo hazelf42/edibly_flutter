@@ -265,8 +265,8 @@ class RestaurantScreen extends StatelessWidget {
               children: <Widget>[
                 SmoothStarRating(
                   allowHalfRating: true,
-                  starCount: 10,
-                  rating: snapshot.data.value['numRating'] / 1.0,
+                  starCount: 5,
+                  rating: snapshot.data.value['numRating'] / 2.0 - 0.1,
                   size: 16.0,
                   color: AppColors.primarySwatch.shade900,
                   borderColor: AppColors.primarySwatch.shade900,
@@ -275,7 +275,7 @@ class RestaurantScreen extends StatelessWidget {
                   width: 8.0,
                 ),
                 SingleLineText(
-                  double.parse(snapshot.data.value['numRating'].toString()).toStringAsFixed(1),
+                  (double.parse(snapshot.data.value['numRating'].toString()) / 2.0).toStringAsFixed(1),
                   style: TextStyle(
                     color: Theme.of(context).hintColor,
                   ),

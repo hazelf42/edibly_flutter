@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
@@ -17,6 +19,7 @@ class RestaurantTipsBloc {
 
   /// Local  variables
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
+  StreamSubscription onChildAddedListener;
   bool _fetchStarted = false;
   int _tipsInCurrentPage = 0;
   int _currentPage = 0;
@@ -48,11 +51,13 @@ class RestaurantTipsBloc {
     }
 
     /// started fetching a page
+    onChildAddedListener?.cancel();
     _fetchStarted = true;
 
     /// make sure we have an array to put things in
     List<Data> tips = _tips.value;
     if (tips == null) tips = [];
+    int oldTipsLength = tips.where((tip) => tip != null).length;
 
     /// if this is still the first page
     if (tips == null || tips.isEmpty) {
@@ -62,7 +67,7 @@ class RestaurantTipsBloc {
 
       /// network request
       Query query = _firebaseDatabase.reference().child('restaurantTips').child(restaurantKey).orderByKey().limitToLast(TIPS_PER_PAGE);
-      query.onChildAdded.listen((event) async {
+      onChildAddedListener = query.onChildAdded.listen((event) async {
         /// increment number of tips in current page
         _tipsInCurrentPage++;
 
@@ -70,7 +75,7 @@ class RestaurantTipsBloc {
         tips.remove(null);
 
         /// insert newly acquired tip to the start of new page
-        tips.insert(_currentPage * TIPS_PER_PAGE, Data(event?.snapshot?.key, event?.snapshot?.value));
+        tips.insert(oldTipsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
 
         /// if this was the last tip in requested page, then show a circular loader at the end of page
         if (_tipsInCurrentPage == TIPS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) tips.add(null);
@@ -79,6 +84,13 @@ class RestaurantTipsBloc {
         _tips.add(tips);
       });
       query.onValue.listen((event) {
+        _tips.add(tips);
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        tips.removeWhere((tip) => tip != null && tip.key == (event?.snapshot?.key ?? ''));
+
+        /// publish an update to the stream
         _tips.add(tips);
       });
     }
@@ -92,7 +104,7 @@ class RestaurantTipsBloc {
           .orderByKey()
           .endAt(tips.lastWhere((tip) => tip != null).key.toString())
           .limitToLast(TIPS_PER_PAGE + 1);
-      query.onChildAdded.listen((event) async {
+      onChildAddedListener = query.onChildAdded.listen((event) async {
         /// increment number of tips in current page
         _tipsInCurrentPage++;
 
@@ -100,9 +112,9 @@ class RestaurantTipsBloc {
         tips.remove(null);
 
         /// do not insert duplicate tips
-        if (event?.snapshot?.key != tips[_currentPage * TIPS_PER_PAGE - 1].key) {
+        if (event?.snapshot?.key != tips[oldTipsLength - 1].key) {
           /// insert newly acquired tip to the start of new page
-          tips.insert(_currentPage * TIPS_PER_PAGE, Data(event?.snapshot?.key, event?.snapshot?.value));
+          tips.insert(oldTipsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
         }
 
         /// if this was the last tip in requested page, then show a circular loader at the end of page
@@ -113,12 +125,20 @@ class RestaurantTipsBloc {
       });
       query.onValue.listen((event) {
         _tips.add(tips);
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        tips.removeWhere((tip) => tip != null && tip.key == (event?.snapshot?.key ?? ''));
+
+        /// publish an update to the stream
+        _tips.add(tips);
       });
     }
   }
 
   /// Dispose function
   void dispose() {
+    onChildAddedListener?.cancel();
     _tips.close();
   }
 }

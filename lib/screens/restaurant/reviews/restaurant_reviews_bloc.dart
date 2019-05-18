@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
@@ -17,6 +19,7 @@ class RestaurantReviewsBloc {
 
   /// Local  variables
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
+  StreamSubscription onChildAddedListener;
   bool _fetchStarted = false;
   int _reviewsInCurrentPage = 0;
   int _currentPage = 0;
@@ -48,11 +51,13 @@ class RestaurantReviewsBloc {
     }
 
     /// started fetching a page
+    onChildAddedListener?.cancel();
     _fetchStarted = true;
 
     /// make sure we have an array to put things in
     List<Data> reviews = _reviews.value;
     if (reviews == null) reviews = [];
+    int oldReviewsLength = reviews.where((review) => review != null).length;
 
     /// if this is still the first page
     if (reviews == null || reviews.isEmpty) {
@@ -62,7 +67,7 @@ class RestaurantReviewsBloc {
 
       /// network request
       Query query = _firebaseDatabase.reference().child('reviews').child(restaurantKey).orderByKey().limitToLast(REVIEWS_PER_PAGE);
-      query.onChildAdded.listen((event) async {
+      onChildAddedListener = query.onChildAdded.listen((event) async {
         /// increment number of reviews in current page
         _reviewsInCurrentPage++;
 
@@ -73,7 +78,7 @@ class RestaurantReviewsBloc {
 
         /// insert newly acquired review to the start of new page
         if (dataSnapshot?.key != null && dataSnapshot?.value != null) {
-          reviews.insert(_currentPage * REVIEWS_PER_PAGE, Data(dataSnapshot?.key, dataSnapshot?.value));
+          reviews.insert(oldReviewsLength, Data(dataSnapshot?.key, dataSnapshot?.value));
         } else {
           _reviewsInCurrentPage--;
         }
@@ -85,6 +90,13 @@ class RestaurantReviewsBloc {
         _reviews.add(reviews);
       });
       query.onValue.listen((event) {
+        _reviews.add(reviews);
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        reviews.removeWhere((review) => review != null && review.key == (event?.snapshot?.key ?? ''));
+
+        /// publish an update to the stream
         _reviews.add(reviews);
       });
     }
@@ -98,7 +110,7 @@ class RestaurantReviewsBloc {
           .orderByKey()
           .endAt(reviews.lastWhere((review) => review != null).key.toString())
           .limitToLast(REVIEWS_PER_PAGE + 1);
-      query.onChildAdded.listen((event) async {
+      onChildAddedListener = query.onChildAdded.listen((event) async {
         /// increment number of reviews in current page
         _reviewsInCurrentPage++;
 
@@ -106,12 +118,12 @@ class RestaurantReviewsBloc {
         reviews.remove(null);
 
         /// do not insert duplicate reviews
-        if (event?.snapshot?.key != reviews[_currentPage * REVIEWS_PER_PAGE - 1].key) {
+        if (event?.snapshot?.key != reviews[oldReviewsLength - 1].key) {
           DataSnapshot dataSnapshot = await _firebaseDatabase.reference().child('feedPosts').child(event?.snapshot?.key).once();
 
           /// insert newly acquired review to the start of new page
           if (dataSnapshot?.key != null && dataSnapshot?.value != null) {
-            reviews.insert(_currentPage * REVIEWS_PER_PAGE, Data(dataSnapshot?.key, dataSnapshot?.value));
+            reviews.insert(oldReviewsLength, Data(dataSnapshot?.key, dataSnapshot?.value));
           } else {
             _reviewsInCurrentPage--;
           }
@@ -125,12 +137,20 @@ class RestaurantReviewsBloc {
       });
       query.onValue.listen((event) {
         _reviews.add(reviews);
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        reviews.removeWhere((review) => review != null && review.key == (event?.snapshot?.key ?? ''));
+
+        /// publish an update to the stream
+        _reviews.add(reviews);
       });
     }
   }
 
   /// Dispose function
   void dispose() {
+    onChildAddedListener?.cancel();
     _reviews.close();
   }
 }

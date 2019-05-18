@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -14,6 +16,7 @@ class FeedBloc {
 
   /// Local  variables
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
+  StreamSubscription onChildAddedListener;
   bool _fetchStarted = false;
   int _postsInCurrentPage = 0;
   int _currentPage = 0;
@@ -45,11 +48,13 @@ class FeedBloc {
     }
 
     /// started fetching a page
+    onChildAddedListener?.cancel();
     _fetchStarted = true;
 
     /// make sure we have an array to put things in
     List<Data> posts = _posts.value;
     if (posts == null) posts = [];
+    int oldPostsLength = posts.where((post) => post != null).length;
 
     /// if this is still the first page
     if (posts == null || posts.isEmpty) {
@@ -58,7 +63,8 @@ class FeedBloc {
       _postsInCurrentPage = 0;
 
       /// network request
-      _firebaseDatabase.reference().child('feedPosts').orderByKey().limitToLast(POSTS_PER_PAGE).onChildAdded.listen((event) {
+      Query query = _firebaseDatabase.reference().child('feedPosts').orderByKey().limitToLast(POSTS_PER_PAGE);
+      onChildAddedListener = query.onChildAdded.listen((event) {
         /// increment number of posts in current page
         _postsInCurrentPage++;
 
@@ -66,10 +72,19 @@ class FeedBloc {
         posts.remove(null);
 
         /// insert newly acquired post to the start of new page
-        posts.insert(_currentPage * POSTS_PER_PAGE, Data(event?.snapshot?.key, event?.snapshot?.value));
+        posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
 
         /// if this was the last post in requested page, then show a circular loader at the end of page
         if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
+
+        /// publish an update to the stream
+        _posts.add(posts);
+      });
+      query.onValue.listen((_) {
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
 
         /// publish an update to the stream
         _posts.add(posts);
@@ -78,14 +93,13 @@ class FeedBloc {
 
     /// if this is not the first page
     else {
-      _firebaseDatabase
+      Query query = _firebaseDatabase
           .reference()
           .child('feedPosts')
           .orderByKey()
           .endAt(posts.lastWhere((post) => post != null).key.toString())
-          .limitToLast(POSTS_PER_PAGE + 1)
-          .onChildAdded
-          .listen((event) {
+          .limitToLast(POSTS_PER_PAGE + 1);
+      onChildAddedListener = query.onChildAdded.listen((event) {
         /// increment number of posts in current page
         _postsInCurrentPage++;
 
@@ -93,13 +107,22 @@ class FeedBloc {
         posts.remove(null);
 
         /// do not insert duplicate posts
-        if (event?.snapshot?.key != posts[_currentPage * POSTS_PER_PAGE - 1].key) {
+        if (event?.snapshot?.key != posts[oldPostsLength - 1].key) {
           /// insert newly acquired post to the start of new page
-          posts.insert(_currentPage * POSTS_PER_PAGE, Data(event?.snapshot?.key, event?.snapshot?.value));
+          posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
         }
 
         /// if this was the last post in requested page, then show a circular loader at the end of page
         if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
+
+        /// publish an update to the stream
+        _posts.add(posts);
+      });
+      query.onValue.listen((_) {
+        onChildAddedListener?.cancel();
+      });
+      query.onChildRemoved.listen((event) {
+        posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
 
         /// publish an update to the stream
         _posts.add(posts);
@@ -109,6 +132,7 @@ class FeedBloc {
 
   /// Dispose function
   void dispose() {
+    onChildAddedListener?.cancel();
     _posts.close();
   }
 }

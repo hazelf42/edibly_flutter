@@ -14,12 +14,12 @@ import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 import 'package:edibly/main_bloc.dart';
 
-class PostCommentsWidget extends StatelessWidget {
+class PostScreen extends StatelessWidget {
   final TextEditingController commentController = TextEditingController();
   final String uid;
   final Data post;
 
-  PostCommentsWidget({@required this.uid, @required this.post});
+  PostScreen({@required this.uid, @required this.post});
 
   Widget _textField(PostBloc postBloc, AppLocalizations localizations) {
     return Container(
@@ -53,7 +53,7 @@ class PostCommentsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: SingleLineText(post.value['restaurantName']),
+        title: SingleLineText(post.value['restaurantName'] ?? ''),
       ),
       body: DisposableProvider<PostBloc>(
         packageBuilder: (context) => PostBloc(post: post),
@@ -97,7 +97,7 @@ class PostCommentsWidget extends StatelessWidget {
                             itemCount: (postsSnapshot.data == null ? 0 : postsSnapshot.data.length) + 1,
                             itemBuilder: (context, position) {
                               if (position == 0) {
-                                return PostScreen(
+                                return PostWidget(
                                   uid: uid,
                                   post: post,
                                 );
@@ -251,11 +251,11 @@ class PostCommentWidget extends StatelessWidget {
   }
 }
 
-class PostScreen extends StatelessWidget {
+class PostWidget extends StatelessWidget {
   final String uid;
   final Data post;
 
-  PostScreen({
+  PostWidget({
     @required this.uid,
     @required this.post,
   });
@@ -268,6 +268,59 @@ class PostScreen extends StatelessWidget {
       }
     }
     return tagList;
+  }
+
+  void _delete({@required BuildContext context, @required MainBloc mainBloc, @required AppLocalizations localizations}) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: SingleLineText(localizations.delete),
+          content: Text(localizations.deleteConfirmationText),
+          contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(localizations.cancel.toUpperCase()),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text(localizations.delete.toUpperCase()),
+              onPressed: () {
+                mainBloc.deletePost(
+                  post: post,
+                  firebaseUserId: uid,
+                );
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _deleteButton({@required BuildContext context, @required MainBloc mainBloc, @required AppLocalizations localizations}) {
+    if (uid != post.value['reviewingUserId']) {
+      return Container();
+    } else {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12.0),
+        child: BoldFlatButton(
+          onPressed: () {
+            _delete(
+              context: context,
+              mainBloc: mainBloc,
+              localizations: localizations,
+            );
+          },
+          text: localizations.delete.toUpperCase(),
+          textColor: Colors.red.shade600,
+        ),
+      );
+    }
   }
 
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
@@ -434,8 +487,8 @@ class PostScreen extends StatelessWidget {
           children: <Widget>[
             SmoothStarRating(
               allowHalfRating: true,
-              starCount: 10,
-              rating: post.value['numRating'] / 1.0,
+              starCount: 5,
+              rating: post.value['numRating'] / 2.0 - 0.1,
               size: 16.0,
               color: AppColors.primarySwatch.shade900,
               borderColor: AppColors.primarySwatch.shade900,
@@ -444,7 +497,7 @@ class PostScreen extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              post.value['numRating'].toString(),
+              (post.value['numRating'] / 2.0 as double).toStringAsFixed(1),
               style: TextStyle(
                 color: Theme.of(context).hintColor,
               ),
@@ -566,7 +619,7 @@ class PostScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Text(
-                      post.value['restaurantName'],
+                      post.value['restaurantName'] ?? '',
                       style: Theme.of(context).textTheme.title,
                     ),
                     _restaurant(
@@ -598,6 +651,11 @@ class PostScreen extends StatelessWidget {
             child: Row(
               children: <Widget>[
                 _likeButton(
+                  mainBloc: mainBloc,
+                  localizations: localizations,
+                ),
+                _deleteButton(
+                  context: context,
                   mainBloc: mainBloc,
                   localizations: localizations,
                 ),
