@@ -145,7 +145,7 @@ class NewPostDishesScreen extends StatelessWidget {
       if (succeeded) {
         Navigator.of(context).pop();
         Navigator.of(context).pop();
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       } else {
         Scaffold.of(context).showSnackBar(SnackBar(content: Text(localizations.networkRequestFailed)));
         newPostBloc.resetLastDishes();

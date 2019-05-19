@@ -7,7 +7,15 @@ import 'package:flutter/foundation.dart';
 import 'package:location/location.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/models/data.dart';
+
+enum AddReviewState {
+  SUCCESSFUL,
+  FAILED,
+  TRYING,
+  IDLE,
+}
 
 class SearchBloc {
   final FirebaseUser firebaseUser;
@@ -26,6 +34,9 @@ class SearchBloc {
   final _allRestaurants = BehaviorSubject<List<Data>>();
   final _filteredRestaurants = BehaviorSubject<List<Data>>();
   final _bookmarkedRestaurants = BehaviorSubject<List<Data>>();
+  final _addReviewState = BehaviorSubject<AddReviewState>();
+  final _restaurantName = BehaviorSubject<String>();
+  final _restaurantLocation = BehaviorSubject<String>();
 
   /// Variables
   int _filterRestaurantsCallCounter = 0;
@@ -45,6 +56,12 @@ class SearchBloc {
 
   Stream<List<Data>> get bookmarkedRestaurants => _bookmarkedRestaurants.stream;
 
+  Stream<AddReviewState> get addReviewState => _addReviewState.stream;
+
+  Stream<String> get restaurantName => _restaurantName.stream;
+
+  Stream<String> get restaurantLocation => _restaurantLocation.stream;
+
   /// Setters
   void setDistanceFilterValue() {
     double distanceFilterValue = _distanceSlider.value;
@@ -63,6 +80,62 @@ class SearchBloc {
   Function(double value) get setRatingSliderValue => _ratingSlider.add;
 
   Function(double value) get setDistanceSliderValue => _distanceSlider.add;
+
+  Function(AddReviewState) get setAddReviewState => _addReviewState.add;
+
+  /// Void functions
+  void setRestaurantName(String name) {
+    _restaurantName.add(name);
+    _addReviewState.add(AddReviewState.IDLE);
+  }
+
+  void setRestaurantLocation(String location) {
+    _restaurantLocation.add(location);
+    _addReviewState.add(AddReviewState.IDLE);
+  }
+
+  Future<Data> addReview({
+    @required AppLocalizations localizations,
+  }) async {
+    final restaurantName = _restaurantName.value;
+    final restaurantLocation = _restaurantLocation.value;
+    final addReviewState = _addReviewState.value;
+
+    if (addReviewState == AddReviewState.TRYING) return null;
+    _addReviewState.add(AddReviewState.TRYING);
+
+    bool credentialsAreEmpty = false;
+
+    if (restaurantName == null || restaurantName.isEmpty) {
+      _restaurantName.addError(localizations.errorEmptyField);
+      credentialsAreEmpty = true;
+    }
+    if (restaurantLocation == null || restaurantLocation.isEmpty) {
+      _restaurantLocation.addError(localizations.errorEmptyField);
+      credentialsAreEmpty = true;
+    }
+
+    if (!credentialsAreEmpty) {
+      _firebaseDatabase.reference().child('addedRestaurants').orderByKey().limitToLast(1).once().then((snapshot) async {
+        String restaurantKey = snapshot?.value != null ? 'A${int.parse(snapshot.key.substring(1)) + 1}' : 'A1';
+        await _firebaseDatabase.reference().child('addedRestaurants').child(restaurantKey).set({
+          'key': restaurantKey,
+          'name': restaurantName,
+          'location': restaurantLocation,
+        }).catchError((error) {
+          _addReviewState.addError(AddReviewState.FAILED);
+          return null;
+        });
+        _addReviewState.addError(AddReviewState.SUCCESSFUL);
+        return Data(restaurantKey, restaurantName);
+      }).catchError((error) {
+        _addReviewState.addError(AddReviewState.FAILED);
+      });
+    } else if (credentialsAreEmpty) {
+      _addReviewState.add(AddReviewState.IDLE);
+    }
+    return null;
+  }
 
   /// Other functions
   void getAllRestaurants() async {
@@ -201,5 +274,8 @@ class SearchBloc {
     _allRestaurants.close();
     _filteredRestaurants.close();
     _bookmarkedRestaurants.close();
+    _addReviewState.close();
+    _restaurantName.close();
+    _restaurantLocation.close();
   }
 }

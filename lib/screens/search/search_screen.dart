@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 
 import 'package:edibly/screens/search/restaurant_preview_widget.dart';
 import 'package:edibly/screens/restaurant/restaurant_screen.dart';
+import 'package:edibly/screens/new_post/new_post_screen.dart';
 import 'package:edibly/screens/search/search_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
@@ -231,6 +232,190 @@ class SearchScreen extends StatelessWidget {
     );
   }
 
+  /// add review
+
+  Widget _restaurantNameField(SearchBloc searchBloc, AppLocalizations localizations) {
+    return StreamBuilder<String>(
+      stream: searchBloc.restaurantName,
+      builder: (context, nameSnapshot) {
+        return StreamBuilder<AddReviewState>(
+          stream: searchBloc.addReviewState,
+          builder: (context, stateSnapshot) {
+            return TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                isDense: true,
+                labelText: localizations.restaurantName,
+                prefixIcon: Icon(
+                  Icons.short_text,
+                  color: nameSnapshot.hasError ? Theme.of(context).errorColor : null,
+                ),
+                errorText: nameSnapshot.error,
+              ),
+              onChanged: searchBloc.setRestaurantName,
+              enabled: stateSnapshot.data == AddReviewState.TRYING ? false : true,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _restaurantLocationField(SearchBloc searchBloc, AppLocalizations localizations) {
+    return StreamBuilder<String>(
+      stream: searchBloc.restaurantLocation,
+      builder: (context, locationSnapshot) {
+        return StreamBuilder<AddReviewState>(
+          stream: searchBloc.addReviewState,
+          builder: (context, stateSnapshot) {
+            return TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                isDense: true,
+                labelText: localizations.restaurantLocation,
+                prefixIcon: Icon(
+                  Icons.location_on,
+                  color: locationSnapshot.hasError ? Theme.of(context).errorColor : null,
+                ),
+                errorText: locationSnapshot.error,
+              ),
+              onChanged: searchBloc.setRestaurantLocation,
+              enabled: stateSnapshot.data == AddReviewState.TRYING ? false : true,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _submitButton(SearchBloc searchBloc, AppLocalizations localizations) {
+    return StreamBuilder<AddReviewState>(
+      stream: searchBloc.addReviewState,
+      builder: (context, snapshot) {
+        if (snapshot.data == AddReviewState.SUCCESSFUL) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.pop(context, true);
+          });
+        }
+        return snapshot.data == AddReviewState.TRYING
+            ? Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                ),
+                child: SizedBox(
+                  width: 24.0,
+                  height: 24.0,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3.0,
+                  ),
+                ),
+              )
+            : FlatButton(
+                onPressed: () async {
+                  Data restaurant = await searchBloc.addReview(localizations: localizations);
+                  if (restaurant != null) {
+                    final addedNewPost = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => NewPostScreen(
+                              firebaseUserId: firebaseUser.uid,
+                              restaurantName: restaurant.value,
+                              restaurantKey: restaurant.key,
+                            ),
+                      ),
+                    );
+                    if (addedNewPost != null && addedNewPost is bool && addedNewPost) {
+                      final snackBar = SnackBar(
+                        content: Text(localizations.reviewAddedSuccessText),
+                      );
+                      Scaffold.of(context).showSnackBar(snackBar);
+                    }
+                  }
+                },
+                child: SingleLineText(localizations.reset.toUpperCase()),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              );
+      },
+    );
+  }
+
+  void _showAddReviewDialog(
+    BuildContext context,
+    SearchBloc searchBloc,
+    AppLocalizations localizations,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
+          title: SingleLineText(localizations.addReview),
+          content: Container(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: <Widget>[
+                _restaurantNameField(searchBloc, localizations),
+                SizedBox(height: 16.0),
+                _restaurantLocationField(searchBloc, localizations),
+                StreamBuilder<AddReviewState>(
+                  stream: searchBloc.addReviewState,
+                  builder: (context, snapshot) {
+                    return snapshot.hasError
+                        ? Column(children: <Widget>[
+                            SizedBox(
+                              height: 16.0,
+                            ),
+                            Text(
+                              localizations.networkRequestFailed,
+                              style: TextStyle(
+                                color: Theme.of(context).errorColor,
+                                fontSize: 13.0,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ])
+                        : SizedBox();
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(localizations.cancel.toUpperCase()),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            _submitButton(searchBloc, localizations),
+          ],
+        );
+      },
+    ).then((passwordUpdated) {
+      if (passwordUpdated is bool && passwordUpdated) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text(localizations.reviewAddedSuccessText),
+                contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text(localizations.ok.toUpperCase()),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            });
+      }
+      searchBloc.setRestaurantName('');
+      searchBloc.setRestaurantLocation('');
+      searchBloc.setAddReviewState(AddReviewState.IDLE);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations localizations = AppLocalizations.of(context);
@@ -269,7 +454,7 @@ class SearchScreen extends StatelessWidget {
                               separatorBuilder: (context, position) {
                                 return Container(height: 10.0);
                               },
-                              itemCount: listViewItemCount + 1,
+                              itemCount: listViewItemCount,
                               itemBuilder: (context, position) {
                                 if (position == listViewItemCount) {
                                   return _footer(

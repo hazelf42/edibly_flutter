@@ -37,16 +37,16 @@ class RestaurantTipsScreen extends StatelessWidget {
         child: Builder(
           builder: (context) {
             final RestaurantBloc restaurantBloc = Provider.of<RestaurantBloc>(context);
-            final RestaurantTipsBloc restaurantReviewsBloc = Provider.of<RestaurantTipsBloc>(context);
+            final RestaurantTipsBloc restaurantTipsBloc = Provider.of<RestaurantTipsBloc>(context);
             return Container(
               color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
               alignment: Alignment.center,
               child: StreamBuilder<List<Data>>(
-                stream: restaurantReviewsBloc.tips,
+                stream: restaurantTipsBloc.tips,
                 builder: (context, tipsSnapshot) {
                   if (tipsSnapshot?.data == null) {
                     if (tipsSnapshot.connectionState == ConnectionState.waiting) {
-                      restaurantReviewsBloc.getTips();
+                      restaurantTipsBloc.getTips();
                     }
                     return CircularProgressIndicator();
                   }
@@ -80,7 +80,10 @@ class RestaurantTipsScreen extends StatelessWidget {
                                 restaurantBloc: restaurantBloc,
                                 localizations: localizations,
                                 restaurantName: restaurantName,
-                              );
+                              ).then((added) {
+                                restaurantTipsBloc.clearTips();
+                                restaurantTipsBloc.getTips();
+                              });
                             },
                             child: SingleLineText(localizations.addTip.toUpperCase()),
                           ),
@@ -100,7 +103,7 @@ class RestaurantTipsScreen extends StatelessWidget {
                       itemCount: tipsSnapshot.data.length,
                       itemBuilder: (context, position) {
                         if (tipsSnapshot.data.elementAt(position) == null) {
-                          restaurantReviewsBloc.getTips();
+                          restaurantTipsBloc.getTips();
                           return Container(
                             padding: const EdgeInsets.symmetric(
                               vertical: 12.0,
@@ -122,8 +125,8 @@ class RestaurantTipsScreen extends StatelessWidget {
                       },
                     ),
                     onRefresh: () {
-                      restaurantReviewsBloc.clearTips();
-                      restaurantReviewsBloc.getTips();
+                      restaurantTipsBloc.clearTips();
+                      restaurantTipsBloc.getTips();
                       return Future.delayed(Duration(seconds: 1));
                     },
                   );
@@ -154,7 +157,7 @@ class TipWidget extends StatelessWidget {
           children: <Widget>[
             CircleAvatar(
               radius: 18.0,
-              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL']),
+              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
               child: authorValue == null
                   ? SizedBox(
                       width: 36.0,

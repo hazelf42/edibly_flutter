@@ -58,7 +58,7 @@ class PostPreviewWidget extends StatelessWidget {
             children: <Widget>[
               CircleAvatar(
                 radius: 24.0,
-                backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL']),
+                backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
                 child: authorValue == null
                     ? SizedBox(
                         width: 46.0,

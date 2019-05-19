@@ -21,20 +21,24 @@ class DrawerScreen extends StatelessWidget {
 
   DrawerScreen(this._firebaseUser);
 
-  Widget _userInfo(DrawerBloc drawerBloc) {
+  Widget _userInfo(MainBloc mainBloc, DrawerBloc drawerBloc) {
     return StreamBuilder<Event>(
       stream: drawerBloc.getUser(
         uid: _firebaseUser.uid,
       ),
       builder: (context, snapshot) {
         Map<dynamic, dynamic> map = snapshot.hasData ? snapshot?.data?.snapshot?.value : null;
+        if (map != null) {
+          mainBloc.setDiet(null, map['dietName'].toString().toLowerCase() == 'Vegan'.toLowerCase() ? Diet.VEGAN : Diet.VEGETARIAN);
+          mainBloc.setGlutenFree(null, map['isGlutenFree'] ?? false);
+        }
         return Container(
           padding: EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
           child: Row(
             children: <Widget>[
               CircleAvatar(
                 radius: 24.0,
-                backgroundImage: map == null ? null : NetworkImage(map['photoUrl'] ?? map['photoURL']),
+                backgroundImage: map == null ? null : NetworkImage(map['photoUrl'] ?? map['photoURL'] ?? ''),
                 child: map == null
                     ? SizedBox(
                         width: 46.0,
@@ -103,7 +107,6 @@ class DrawerScreen extends StatelessWidget {
                 errorText:
                     oldPasswordSnapshot.hasError && oldPasswordSnapshot.error == AppError.EMPTY ? localizations.errorEmptyPassword : null,
               ),
-              keyboardType: TextInputType.emailAddress,
               onChanged: drawerBloc.setOldPassword,
               enabled: updatePasswordStateSnapshot.data == UpdatePasswordState.TRYING ? false : true,
               obscureText: true,
@@ -367,7 +370,7 @@ class DrawerScreen extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: <Widget>[
                 Container(height: MediaQuery.of(context).padding.top + 8.0),
-                _userInfo(drawerBloc),
+                _userInfo(mainBloc, drawerBloc),
                 MenuItem(
                   onTap: () {
                     Navigator.push(

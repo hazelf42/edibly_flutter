@@ -61,11 +61,22 @@ class MainBloc extends Object with Validators {
     });
   }
 
+  void setGlutenFree(String uid, bool glutenFree) {
+    _glutenFree.add(glutenFree);
+    if (uid != null) {
+      _setCurrentUserInfoWithoutCallback(uid, {
+        'isGlutenFree': glutenFree,
+      });
+    }
+  }
+
   void setDiet(String uid, Diet diet) {
     _diet.add(diet);
-    _setCurrentUserInfoWithoutCallback(uid, {
-      'dietName': diet == Diet.VEGAN ? 'vegan' : 'vegetarian',
-    });
+    if (uid != null) {
+      _setCurrentUserInfoWithoutCallback(uid, {
+        'dietName': diet == Diet.VEGAN ? 'vegan' : 'vegetarian',
+      });
+    }
   }
 
   void _setCurrentUserInfoWithoutCallback(String uid, dynamic value) {

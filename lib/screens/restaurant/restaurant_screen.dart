@@ -40,14 +40,14 @@ class RestaurantScreen extends StatelessWidget {
     return tagList;
   }
 
-  static void showAddTipDialog({
+  static Future<bool> showAddTipDialog({
     @required BuildContext context,
     @required RestaurantBloc restaurantBloc,
     @required AppLocalizations localizations,
     @required String restaurantName,
-  }) {
+  }) async{
     TextEditingController textController = TextEditingController();
-    showDialog(
+    return await showDialog(
       context: context,
       builder: (context) {
         return StreamBuilder<AddTipState>(
@@ -323,8 +323,8 @@ class RestaurantScreen extends StatelessWidget {
 
   Widget _coverImage({@required Data restaurant}) {
     if (restaurant == null) return Container();
-    String photoUrl = restaurant.value['photoUrl'] ?? restaurant.value['photoURL'];
-    if (photoUrl == null || photoUrl.isEmpty) return Container();
+    String photoUrl = restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '';
+    if (photoUrl == null || photoUrl.isEmpty || photoUrl == 'None') return Container();
     return Container(
       color: Colors.white,
       child: CachedNetworkImage(
@@ -611,7 +611,7 @@ class RestaurantScreen extends StatelessWidget {
                   children: <Widget>[
                     CircleAvatar(
                       radius: 18.0,
-                      backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL']),
+                      backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
                       child: authorValue == null
                           ? SizedBox(
                               width: 34.0,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:edibly/screens/register/register_screen.dart';
 import 'package:edibly/screens/login/login_bloc.dart';
 import 'package:edibly/screens/home/home_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
@@ -112,6 +113,7 @@ class LoginScreen extends StatelessWidget {
             snapshot.data == LoginState.TRYING
                 ? CircularProgressIndicator()
                 : RaisedButton(
+                    color: Colors.orange.shade700,
                     onPressed: loginBloc.logIn,
                     child: SingleLineText(localizations.logIn),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -132,7 +134,12 @@ class LoginScreen extends StatelessWidget {
               : () {
                   showForgotPasswordDialog(context, loginBloc, localizations);
                 },
-          child: SingleLineText(localizations.forgotPassword),
+          child: SingleLineText(
+            localizations.forgotPassword,
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
         );
       },
     );
@@ -240,25 +247,84 @@ class LoginScreen extends StatelessWidget {
           final LoginBloc loginBloc = Provider.of<LoginBloc>(context);
           final AppLocalizations localizations = AppLocalizations.of(context);
           return Scaffold(
-            appBar: AppBar(
-              title: SingleLineText(localizations.logIn),
-            ),
-            body: Container(
-              alignment: Alignment.center,
-              child: ListView(
-                padding: const EdgeInsets.all(20.0),
-                shrinkWrap: true,
-                children: <Widget>[
-                  emailField(loginBloc, localizations),
-                  SizedBox(height: 16.0),
-                  passwordField(loginBloc, localizations),
-                  SizedBox(height: 16.0),
-                  submitButton(loginBloc, localizations),
-                  SizedBox(height: 16.0),
-                  forgotPasswordButton(loginBloc, localizations),
-                ],
-              ),
-            ),
+            body: Theme(
+                data: ThemeData(
+                  errorColor: Colors.white,
+                  primarySwatch: Colors.orange,
+                  brightness: Brightness.dark,
+                  accentColor: Colors.white,
+                ),
+                child: SafeArea(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.orange.shade400, Colors.red.shade600],
+                        begin: const FractionalOffset(0.5, 0.0),
+                        end: const FractionalOffset(0.0, 0.5),
+                        stops: [0.0, 1.0],
+                        tileMode: TileMode.clamp,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: ListView(
+                      padding: const EdgeInsets.all(20.0),
+                      shrinkWrap: true,
+                      children: <Widget>[
+                        SingleLineText(
+                          localizations.appName,
+                          style: TextStyle(
+                            fontSize: 32.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 16.0),
+                        emailField(loginBloc, localizations),
+                        SizedBox(height: 16.0),
+                        passwordField(loginBloc, localizations),
+                        SizedBox(height: 16.0),
+                        submitButton(loginBloc, localizations),
+                        SizedBox(height: 16.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            SingleLineText(
+                              localizations.signUpPreText,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                            Container(width: 10.0),
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RegisterScreen(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12.0,
+                                  horizontal: 10.0,
+                                ),
+                                child: SingleLineText(
+                                  localizations.signUp,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        forgotPasswordButton(loginBloc, localizations),
+                      ],
+                    ),
+                  ),
+                )),
           );
         },
       ),

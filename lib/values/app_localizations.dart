@@ -117,6 +117,8 @@ class AppLocalizations {
 
   String get errorEmptyTextField => Intl.message('Text field cannot be empty.');
 
+  String get errorEmptyField => Intl.message('This field cannot be empty.');
+
   String get errorInvalidPassword => Intl.message('Password is too short.');
 
   String get errorWrongPassword => Intl.message('Wrong password.');
@@ -140,6 +142,10 @@ class AppLocalizations {
   String get delete => Intl.message('Delete');
 
   String get incorrectCredentials => Intl.message('Username or password is incorrect.');
+
+  String get signUpPreText => Intl.message('Don\'t have an account?');
+
+  String get signUp => Intl.message('Sign up!');
 
   String get networkRequestFailed => Intl.message('Something went wrong. Check your Internet connection and try again.');
 
@@ -166,6 +172,14 @@ class AppLocalizations {
   String get noRestaurantsFound => Intl.message('0 restaurants found.');
 
   String get restaurant => Intl.message('Restaurant');
+
+  String get restaurantName => Intl.message('Restaurant name');
+
+  String get restaurantLocation => Intl.message('Restaurant location');
+
+  String get firstName => Intl.message('First name');
+
+  String get lastName => Intl.message('Last name');
 
   String get noBookmarksFound => Intl.message('0 bookmarks found.');
 
