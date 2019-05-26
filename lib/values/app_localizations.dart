@@ -199,6 +199,8 @@ class AppLocalizations {
 
   String get photos => Intl.message('Photos');
 
+  String get photo => Intl.message('Photo');
+
   String get addReview => Intl.message('Add review');
 
   String get addTip => Intl.message('Add tip');
@@ -237,6 +239,8 @@ class AppLocalizations {
   String get reviewDishesQuestionText => Intl.message('What did you have to eat?');
 
   String get reviewDishesHelpText => Intl.message('Swipe right to upvote, left to downvote, tap to deselect.');
+
+  String get tagMaximumReached => Intl.message('You have selected maximum number of tags.');
 
   String ratingText(int rating) {
     if (rating == 0) {

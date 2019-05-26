@@ -119,6 +119,36 @@ class RestaurantPreviewWidget extends StatelessWidget {
     );
   }
 
+  Widget _photo() {
+    bool hasPhoto = (restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '').toString().isNotEmpty;
+    if (!hasPhoto) return Container();
+    return ClipRRect(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(4.0),
+        bottomLeft: Radius.circular(4.0),
+      ),
+      child: Container(
+        width: 70.0,
+        height: 70.0,
+        color: Colors.white,
+        child: CachedNetworkImage(
+          imageUrl: restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '',
+          width: 70.0,
+          height: 70.0,
+          fit: BoxFit.cover,
+          placeholder: (context, imageUrl) {
+            return Container(
+              width: 70.0,
+              height: 70.0,
+              alignment: Alignment.center,
+              child: CircularProgressIndicator(),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final SearchBloc searchBloc = Provider.of<SearchBloc>(context);
@@ -140,64 +170,40 @@ class RestaurantPreviewWidget extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(4.0),
-                bottomLeft: Radius.circular(4.0),
-              ),
-              child: Container(
-                width: 70.0,
-                height: 70.0,
-                color: Colors.white,
-                child: CachedNetworkImage(
-                  imageUrl: restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '',
-                  width: 70.0,
-                  height: 70.0,
-                  errorWidget: (context, imageUrl, error) {
-                    return Container(
-                      height: 120.0,
-                      alignment: Alignment.center,
-                      child: Image.asset('assets/drawables/ic_launcher.png'),
-                    );
-                  },
-                  placeholder: (context, imageUrl) {
-                    return Container(
-                      height: 120.0,
-                      alignment: Alignment.center,
-                      child: CircularProgressIndicator(),
-                    );
-                  },
-                ),
-              ),
-            ),
+            _photo(),
             Expanded(
               child: Container(
                 padding: const EdgeInsets.fromLTRB(12.0, 8.0, 0.0, 8.0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                restaurant.value['name'] ?? '',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15.0,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: 48.0,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Text(
+                                  restaurant.value['name'] ?? '',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15.0,
+                                  ),
                                 ),
-                              ),
-                              _rating(
-                                context: context,
-                                value: restaurant.value['rating'],
-                              ),
-                              _address(),
-                            ],
+                                _rating(
+                                  context: context,
+                                  value: restaurant.value['rating'],
+                                ),
+                                _address(),
+                              ],
+                            ),
                           ),
                         ),
                         _bookmarkButton(searchBloc: searchBloc),

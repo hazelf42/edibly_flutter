@@ -45,7 +45,7 @@ class RestaurantScreen extends StatelessWidget {
     @required RestaurantBloc restaurantBloc,
     @required AppLocalizations localizations,
     @required String restaurantName,
-  }) async{
+  }) async {
     TextEditingController textController = TextEditingController();
     return await showDialog(
       context: context,
@@ -299,26 +299,33 @@ class RestaurantScreen extends StatelessWidget {
     );
   }
 
-  Widget _tags({@required BuildContext context, @required dynamic value}) {
-    if (value == null || value['tagDict'] == null || value['tagDict'].toString().isEmpty) {
-      return Container();
-    }
-    List<Data> tags = dynamicTagArrayToTagList(value['tagDict']);
-    tags.sort((a, b) => b.value - a.value);
-    return Container(
-      height: 32.0,
-      margin: const EdgeInsets.only(top: 12.0, right: 12.0),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        separatorBuilder: (context, position) {
-          return Container(width: 8.0, height: 1.0);
-        },
-        itemCount: tags.length,
-        itemBuilder: (context, position) {
-          return CustomTag('${tags.elementAt(position).key} (${tags.elementAt(position).value})');
-        },
-      ),
-    );
+  Widget _tags({@required BuildContext context, @required RestaurantBloc restaurantBloc}) {
+    return StreamBuilder<Data>(
+        stream: restaurantBloc.rating,
+        builder: (context, snapshot) {
+          if (snapshot?.data == null) {
+            return Container();
+          }
+          if (snapshot?.data?.value == null) return Container();
+          dynamic tagDict = snapshot?.data?.value['tagDict'];
+          if (tagDict == null) return Container();
+          List<Data> tags = dynamicTagArrayToTagList(tagDict);
+          tags.sort((a, b) => b.value - a.value);
+          return Container(
+            height: 32.0,
+            margin: const EdgeInsets.only(top: 12.0, right: 12.0),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              separatorBuilder: (context, position) {
+                return Container(width: 8.0, height: 1.0);
+              },
+              itemCount: tags.length,
+              itemBuilder: (context, position) {
+                return CustomTag('${tags.elementAt(position).key} (${tags.elementAt(position).value})');
+              },
+            ),
+          );
+        });
   }
 
   Widget _coverImage({@required Data restaurant}) {
@@ -402,7 +409,7 @@ class RestaurantScreen extends StatelessWidget {
               ),
               _tags(
                 context: context,
-                value: restaurant.value['rating'],
+                restaurantBloc: restaurantBloc,
               ),
             ],
           ),
@@ -744,122 +751,128 @@ class RestaurantScreen extends StatelessWidget {
             appBar: AppBar(
               title: SingleLineText(localizations.restaurant),
             ),
-            body: Container(
-              alignment: Alignment.center,
-              child: StreamBuilder<Data>(
-                  stream: restaurantBloc.restaurant,
-                  builder: (context, restaurantSnapshot) {
-                    if (restaurantSnapshot?.data == null) {
-                      if (restaurantSnapshot.connectionState == ConnectionState.waiting) {
-                        restaurantBloc.getRestaurant();
+            body: GestureDetector(
+              onTap: () {
+                // call this method here to hide soft keyboard
+                FocusScope.of(context).requestFocus(new FocusNode());
+              },
+              child: Container(
+                alignment: Alignment.center,
+                child: StreamBuilder<Data>(
+                    stream: restaurantBloc.restaurant,
+                    builder: (context, restaurantSnapshot) {
+                      if (restaurantSnapshot?.data == null) {
+                        if (restaurantSnapshot.connectionState == ConnectionState.waiting) {
+                          restaurantBloc.getRestaurant();
+                        }
+                        return CircularProgressIndicator();
+                      } else {
+                        return ListView(
+                          children: <Widget>[
+                            _header(context: context, restaurantBloc: restaurantBloc, restaurant: restaurantSnapshot?.data),
+                            _featuredTip(
+                              context: context,
+                              mainBloc: mainBloc,
+                              restaurantBloc: restaurantBloc,
+                              localizations: localizations,
+                              restaurant: restaurantSnapshot?.data,
+                            ),
+                            Container(height: 6.0),
+                            _buttonBar(
+                              context: context,
+                              restaurantBloc: restaurantBloc,
+                              localizations: localizations,
+                              restaurantName: restaurantSnapshot.data.value['name'],
+                            ),
+                            ListTile(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => RestaurantDishesScreen(
+                                          restaurantName: restaurantSnapshot.data.value['name'],
+                                          restaurantKey: restaurantKey,
+                                        ),
+                                  ),
+                                );
+                              },
+                              title: SingleLineText(localizations.menu),
+                              leading: Icon(Icons.restaurant_menu),
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16.0,
+                                color: Theme.of(context).disabledColor,
+                              ),
+                            ),
+                            ListTile(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => RestaurantReviewsScreen(
+                                          firebaseUserId: firebaseUserId,
+                                          restaurantName: restaurantSnapshot.data.value['name'],
+                                          restaurantKey: restaurantKey,
+                                        ),
+                                  ),
+                                );
+                              },
+                              title: SingleLineText(localizations.reviews),
+                              leading: Icon(Icons.comment),
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16.0,
+                                color: Theme.of(context).disabledColor,
+                              ),
+                            ),
+                            ListTile(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => RestaurantTipsScreen(
+                                          firebaseUserId: firebaseUserId,
+                                          restaurantName: restaurantSnapshot.data.value['name'],
+                                          restaurantKey: restaurantKey,
+                                        ),
+                                  ),
+                                );
+                              },
+                              title: SingleLineText(localizations.tips),
+                              leading: Icon(Icons.info),
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16.0,
+                                color: Theme.of(context).disabledColor,
+                              ),
+                            ),
+                            ListTile(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => RestaurantPhotosScreen(
+                                          firebaseUserId: firebaseUserId,
+                                          restaurantName: restaurantSnapshot.data.value['name'],
+                                          restaurantKey: restaurantKey,
+                                        ),
+                                  ),
+                                );
+                              },
+                              title: SingleLineText(localizations.photos),
+                              leading: Icon(Icons.collections),
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16.0,
+                                color: Theme.of(context).disabledColor,
+                              ),
+                            ),
+                            _photos(
+                              context: context,
+                              restaurantName: restaurantSnapshot.data.value['name'],
+                              restaurantBloc: restaurantBloc,
+                            ),
+                          ],
+                        );
                       }
-                      return CircularProgressIndicator();
-                    } else {
-                      return ListView(
-                        children: <Widget>[
-                          _header(context: context, restaurantBloc: restaurantBloc, restaurant: restaurantSnapshot?.data),
-                          _featuredTip(
-                            context: context,
-                            mainBloc: mainBloc,
-                            restaurantBloc: restaurantBloc,
-                            localizations: localizations,
-                            restaurant: restaurantSnapshot?.data,
-                          ),
-                          Container(height: 6.0),
-                          _buttonBar(
-                            context: context,
-                            restaurantBloc: restaurantBloc,
-                            localizations: localizations,
-                            restaurantName: restaurantSnapshot.data.value['name'],
-                          ),
-                          ListTile(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => RestaurantDishesScreen(
-                                        restaurantName: restaurantSnapshot.data.value['name'],
-                                        restaurantKey: restaurantKey,
-                                      ),
-                                ),
-                              );
-                            },
-                            title: SingleLineText(localizations.menu),
-                            leading: Icon(Icons.restaurant_menu),
-                            trailing: Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16.0,
-                              color: Theme.of(context).disabledColor,
-                            ),
-                          ),
-                          ListTile(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => RestaurantReviewsScreen(
-                                        firebaseUserId: firebaseUserId,
-                                        restaurantName: restaurantSnapshot.data.value['name'],
-                                        restaurantKey: restaurantKey,
-                                      ),
-                                ),
-                              );
-                            },
-                            title: SingleLineText(localizations.reviews),
-                            leading: Icon(Icons.comment),
-                            trailing: Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16.0,
-                              color: Theme.of(context).disabledColor,
-                            ),
-                          ),
-                          ListTile(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => RestaurantTipsScreen(
-                                        firebaseUserId: firebaseUserId,
-                                        restaurantName: restaurantSnapshot.data.value['name'],
-                                        restaurantKey: restaurantKey,
-                                      ),
-                                ),
-                              );
-                            },
-                            title: SingleLineText(localizations.tips),
-                            leading: Icon(Icons.info),
-                            trailing: Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16.0,
-                              color: Theme.of(context).disabledColor,
-                            ),
-                          ),
-                          ListTile(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => RestaurantPhotosScreen(
-                                        firebaseUserId: firebaseUserId,
-                                        restaurantName: restaurantSnapshot.data.value['name'],
-                                        restaurantKey: restaurantKey,
-                                      ),
-                                ),
-                              );
-                            },
-                            title: SingleLineText(localizations.photos),
-                            leading: Icon(Icons.collections),
-                            trailing: Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16.0,
-                              color: Theme.of(context).disabledColor,
-                            ),
-                          ),
-                          _photos(
-                            context: context,
-                            restaurantName: restaurantSnapshot.data.value['name'],
-                            restaurantBloc: restaurantBloc,
-                          ),
-                        ],
-                      );
-                    }
-                  }),
+                    }),
+              ),
             ),
           );
         },

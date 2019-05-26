@@ -226,7 +226,6 @@ class RestaurantBloc {
 
   void getRating() async {
     _firebaseDatabase.reference().child('restaurantRatings').child(restaurantKey).onValue.listen((event) {
-      print(event?.snapshot?.value?.toString());
       if (event?.snapshot?.key != null && event?.snapshot?.value != null) {
         _rating.add(Data(event.snapshot.key, event.snapshot.value));
       }

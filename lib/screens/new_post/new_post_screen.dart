@@ -87,70 +87,92 @@ class NewPostScreen extends StatelessWidget {
           newPostBloc.addTags(localizations.tagArray);
           return Container();
         }
-        return Container(
-          height: 32.0,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            separatorBuilder: (context, position) {
-              return Container(width: 8.0, height: 1.0);
-            },
-            itemCount: snapshot.data.length + 1,
-            itemBuilder: (context, position) {
-              if (position == 0) {
-                return Center(
-                  child: Container(
-                    width: 120.0,
-                    height: 30.0,
-                    alignment: Alignment.centerLeft,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6.0),
-                      border: Border.all(
-                        width: 1.5,
-                        color: Theme.of(context).disabledColor,
-                      ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            snapshot?.data?.where((tag) => tag.value == true)?.length == 3
+                ? Container(
+                    margin: const EdgeInsets.only(bottom: 8.0),
+                    child: Text(
+                      localizations.tagMaximumReached,
+                      style: TextStyle(color: Colors.green.shade600),
                     ),
-                    child: TextField(
-                      controller: tagEditingController,
-                      onSubmitted: (newTag) {
-                        newPostBloc.addTag(newTag);
-                        tagEditingController.clear();
+                  )
+                : Container(),
+            Container(
+              height: 44.0,
+              child: SingleChildScrollViewWithScrollbar(
+                scrollbarColor: Theme.of(context).accentColor.withOpacity(0.75),
+                scrollbarThickness: 4.0,
+                scrollDirection: Axis.horizontal,
+                child: ListView.separated(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  scrollDirection: Axis.horizontal,
+                  separatorBuilder: (context, position) {
+                    return Container(width: 8.0, height: 1.0);
+                  },
+                  itemCount: snapshot.data.length + 1,
+                  itemBuilder: (context, position) {
+                    if (position == 0) {
+                      return Center(
+                        child: Container(
+                          width: 120.0,
+                          height: 30.0,
+                          alignment: Alignment.centerLeft,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6.0),
+                            border: Border.all(
+                              width: 1.5,
+                              color: Theme.of(context).disabledColor,
+                            ),
+                          ),
+                          child: TextField(
+                            controller: tagEditingController,
+                            onSubmitted: (newTag) {
+                              newPostBloc.addTag(newTag);
+                              tagEditingController.clear();
+                            },
+                            textAlign: TextAlign.center,
+                            decoration: InputDecoration(
+                              hintText: localizations.other,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              border: InputBorder.none,
+                              isDense: true,
+                            ),
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(30),
+                            ],
+                            style: TextStyle(
+                              fontSize: 16.0,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    Data tag = snapshot.data.elementAt(position - 1);
+                    return GestureDetector(
+                      onTap: () {
+                        if (snapshot.data.where((t) => t.key == tag.key && t.value == true).isNotEmpty) {
+                          newPostBloc.removeTag(tag.key);
+                        } else {
+                          newPostBloc.addTag(tag.key);
+                        }
                       },
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                        hintText: localizations.other,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        border: InputBorder.none,
-                        isDense: true,
-                      ),
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(30),
-                      ],
-                      style: TextStyle(
+                      behavior: HitTestBehavior.translucent,
+                      child: CustomTag(
+                        tag.key,
+                        disabled: !(snapshot?.data ?? []).where((t) => t.key == tag.key && t.value == true).isNotEmpty,
+                        selected: (snapshot?.data ?? []).where((t) => t.key == tag.key && t.value == true).isNotEmpty,
                         fontSize: 16.0,
                       ),
-                    ),
-                  ),
-                );
-              }
-              Data tag = snapshot.data.elementAt(position - 1);
-              return GestureDetector(
-                onTap: () {
-                  if (snapshot.data.where((t) => t.key == tag.key && t.value == true).isNotEmpty) {
-                    newPostBloc.removeTag(tag.key);
-                  } else {
-                    newPostBloc.addTag(tag.key);
-                  }
-                },
-                behavior: HitTestBehavior.translucent,
-                child: CustomTag(
-                  tag.key,
-                  disabled: !(snapshot?.data ?? []).where((t) => t.key == tag.key && t.value == true).isNotEmpty,
-                  selected: (snapshot?.data ?? []).where((t) => t.key == tag.key && t.value == true).isNotEmpty,
-                  fontSize: 16.0,
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+              ),
+            )
+          ],
         );
       },
     );
@@ -239,6 +261,7 @@ class NewPostScreen extends StatelessWidget {
                                 ? Image.file(
                                     photoSnapshot?.data,
                                     height: 90.0,
+                                    fit: BoxFit.cover,
                                   )
                                 : Container(
                                     decoration: BoxDecoration(

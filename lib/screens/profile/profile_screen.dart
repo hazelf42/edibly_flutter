@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'package:edibly/screens/common/full_screen_image.dart';
 import 'package:edibly/screens/post/post_preview_widget.dart';
 import 'package:edibly/screens/profile/profile_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
@@ -25,18 +26,29 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              CircleAvatar(
-                radius: 36.0,
-                backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
-                child: authorValue == null
-                    ? SizedBox(
-                        width: 70.0,
-                        height: 70.0,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                        ),
-                      )
-                    : null,
+              GestureDetector(
+                onTap: () {
+                  String url = (authorValue == null ? null : (authorValue['photoUrl'] ?? authorValue['photoURL']));
+                  if (url == null || url.isEmpty) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => FullScreenImageScreen(url)),
+                  );
+                },
+                behavior: HitTestBehavior.translucent,
+                child: CircleAvatar(
+                  radius: 36.0,
+                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
+                  child: authorValue == null
+                      ? SizedBox(
+                          width: 70.0,
+                          height: 70.0,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.0,
+                          ),
+                        )
+                      : null,
+                ),
               ),
               Container(
                 height: 10.0,
