@@ -120,7 +120,8 @@ class RestaurantPreviewWidget extends StatelessWidget {
   }
 
   Widget _photo() {
-    bool hasPhoto = (restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '').toString().isNotEmpty;
+    String url = (restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '').toString();
+    bool hasPhoto = url.isNotEmpty && url.toLowerCase() != 'none';
     if (!hasPhoto) return Container();
     return ClipRRect(
       borderRadius: BorderRadius.only(
