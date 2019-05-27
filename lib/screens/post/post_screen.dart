@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as TimeAgo;
 
 import 'package:edibly/screens/restaurant/restaurant_screen.dart';
+import 'package:edibly/screens/common/full_screen_image.dart';
 import 'package:edibly/screens/profile/profile_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/screens/post/post_bloc.dart';
@@ -447,22 +448,32 @@ class PostWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Container(
-          height: MediaQuery.of(context).size.width,
-          child: ClipRect(
-            child: PhotoView(
-              imageProvider: NetworkImage(photoURL),
-              loadingChild: Container(
-                color: Colors.black,
-                alignment: Alignment.center,
-                child: Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: CircularProgressIndicator(),
+        GestureDetector(
+          onTap: () {
+            if (photoURL == null || photoURL.isEmpty) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => FullScreenImageScreen(photoURL)),
+            );
+          },
+          behavior: HitTestBehavior.translucent,
+          child: Container(
+            height: MediaQuery.of(context).size.width,
+            child: ClipRect(
+              child: PhotoView(
+                imageProvider: NetworkImage(photoURL),
+                loadingChild: Container(
+                  color: Colors.black,
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: CircularProgressIndicator(),
+                  ),
                 ),
+                backgroundDecoration: BoxDecoration(color: Colors.black),
+                minScale: PhotoViewComputedScale.contained * 1.0,
+                maxScale: PhotoViewComputedScale.covered * 4.0,
               ),
-              backgroundDecoration: BoxDecoration(color: Colors.black),
-              minScale: PhotoViewComputedScale.contained * 1.0,
-              maxScale: PhotoViewComputedScale.covered * 4.0,
             ),
           ),
         ),
