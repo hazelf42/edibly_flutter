@@ -26,6 +26,8 @@ class AppLocalizations {
 
   String get map => Intl.message('Map');
 
+  String get discover => Intl.message('Discover');
+
   String get like => Intl.message('Like');
 
   String get liked => Intl.message('Liked');
@@ -95,6 +97,8 @@ class AppLocalizations {
 
   String get email => Intl.message('Email');
 
+  String get events => Intl.message('Events');
+
   String get send => Intl.message('Send');
 
   String get search => Intl.message('Search');
@@ -139,6 +143,8 @@ class AppLocalizations {
 
   String get next => Intl.message('Next');
 
+  String get nearby => Intl.message('Nearby');
+
   String get delete => Intl.message('Delete');
 
   String get incorrectCredentials => Intl.message('Username or password is incorrect.');
@@ -149,6 +155,8 @@ class AppLocalizations {
 
   String get networkRequestFailed => Intl.message('Something went wrong. Check your Internet connection and try again.');
 
+  String get emailIsAlreadyInUse => Intl.message('Email is already in use.');
+
   String get accountNotFound => Intl.message('This email is not tied to any account.');
 
   String get noPostsByUserText => Intl.message('User has no posts yet.');
@@ -158,6 +166,8 @@ class AppLocalizations {
   String get noTipsText => Intl.message('No tips here yet.');
 
   String get nothingHereText => Intl.message('Nothing here yet.');
+
+  String get noEvents => Intl.message('No events.');
 
   String get other => Intl.message('Other');
 
@@ -194,6 +204,8 @@ class AppLocalizations {
   String get reviews => Intl.message('Reviews');
 
   String get featuredTip => Intl.message('Featured tip');
+
+  String get featured => Intl.message('Featured');
 
   String get tips => Intl.message('Tips');
 

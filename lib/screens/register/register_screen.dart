@@ -196,6 +196,8 @@ class RegisterScreen extends StatelessWidget {
       switch (loginState) {
         case RegisterState.FAILED:
           return localizations.networkRequestFailed;
+        case RegisterState.EMAIL_IN_USE:
+          return localizations.emailIsAlreadyInUse;
         default:
           return '';
       }

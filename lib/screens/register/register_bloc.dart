@@ -5,12 +5,14 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/validators.dart';
 
 enum RegisterState {
+  EMAIL_IN_USE,
   SUCCESSFUL,
   FAILED,
   TRYING,
@@ -170,7 +172,11 @@ class RegisterBloc extends Object with Validators {
           _registerState.addError(RegisterState.FAILED);
         });
       }).catchError((error) {
-        _registerState.addError(RegisterState.FAILED);
+        if (error is PlatformException && error.code == 'ERROR_EMAIL_ALREADY_IN_USE') {
+          _registerState.addError(RegisterState.EMAIL_IN_USE);
+        } else {
+          _registerState.addError(RegisterState.FAILED);
+        }
       });
     } else {
       _registerState.add(RegisterState.IDLE);

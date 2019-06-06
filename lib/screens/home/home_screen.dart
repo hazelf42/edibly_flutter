@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edibly/screens/search/bookmarks/bookmarks_screen.dart';
+import 'package:edibly/screens/discover/discover_screen.dart';
 import 'package:edibly/screens/drawer/drawer_screen.dart';
 import 'package:edibly/screens/search/search_screen.dart';
 import 'package:edibly/screens/feed/feed_screen.dart';
@@ -21,7 +22,7 @@ class HomeScreen extends StatelessWidget {
       case 0:
         return FeedScreen();
       case 1:
-        return SearchScreen(firebaseUser: firebaseUser);
+        return DiscoverScreen(firebaseUser: firebaseUser);
       default: // case 2
         return BookmarksScreen(firebaseUser: firebaseUser);
     }
@@ -54,7 +55,7 @@ class HomeScreen extends StatelessWidget {
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.location_on),
-                title: SingleLineText(localizations.map),
+                title: SingleLineText(localizations.discover),
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.bookmark),

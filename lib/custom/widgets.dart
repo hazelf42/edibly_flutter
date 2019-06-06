@@ -99,12 +99,17 @@ class CustomTag extends StatelessWidget {
   final bool disabled;
   final bool selected;
   final double fontSize;
+  final EdgeInsets padding;
 
   CustomTag(
     this.text, {
     this.disabled = false,
     this.selected = false,
     this.fontSize = 13.0,
+    this.padding = const EdgeInsets.symmetric(
+      vertical: 4.0,
+      horizontal: 8.0,
+    ),
   });
 
   BoxDecoration _boxDecoration({@required BuildContext context}) {
@@ -150,10 +155,7 @@ class CustomTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 4.0,
-          horizontal: 8.0,
-        ),
+        padding: padding,
         decoration: _boxDecoration(context: context),
         child: SingleLineText(
           text,
