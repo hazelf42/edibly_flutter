@@ -66,16 +66,23 @@ class RestaurantPreviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _address() {
-    if (restaurant?.value == null ||
-        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']) == null) {
-      return Container();
+  Widget _addressAndDistance() {
+    if (restaurant?.value == null) return Container();
+    String address = (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2'] ?? '');
+    String distance =
+        restaurant.value['distance'] != null ? '${double.parse(restaurant.value['distance'].toString()).toStringAsFixed(1)} km' : '';
+    if (address.isEmpty && distance.isEmpty) return Container();
+    String info;
+    if (address.isNotEmpty && distance.isNotEmpty) {
+      info = '$address • $distance';
+    } else if (address.isEmpty) {
+      info = distance;
+    } else {
+      info = address;
     }
     return Container(
       margin: const EdgeInsets.only(top: 4.0),
-      child: Text(
-        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']).toString().trim() ?? '',
-      ),
+      child: Text(info),
     );
   }
 
@@ -202,7 +209,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
                                   context: context,
                                   value: restaurant.value['rating'],
                                 ),
-                                _address(),
+                                _addressAndDistance(),
                               ],
                             ),
                           ),

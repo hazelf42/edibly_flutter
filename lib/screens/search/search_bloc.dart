@@ -152,10 +152,21 @@ class SearchBloc {
         Data dataWithRating = Data(dataWithoutRating.key, dataWithoutRating.value);
         try {
           dataWithRating.value['rating'] = ratingSnapshot?.value;
+          dataWithRating.value['distance'] = _distanceFromMeToDestination(LatLng(
+            double.parse(dataWithRating.value['lat'].toString()),
+            double.parse(dataWithRating.value['lng'].toString()),
+          ));
           restaurantsWithRating.add(dataWithRating);
         } catch (_) {}
         return null;
       });
+
+      /// sort by distance
+      restaurantsWithRating.sort((a, b) {
+        double diff = a.value['distance'] - b.value['distance'];
+        return diff < 0 ? -1 : (diff == 0 ? 0 : 1);
+      });
+
       _allRestaurants.add(restaurantsWithRating);
     });
   }
@@ -180,7 +191,7 @@ class SearchBloc {
             if (_distanceFilterValue == -1 ||
                 (data.value['lat'] != null &&
                     data.value['lng'] != null &&
-                    _distanceToRestaurant(LatLng(
+                    _distanceFromMeToDestination(LatLng(
                           double.parse(data.value['lat'].toString()),
                           double.parse(data.value['lng'].toString()),
                         )) <=
@@ -223,15 +234,12 @@ class SearchBloc {
     return locationToBeReturned;
   }
 
-  double _distanceToRestaurant(LatLng restaurantLocation) {
+  double _distanceFromMeToDestination(LatLng destination) {
     if (_myLocation == null) return 0;
     var p = 0.017453292519943295;
     var a = 0.5 -
-        cos((restaurantLocation.latitude - _myLocation.latitude) * p) / 2 +
-        cos(_myLocation.latitude * p) *
-            cos(restaurantLocation.latitude * p) *
-            (1 - cos((restaurantLocation.longitude - _myLocation.longitude) * p)) /
-            2;
+        cos((destination.latitude - _myLocation.latitude) * p) / 2 +
+        cos(_myLocation.latitude * p) * cos(destination.latitude * p) * (1 - cos((destination.longitude - _myLocation.longitude) * p)) / 2;
     return 12742 * asin(sqrt(a));
   }
 

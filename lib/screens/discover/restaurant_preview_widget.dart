@@ -70,56 +70,64 @@ class RestaurantPreviewWidget extends StatelessWidget {
     List<Data> tags = dynamicTagArrayToTagList(value['tagDict']);
     tags.sort((a, b) => b.value - a.value);
     return Container(
-      height: 20.0,
-      margin: const EdgeInsets.only(top: 6.0),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        separatorBuilder: (context, position) {
-          return Container(width: 6.0, height: 1.0);
-        },
-        itemCount: tags.length,
-        itemBuilder: (context, position) {
-          return CustomTag(
-            '${tags.elementAt(position).key} (${tags.elementAt(position).value})',
-            fontSize: 10.0,
-            padding: const EdgeInsets.symmetric(
-              vertical: 2.0,
-              horizontal: 3.0,
-            ),
-          );
-        },
-      ),
-    );
+        margin: const EdgeInsets.only(top: 6.0),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: tags.map((data) {
+              return Container(
+                margin: EdgeInsets.only(
+                  top: 1.0,
+                  bottom: 1.0,
+                  left: data.key == tags.first.key ? 0 : 6.0,
+                ),
+                child: CustomTag(
+                  '${data.key} (${data.value})',
+                  fontSize: 10.0,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 2.0,
+                    horizontal: 3.0,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ));
   }
 
   Widget _photoAndDistance(String distance) {
     String url = (restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '').toString();
     bool hasPhoto = url.isNotEmpty && url.toLowerCase() != 'none';
-    if (!hasPhoto) url = 'https://img2.10bestmedia.com/static/img/placeholder-restaurants.jpg';
+    if (!hasPhoto) {
+      url = 'https://images.pexels.com/photos/6267/menu-restaurant-vintage-table.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500';
+      hasPhoto = true;
+    }
     return ClipRRect(
       borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(4.0),
-        topRight: Radius.circular(4.0),
+        topLeft: Radius.circular(hasPhoto ? 4.0 : 0.0),
+        topRight: Radius.circular(hasPhoto ? 4.0 : 0.0),
       ),
       child: Container(
-        height: 120.0,
-        color: Colors.white,
+        height: hasPhoto ? 120.0 : null,
+        color: hasPhoto ? Colors.white : null,
         child: Stack(
           children: <Widget>[
-            CachedNetworkImage(
-              imageUrl: url,
-              width: 200.0,
-              height: 120.0,
-              fit: BoxFit.cover,
-              placeholder: (context, imageUrl) {
-                return Container(
-                  width: 200.0,
-                  height: 120.0,
-                  alignment: Alignment.center,
-                  child: CircularProgressIndicator(),
-                );
-              },
-            ),
+            hasPhoto
+                ? CachedNetworkImage(
+                    imageUrl: url,
+                    width: 200.0,
+                    height: 120.0,
+                    fit: BoxFit.cover,
+                    placeholder: (context, imageUrl) {
+                      return Container(
+                        width: 200.0,
+                        height: 120.0,
+                        alignment: Alignment.center,
+                        child: CircularProgressIndicator(),
+                      );
+                    },
+                  )
+                : Container(),
             Container(
               padding: const EdgeInsets.symmetric(
                 vertical: 4.0,
@@ -142,6 +150,8 @@ class RestaurantPreviewWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String url = (restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '').toString();
+    bool hasPhoto = url.isNotEmpty && url.toLowerCase() != 'none';
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -160,6 +170,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
         child: Card(
           margin: EdgeInsets.zero,
           child: Column(
+            mainAxisAlignment: hasPhoto ? MainAxisAlignment.start : MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               _photoAndDistance(restaurant.value['distance'] != null
@@ -168,6 +179,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Row(

@@ -177,6 +177,8 @@ class AppLocalizations {
 
   String get showVegetarianOptions => Intl.message('Show vegetarian options');
 
+  String get showMapPage => Intl.message('Click to show map page');
+
   String get noPhotosText => Intl.message('No photos here yet.');
 
   String get noRestaurantsFound => Intl.message('0 restaurants found.');
