@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:edibly/models/data.dart';
 
@@ -70,22 +72,32 @@ class RestaurantBloc {
   /// Other functions
   void getRestaurant() async {
     _restaurant.add(null);
-    _firebaseDatabase.reference().child('restaurants').child(restaurantKey).onValue.listen((event) async {
-      if (event?.snapshot?.value != null) {
-        try {
-          Data restaurantData = Data(event.snapshot.key, event.snapshot.value);
-          Query tipsQuery = _firebaseDatabase.reference().child('restaurantTips').child(restaurantKey).orderByKey().limitToLast(1);
-          tipsQuery.onChildAdded.listen((event) {
-            DataSnapshot tipsSnapshot = event?.snapshot;
-            restaurantData.value['featured_tip'] = tipsSnapshot?.value;
-          });
-          tipsQuery.onValue.listen((_) async {
-            _restaurant..add(restaurantData);
-          });
-        } catch (_) {}
-      }
-    });
-  }
+    final url = 'http://edibly.vassi.li/api/restaurants/'+restaurantKey;
+          print(url); 
+    final response =
+      await http.get(url);
+      final map = json.decode(response.body);
+      Data restaurantData = Data(map['rid'], map);  
+      _restaurant.add(restaurantData);
+      //final tipsResponse = await http.get('http://edibly.vassi.li/api/restaurants/'+restaurantKey+'/tips');
+      //final tipsMap = json.decode(tipsResponse.body);
+  //   _firebaseDatabase.reference().child('restaurants').child(restaurantKey).onValue.listen((event) async {
+    //   if (event?.snapshot?.value != null) {
+    //       Data restaurantData = Data(event.snapshot.key, event.snapshot.value);
+    //       Query tipsQuery = _firebaseDatabase.reference().child('restaurantTips').child(restaurantKey).orderByKey().limitToLast(1);
+    //       tipsQuery.onChildAdded.listen((event) {
+    //     try {
+    //         DataSnapshot tipsSnapshot = event?.snapshot;
+    //         restaurantData.value['featured_tip'] = tipsSnapshot?.value;
+    //       });
+    //       tipsQuery.onValue.listen((_) async {
+    //         _restaurant..add(restaurantData);
+    //       });
+    //     } catch (_) {}
+    //   }
+    // });
+  // }
+    }
 
   void addTip({@required String tip, @required String restaurantName}) {
     AddTipState addTipState = _addTipState.value;
@@ -99,7 +111,7 @@ class RestaurantBloc {
       _addTipState.addError(AddTipState.EMPTY_TIP);
       tipIsEmpty = true;
     }
-
+    // TODO: - Connect tips to vassilibase once he updates tips
     if (!tipIsEmpty) {
       DatabaseReference feedPostReference = _firebaseDatabase.reference().child('feedPosts').push();
       feedPostReference.set({
@@ -165,75 +177,107 @@ class RestaurantBloc {
       if (downloadUrl == null || downloadUrl.isEmpty) {
         _pickedPhotoUploadState.addError(PickedPhotoUploadState.FAILED);
         return;
+      } else {
+        var body = {
+        "photo": downloadUrl,
+        "uid": firebaseUserId,
+        "rid": restaurantKey
+      };
+      http.post("http://edibly.vassi.li/api/pictures/add", body: body).then((http.Response response) {
+         final int statusCode = response.statusCode;
+ 
+      if (statusCode < 200 || statusCode > 400 || body == null) {
+        throw new Exception("Error while fetching data" + statusCode.toString());
       }
-      await _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).push().set({
-        'imageUrl': downloadUrl,
-        'userId': firebaseUserId,
-        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
-        'isATest': false,
+      return json.decode(response.body);
       });
-      DatabaseReference feedPostReference = _firebaseDatabase.reference().child('feedPosts').push();
-      await feedPostReference.set({
-        'description': null,
-        'tagArray': null,
-        'otherTags': null,
-        'restaurantName': restaurantName,
-        'restaurantKey': restaurantKey,
-        'numRating': null,
-        'imageUrl': downloadUrl,
-        'postType': 1,
-        'comments': null,
-        'reviewingUserId': firebaseUserId,
-        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
-        'isATest': false,
-      });
-      await _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(feedPostReference.key).set({
-        'description': null,
-        'tagArray': null,
-        'otherTags': null,
-        'restaurantName': restaurantName,
-        'restaurantKey': restaurantKey,
-        'numRating': null,
-        'imageUrl': downloadUrl,
-        'postType': 1,
-        'comments': null,
-        'reviewingUserId': firebaseUserId,
-        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
-        'isATest': false,
-      });
-      _pickedPhotoUploadState.add(PickedPhotoUploadState.SUCCESSFUL);
-    }).catchError((error) {
-      _pickedPhotoUploadState.addError(PickedPhotoUploadState.FAILED);
-    });
-  }
+      //TODO: - Change to vassilibase once he enables setting images
+      
+    
+      // await _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).push().set({
+      //   'imageUrl': downloadUrl,
+      //   'userId': firebaseUserId,
+      //   'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
+      //   'isATest': false,
+      // });
+      // DatabaseReference feedPostReference = _firebaseDatabase.reference().child('feedPosts').push();
+      // await feedPostReference.set({
+      //   'description': null,
+      //   'tagArray': null,
+      //   'otherTags': null,
+      //   'restaurantName': restaurantName,
+      //   'restaurantKey': restaurantKey,
+      //   'numRating': null,
+      //   'imageUrl': downloadUrl,
+      //   'postType': 1,
+      //   'comments': null,
+      //   'reviewingUserId': firebaseUserId,
+      //   'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
+      //   'isATest': false,
+      // });
+      // await _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(feedPostReference.key).set({
+      //   'description': null,
+      //   'tagArray': null,
+      //   'otherTags': null,
+      //   'restaurantName': restaurantName,
+      //   'restaurantKey': restaurantKey,
+      //   'numRating': null,
+      //   'imageUrl': downloadUrl,
+      //   'postType': 1,
+      //   'comments': null,
+      //   'reviewingUserId': firebaseUserId,
+      //   'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
+      //   'isATest': false,
+      // });
+      _pickedPhotoUploadState.add(PickedPhotoUploadState.SUCCESSFUL);};
 
-  Stream<Event> getRestaurantBookmarkValue(String uid, String restaurantKey) {
-    return _firebaseDatabase.reference().child('starredRestaurants').child(uid).child(restaurantKey).onValue;
+  });}
+
+  Future<Stream<Event>> getRestaurantBookmarkValue(String uid, String restaurantKey)  async {
+    final url = 'http://edibly.vassi.li/api/profiles/'+uid+"/"+restaurantKey;
+          print(url);
+    final response = 
+      await http.get(url);
+    return json.decode(response.body);
+
+
   }
 
   void getLastThreeRestaurantPhotos() async {
-    _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).orderByKey().limitToLast(3).onValue.listen((event) {
+      final url = 'http://edibly.vassi.li/api/restaurants/'+restaurantKey+'/pictures';
+      final response = await http.get(url);
+      print(url);
       List<Data> photos = [];
-      if (event?.snapshot?.value != null) {
-        Map<dynamic, dynamic> photosMap = event.snapshot.value;
-        photosMap.forEach((key, value) {
-          photos.add(Data(key, value));
-        });
+      final imagesMap = json.decode(response.body);
+      imagesMap.forEach((r) => photos.add(r));
+      //photos = (photos.reversed); photos = photos.sublist(0,3);
+      if (photos.length > 3) {
+        photos = photos.sublist(0,3);
       }
       _lastThreePhotos.add(photos);
-    });
+
+    // _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).orderByKey().limitToLast(3).onValue.listen((event) {
+    //   List<Data> photos = [];
+    //   if (event?.snapshot?.value != null) {
+    //     Map<dynamic, dynamic> photosMap = event.snapshot.value;
+    //     photosMap.forEach((key, value) {
+    //       photos.add(Data(key, value));
+    //     });
+    //   }
+    //  _lastThreePhotos.add(photos);
+    //});
   }
 
   void getRating() async {
-    _firebaseDatabase.reference().child('restaurantRatings').child(restaurantKey).onValue.listen((event) {
-      if (event?.snapshot?.key != null && event?.snapshot?.value != null) {
-        _rating.add(Data(event.snapshot.key, event.snapshot.value));
-      }
-    });
+    // _firebaseDatabase.reference().child('restaurantRatings').child(restaurantKey).onValue.listen((event) {
+    //   if (event?.snapshot?.key != null && event?.snapshot?.value != null) {
+    //     _rating.add(Data(event.snapshot.key, event.snapshot.value));
+    //   }
+    // });
   }
 
   void setRestaurantBookmarkValue(String uid, String restaurantKey, bool value) {
-    _firebaseDatabase.reference().child('starredRestaurants').child(uid).child(restaurantKey).set(value ? 1 : 0);
+    // _firebaseDatabase.reference().child('starredRestaurants').child(uid).child(restaurantKey).set(value ? 1 : 0);
   }
 
   /// Dispose function

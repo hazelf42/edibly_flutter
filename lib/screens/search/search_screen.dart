@@ -32,7 +32,7 @@ class SearchScreen extends StatelessWidget {
           markerId: MarkerId(data.key),
           position: LatLng(
             double.parse(data.value['lat'].toString()),
-            double.parse(data.value['lng'].toString()),
+            double.parse(data.value['lon'].toString()),
           ),
           infoWindow: InfoWindow(
             title: data.value['name'],
@@ -419,150 +419,147 @@ class SearchScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations localizations = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(title: SingleLineText(localizations.map)),
-      body: DisposableProvider<SearchBloc>(
-        packageBuilder: (context) => SearchBloc(firebaseUser: firebaseUser),
-        child: Builder(
-          builder: (context) {
-            final SearchBloc searchBloc = Provider.of<SearchBloc>(context);
-            return Container(
-              color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
-              alignment: Alignment.center,
-              child: FutureBuilder(
-                  future: searchBloc.getCurrentLocation(),
-                  builder: (context, currentLocationSnapshot) {
-                    if (currentLocationSnapshot?.data == null) {
-                      return CircularProgressIndicator();
-                    }
-                    return StreamBuilder<List<Data>>(
-                      stream: searchBloc.allRestaurants,
-                      builder: (context, allRestaurantsSnapshot) {
-                        if (allRestaurantsSnapshot?.data == null) {
-                          if (allRestaurantsSnapshot.connectionState == ConnectionState.waiting) {
-                            searchBloc.getAllRestaurants();
-                          }
-                          return CircularProgressIndicator();
+    return DisposableProvider<SearchBloc>(
+      packageBuilder: (context) => SearchBloc(firebaseUser: firebaseUser),
+      child: Builder(
+        builder: (context) {
+          final SearchBloc searchBloc = Provider.of<SearchBloc>(context);
+          return Container(
+            color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
+            alignment: Alignment.center,
+            child: FutureBuilder(
+                future: searchBloc.getCurrentLocation(),
+                builder: (context, currentLocationSnapshot) {
+                  if (currentLocationSnapshot?.data == null) {
+                    return CircularProgressIndicator();
+                  }
+                  return StreamBuilder<List<Data>>(
+                    stream: searchBloc.allRestaurants,
+                    builder: (context, allRestaurantsSnapshot) {
+                      if (allRestaurantsSnapshot?.data == null) {
+                        if (allRestaurantsSnapshot.connectionState == ConnectionState.waiting) {
+                          searchBloc.getAllRestaurants();
                         }
-                        return RefreshIndicator(
-                          child: StreamBuilder<List<Data>>(
-                            stream: searchBloc.filteredRestaurants,
-                            initialData: allRestaurantsSnapshot?.data,
-                            builder: (context, filteredRestaurantsSnapshot) {
-                              bool filteredRestaurantsValueIsNull = filteredRestaurantsSnapshot?.data == null;
-                              int listViewItemCount = (filteredRestaurantsValueIsNull ? 0 : filteredRestaurantsSnapshot.data.length) + 2;
-                              return ListView.separated(
-                                padding: const EdgeInsets.only(bottom: 10.0),
-                                separatorBuilder: (context, position) {
-                                  return Container(height: 10.0);
-                                },
-                                itemCount: listViewItemCount,
-                                itemBuilder: (context, position) {
-                                  if (position == listViewItemCount) {
-                                    return _footer(
-                                      context: context,
-                                      localizations: localizations,
-                                    );
-                                  } else if (position == 0) {
-                                    return _map(
-                                      context: context,
-                                      currentLocationSnapshot: currentLocationSnapshot,
-                                      allRestaurantsSnapshot: allRestaurantsSnapshot,
-                                    );
-                                  } else if (position == 1) {
-                                    return Column(
-                                      children: <Widget>[
-                                        Card(
-                                          margin: const EdgeInsets.symmetric(horizontal: 10.0),
-                                          child: Row(
-                                            children: <Widget>[
-                                              Expanded(
-                                                child: TextField(
-                                                  onChanged: (keyword) {
-                                                    searchBloc.filterRestaurants(keyword);
-                                                  },
-                                                  decoration: InputDecoration(
-                                                    border: InputBorder.none,
-                                                    isDense: true,
-                                                    hintText: localizations.searchExampleText,
-                                                    labelText: localizations.search,
-                                                    prefixIcon: Icon(Icons.search),
-                                                  ),
-                                                ),
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.tune,
-                                                  color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey,
-                                                ),
-                                                onPressed: () {
-                                                  _openFilters(
-                                                    context: context,
-                                                    searchBloc: searchBloc,
-                                                    localizations: localizations,
-                                                  );
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Builder(builder: (context) {
-                                          if (listViewItemCount == 2 && filteredRestaurantsValueIsNull) {
-                                            return Container(
-                                              margin: const EdgeInsets.all(24.0),
-                                              child: CircularProgressIndicator(),
-                                            );
-                                          } else if (listViewItemCount == 2) {
-                                            return Container(
-                                              margin: const EdgeInsets.all(24.0),
-                                              child: Column(
-                                                children: <Widget>[
-                                                  Icon(
-                                                    Icons.warning,
-                                                    color: Theme.of(context).hintColor,
-                                                    size: 48.0,
-                                                  ),
-                                                  Container(
-                                                    height: 12.0,
-                                                  ),
-                                                  Text(
-                                                    localizations.noRestaurantsFound,
-                                                    style: TextStyle(
-                                                      fontSize: 18.0,
-                                                      color: Theme.of(context).hintColor,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          }
-                                          return Container();
-                                        }),
-                                      ],
-                                    );
-                                  }
-                                  return Container(
-                                    margin: EdgeInsets.symmetric(horizontal: 10.0),
-                                    child: RestaurantPreviewWidget(
-                                      firebaseUser: firebaseUser,
-                                      restaurant: filteredRestaurantsSnapshot.data.elementAt(position - 2),
-                                    ),
+                        return CircularProgressIndicator();
+                      }
+                      return RefreshIndicator(
+                        child: StreamBuilder<List<Data>>(
+                          stream: searchBloc.filteredRestaurants,
+                          initialData: allRestaurantsSnapshot?.data,
+                          builder: (context, filteredRestaurantsSnapshot) {
+                            bool filteredRestaurantsValueIsNull = filteredRestaurantsSnapshot?.data == null;
+                            int listViewItemCount = (filteredRestaurantsValueIsNull ? 0 : filteredRestaurantsSnapshot.data.length) + 2;
+                            return ListView.separated(
+                              padding: const EdgeInsets.only(bottom: 10.0),
+                              separatorBuilder: (context, position) {
+                                return Container(height: 10.0);
+                              },
+                              itemCount: listViewItemCount,
+                              itemBuilder: (context, position) {
+                                if (position == listViewItemCount) {
+                                  return _footer(
+                                    context: context,
+                                    localizations: localizations,
                                   );
-                                },
-                              );
-                            },
-                          ),
-                          onRefresh: () {
-                            searchBloc.getAllRestaurants();
-                            return Future.delayed(Duration(seconds: 1));
+                                } else if (position == 0) {
+                                  return _map(
+                                    context: context,
+                                    currentLocationSnapshot: currentLocationSnapshot,
+                                    allRestaurantsSnapshot: allRestaurantsSnapshot,
+                                  );
+                                } else if (position == 1) {
+                                  return Column(
+                                    children: <Widget>[
+                                      Card(
+                                        margin: const EdgeInsets.symmetric(horizontal: 10.0),
+                                        child: Row(
+                                          children: <Widget>[
+                                            Expanded(
+                                              child: TextField(
+                                                onChanged: (keyword) {
+                                                  searchBloc.filterRestaurants(keyword);
+                                                },
+                                                decoration: InputDecoration(
+                                                  border: InputBorder.none,
+                                                  isDense: true,
+                                                  hintText: localizations.searchExampleText,
+                                                  labelText: localizations.search,
+                                                  prefixIcon: Icon(Icons.search),
+                                                ),
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.tune,
+                                                color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey,
+                                              ),
+                                              onPressed: () {
+                                                _openFilters(
+                                                  context: context,
+                                                  searchBloc: searchBloc,
+                                                  localizations: localizations,
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Builder(builder: (context) {
+                                        if (listViewItemCount == 2 && filteredRestaurantsValueIsNull) {
+                                          return Container(
+                                            margin: const EdgeInsets.all(24.0),
+                                            child: CircularProgressIndicator(),
+                                          );
+                                        } else if (listViewItemCount == 2) {
+                                          return Container(
+                                            margin: const EdgeInsets.all(24.0),
+                                            child: Column(
+                                              children: <Widget>[
+                                                Icon(
+                                                  Icons.warning,
+                                                  color: Theme.of(context).hintColor,
+                                                  size: 48.0,
+                                                ),
+                                                Container(
+                                                  height: 12.0,
+                                                ),
+                                                Text(
+                                                  localizations.noRestaurantsFound,
+                                                  style: TextStyle(
+                                                    fontSize: 18.0,
+                                                    color: Theme.of(context).hintColor,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }
+                                        return Container();
+                                      }),
+                                    ],
+                                  );
+                                }
+                                return Container(
+                                  margin: EdgeInsets.symmetric(horizontal: 10.0),
+                                  child: RestaurantPreviewWidget(
+                                    firebaseUser: firebaseUser,
+                                    restaurant: filteredRestaurantsSnapshot.data.elementAt(position - 2),
+                                  ),
+                                );
+                              },
+                            );
                           },
-                        );
-                      },
-                    );
-                  }),
-            );
-          },
-        ),
+                        ),
+                        onRefresh: () {
+                          searchBloc.getAllRestaurants();
+                          return Future.delayed(Duration(seconds: 1));
+                        },
+                      );
+                    },
+                  );
+                }),
+          );
+        },
       ),
     );
   }

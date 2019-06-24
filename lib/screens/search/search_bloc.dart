@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:convert';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -6,6 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:location/location.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:http/http.dart' as http;
+
 
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/models/data.dart';
@@ -140,35 +143,18 @@ class SearchBloc {
   /// Other functions
   void getAllRestaurants() async {
     _allRestaurants.add(null);
-    _firebaseDatabase.reference().child('restaurants').onValue.listen((event) async {
-      List<Data> restaurantsWithRating = [];
-      List<Data> restaurantsWithoutRating = [];
-      if (event?.snapshot?.value != null) {
-        Map<dynamic, dynamic> restaurantsWithoutRatingMap = event.snapshot.value;
-        restaurantsWithoutRatingMap.forEach((key, value) => restaurantsWithoutRating.add(Data(key, value)));
-      }
-      await Future.forEach(restaurantsWithoutRating, (Data dataWithoutRating) async {
-        DataSnapshot ratingSnapshot = await _firebaseDatabase.reference().child('restaurantRatings').child(dataWithoutRating.key).once();
-        Data dataWithRating = Data(dataWithoutRating.key, dataWithoutRating.value);
-        try {
-          dataWithRating.value['rating'] = ratingSnapshot?.value;
-          dataWithRating.value['distance'] = _distanceFromMeToDestination(LatLng(
-            double.parse(dataWithRating.value['lat'].toString()),
-            double.parse(dataWithRating.value['lng'].toString()),
-          ));
-          restaurantsWithRating.add(dataWithRating);
-        } catch (_) {}
-        return null;
-      });
+    List<Data> restaurantsWithRating = [];
+    List<Data> restaurantsWithoutRating = [];
+    final response =
+      await http.get('http://edibly.vassi.li/api/restaurants');
+      final map = json.decode(response.body);
+      final restaurantsWithoutRatingMap = Map<dynamic, dynamic>();
+      map.forEach((r) => restaurantsWithoutRatingMap[r['rid'].toString()] = r);
 
-      /// sort by distance
-      restaurantsWithRating.sort((a, b) {
-        double diff = a.value['distance'] - b.value['distance'];
-        return diff < 0 ? -1 : (diff == 0 ? 0 : 1);
-      });
+     restaurantsWithoutRatingMap.forEach((key, value) => restaurantsWithoutRating.add(Data(key, value)));
 
-      _allRestaurants.add(restaurantsWithRating);
-    });
+     
+     _allRestaurants.add(restaurantsWithoutRating);
   }
 
   void filterRestaurants(String keyword) async {
@@ -191,7 +177,7 @@ class SearchBloc {
             if (_distanceFilterValue == -1 ||
                 (data.value['lat'] != null &&
                     data.value['lng'] != null &&
-                    _distanceFromMeToDestination(LatLng(
+                    _distanceToRestaurant(LatLng(
                           double.parse(data.value['lat'].toString()),
                           double.parse(data.value['lng'].toString()),
                         )) <=
@@ -234,12 +220,15 @@ class SearchBloc {
     return locationToBeReturned;
   }
 
-  double _distanceFromMeToDestination(LatLng destination) {
+  double _distanceToRestaurant(LatLng restaurantLocation) {
     if (_myLocation == null) return 0;
     var p = 0.017453292519943295;
     var a = 0.5 -
-        cos((destination.latitude - _myLocation.latitude) * p) / 2 +
-        cos(_myLocation.latitude * p) * cos(destination.latitude * p) * (1 - cos((destination.longitude - _myLocation.longitude) * p)) / 2;
+        cos((restaurantLocation.latitude - _myLocation.latitude) * p) / 2 +
+        cos(_myLocation.latitude * p) *
+            cos(restaurantLocation.latitude * p) *
+            (1 - cos((restaurantLocation.longitude - _myLocation.longitude) * p)) /
+            2;
     return 12742 * asin(sqrt(a));
   }
 
@@ -273,7 +262,7 @@ class SearchBloc {
       });
       _bookmarkedRestaurants.add(restaurantsWithRating);
     });
-  }
+  } 
 
   /// Dispose function
   void dispose() {

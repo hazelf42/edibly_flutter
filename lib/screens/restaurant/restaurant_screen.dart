@@ -351,7 +351,7 @@ class RestaurantScreen extends StatelessWidget {
 
   Widget _bookmarkButton({@required RestaurantBloc restaurantBloc, @required Data restaurant}) {
     return StreamBuilder<Event>(
-      stream: restaurantBloc.getRestaurantBookmarkValue(firebaseUserId, restaurant.key),
+      //stream: restaurantBloc.getRestaurantBookmarkValue(firebaseUserId, restaurant.key),
       builder: (context, bookmarkValueSnapshot) {
         bool bookmarked = bookmarkValueSnapshot?.data?.snapshot?.value == 1;
         return IconButton(

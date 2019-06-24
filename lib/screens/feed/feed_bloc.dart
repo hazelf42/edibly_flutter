@@ -1,8 +1,8 @@
 import 'dart:async';
-
+import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:rxdart/rxdart.dart';
-
+import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
 
 class FeedBloc {
@@ -63,32 +63,55 @@ class FeedBloc {
       _postsInCurrentPage = 0;
 
       /// network request
-      Query query = _firebaseDatabase.reference().child('feedPosts').orderByKey().limitToLast(POSTS_PER_PAGE);
-      onChildAddedListener = query.onChildAdded.listen((event) {
-        /// increment number of posts in current page
-        _postsInCurrentPage++;
+      final response = await http.get('http://edibly.vassi.li/api/posts');
 
-        /// remove any null values, null values are shown as circular loaders
-        posts.remove(null);
+      final map = json.decode(response.body);
+      final postsMap = Map<dynamic, dynamic>();
+      map.forEach((p) => postsMap[p['rrid'].toString()] = p);
+      var index = 0;
+      for (var post in map) {
+        final nameResponse = await http.get('http://edibly.vassi.li/api/restaurants/'+post['rid'].toString());
+        final name = json.decode(nameResponse.body)['name'];
+        post['restaurantName'] = name;
+        posts.add(Data(index, post));
+      }
+      
+      print(posts);
+      _postsInCurrentPage += 10;
+      posts.remove(null);
+      _posts.add(posts);
+      print(_posts);
 
-        /// insert newly acquired post to the start of new page
-        posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
+      // Query query = _firebaseDatabase.reference().child('feedPosts').orderByKey().limitToLast(POSTS_PER_PAGE);
+      // onChildAddedListener = query.onChildAdded.listen((event) {
+      //   /// increment number of posts in current page
+      //   _postsInCurrentPage++;
 
-        /// if this was the last post in requested page, then show a circular loader at the end of page
-        if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
+      //   /// remove any null values, null values are shown as circular loaders
+      //   posts.remove(null);
+      //   print(posts);
 
-        /// publish an update to the stream
-        _posts.add(posts);
-      });
-      query.onValue.listen((_) {
-        onChildAddedListener?.cancel();
-      });
-      query.onChildRemoved.listen((event) {
-        posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+      //   /// insert newly acquired post to the start of new page
+      //   posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
 
-        /// publish an update to the stream
-        _posts.add(posts);
-      });
+      //   /// if this was the last post in requested page, then show a circular loader at the end of page
+      //   if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
+
+      //   /// publish an update to the stream
+      //   _posts.add(posts);
+      // });
+      // query.onValue.listen((_) {
+      //   onChildAddedListener?.cancel();
+      // });
+      // query.onChildRemoved.listen((event) {
+      //   posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+
+      //   /// publish an update to the stream
+      //   _posts.add(posts);
+      //   print("Posts!");
+        
+      //   print(_posts);
+      // });
     }
 
     /// if this is not the first page
@@ -117,6 +140,7 @@ class FeedBloc {
 
         /// publish an update to the stream
         _posts.add(posts);
+        print(_posts);
       });
       query.onValue.listen((_) {
         onChildAddedListener?.cancel();

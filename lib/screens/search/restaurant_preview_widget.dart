@@ -33,7 +33,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
   }
 
   Widget _rating({@required BuildContext context, @required dynamic value}) {
-    if (value == null || value['numRating'] == null) {
+    if (value == null || value['stars'] == null) {
       return Container();
     }
     return Container(
@@ -46,7 +46,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
             SmoothStarRating(
               allowHalfRating: true,
               starCount: 5,
-              rating: value['numRating'] / 2.0 - 0.1,
+              rating: value['stars'] / 2.0 - 0.1,
               size: 16.0,
               color: AppColors.primarySwatch.shade900,
               borderColor: AppColors.primarySwatch.shade900,
@@ -55,7 +55,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              (double.parse(value['numRating'].toString()) / 2.0).toStringAsFixed(1),
+              (double.parse(value['stars'].toString()) / 2.0).toStringAsFixed(1),
               style: TextStyle(
                 color: Theme.of(context).hintColor,
               ),
@@ -66,23 +66,16 @@ class RestaurantPreviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _addressAndDistance() {
-    if (restaurant?.value == null) return Container();
-    String address = (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2'] ?? '');
-    String distance =
-        restaurant.value['distance'] != null ? '${double.parse(restaurant.value['distance'].toString()).toStringAsFixed(1)} km' : '';
-    if (address.isEmpty && distance.isEmpty) return Container();
-    String info;
-    if (address.isNotEmpty && distance.isNotEmpty) {
-      info = '$address • $distance';
-    } else if (address.isEmpty) {
-      info = distance;
-    } else {
-      info = address;
+  Widget _address() {
+    if (restaurant?.value == null ||
+        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']) == null) {
+      return Container();
     }
     return Container(
       margin: const EdgeInsets.only(top: 4.0),
-      child: Text(info),
+      child: Text(
+        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']).toString().trim() ?? '',
+      ),
     );
   }
 
@@ -127,7 +120,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
   }
 
   Widget _photo() {
-    String url = (restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '').toString();
+    String url = (restaurant.value['photo'] ?? '').toString();
     bool hasPhoto = url.isNotEmpty && url.toLowerCase() != 'none';
     if (!hasPhoto) return Container();
     return ClipRRect(
@@ -140,7 +133,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
         height: 70.0,
         color: Colors.white,
         child: CachedNetworkImage(
-          imageUrl: restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '',
+          imageUrl: restaurant.value['photo'] ?? '',
           width: 70.0,
           height: 70.0,
           fit: BoxFit.cover,
@@ -209,7 +202,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
                                   context: context,
                                   value: restaurant.value['rating'],
                                 ),
-                                _addressAndDistance(),
+                                _address(),
                               ],
                             ),
                           ),
