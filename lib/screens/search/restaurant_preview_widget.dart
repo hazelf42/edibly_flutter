@@ -24,16 +24,16 @@ class RestaurantPreviewWidget extends StatelessWidget {
   List<Data> dynamicTagArrayToTagList(dynamic dynamicTagArray) {
     List<Data> tagList = [];
     if (dynamicTagArray != null) {
-      Map<dynamic, dynamic> map = dynamicTagArray;
-      map.forEach((key, value) {
-        tagList.add(Data(key, value));
+      List<dynamic>map = dynamicTagArray;
+      map.forEach((tag) {
+        tagList.add(Data(tag['text'], tag['num']));
       });
     }
     return tagList;
   }
 
   Widget _rating({@required BuildContext context, @required dynamic value}) {
-    if (value == null || value['stars'] == null) {
+    if (value == null || value['averagerating'] == null) {
       return Container();
     }
     return Container(
@@ -46,7 +46,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
             SmoothStarRating(
               allowHalfRating: true,
               starCount: 5,
-              rating: value['stars'] / 2.0 - 0.1,
+              rating: value['averagerating'] / 2.0 - 0.1,
               size: 16.0,
               color: AppColors.primarySwatch.shade900,
               borderColor: AppColors.primarySwatch.shade900,
@@ -55,7 +55,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              (double.parse(value['stars'].toString()) / 2.0).toStringAsFixed(1),
+              (double.parse(value['averagerating'].toString()) / 2.0).toStringAsFixed(1),
               style: TextStyle(
                 color: Theme.of(context).hintColor,
               ),
@@ -80,10 +80,10 @@ class RestaurantPreviewWidget extends StatelessWidget {
   }
 
   Widget _tags({@required BuildContext context, @required dynamic value}) {
-    if (value == null || value['tagDict'] == null || value['tagDict'].toString().isEmpty) {
+    if (value == null || value['tags'].length == 0 || value['tags'].toString().isEmpty) {
       return Container();
     }
-    List<Data> tags = dynamicTagArrayToTagList(value['tagDict']);
+    List<Data> tags = dynamicTagArrayToTagList(value['tags']);
     tags.sort((a, b) => b.value - a.value);
     return Container(
       height: 32.0,
@@ -131,6 +131,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
       child: Container(
         width: 70.0,
         height: 70.0,
+        padding: (restaurant.value['tags'].length > 0) ? EdgeInsets.only(left: 10, top: 10) : null,
         color: Colors.white,
         child: CachedNetworkImage(
           imageUrl: restaurant.value['photo'] ?? '',
@@ -200,7 +201,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
                                 ),
                                 _rating(
                                   context: context,
-                                  value: restaurant.value['rating'],
+                                  value: restaurant.value,
                                 ),
                                 _address(),
                               ],
@@ -212,7 +213,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
                     ),
                     _tags(
                       context: context,
-                      value: restaurant.value['rating'],
+                      value: restaurant.value,
                     ),
                   ],
                 ),

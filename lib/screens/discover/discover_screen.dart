@@ -21,91 +21,6 @@ class DiscoverScreen extends StatelessWidget {
 
   DiscoverScreen({@required this.firebaseUser});
 
-  List<Widget> _eventWidgets({@required AsyncSnapshot<List<Data>> eventsSnapshot}) {
-    List<Widget> widgets = [];
-    for (int i = 0; i < eventsSnapshot.data.length; i++) {
-      if (i == 0 ||
-          DateFormat('ddMMyyyy').format(
-                DateTime.fromMillisecondsSinceEpoch(
-                  eventsSnapshot.data.elementAt(i - 1).value['startTime'] * 1000,
-                ),
-              ) !=
-              DateFormat('ddMMyyyy').format(
-                DateTime.fromMillisecondsSinceEpoch(
-                  eventsSnapshot.data.elementAt(i).value['startTime'] * 1000,
-                ),
-              )) {
-        widgets.add(
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: 190.0,
-            ),
-            child: Container(
-              margin: EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
-              child: Card(
-                margin: EdgeInsets.zero,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(Icons.today),
-                      Container(height: 4.0),
-                      SingleLineText(
-                        DateFormat('MMM').format(
-                          DateTime.fromMillisecondsSinceEpoch(
-                            eventsSnapshot.data.elementAt(i).value['startTime'] * 1000,
-                          ),
-                        ),
-                      ),
-                      Container(height: 2.0),
-                      SingleLineText(
-                        DateFormat('d').format(
-                          DateTime.fromMillisecondsSinceEpoch(
-                            eventsSnapshot.data.elementAt(i).value['startTime'] * 1000,
-                          ),
-                        ),
-                        style: TextStyle(
-                          color: AppColors.primarySwatch.shade600,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SingleLineText(
-                        DateFormat('EEEE').format(
-                          DateTime.fromMillisecondsSinceEpoch(
-                            eventsSnapshot.data.elementAt(i).value['startTime'] * 1000,
-                          ),
-                        ),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-      widgets.add(
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: 190.0,
-          ),
-          child: Container(
-            margin: EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
-            child: EventPreviewWidget(
-              firebaseUser: firebaseUser,
-              event: eventsSnapshot.data.elementAt(i),
-            ),
-          ),
-        ),
-      );
-    }
-    return widgets;
-  }
-
   Widget _header(String header) {
     return Card(
       shape: RoundedRectangleBorder(),
@@ -123,46 +38,6 @@ class DiscoverScreen extends StatelessWidget {
     );
   }
 
-  Widget _nearbyHeader(BuildContext context, String header, String buttonTitle) {
-    return Card(
-      shape: RoundedRectangleBorder(),
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SearchScreen(firebaseUser: firebaseUser),
-            ),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: SingleLineText(
-                  header,
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              SingleLineText(
-                buttonTitle,
-                style: TextStyle(
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.primarySwatch.shade700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _error({@required String error}) {
     return Container(
       padding: const EdgeInsets.all(24.0),
@@ -174,10 +49,10 @@ class DiscoverScreen extends StatelessWidget {
     );
   }
 
-  Widget _loader() {
+  Widget _loader({double height = 200.0}) {
     return Container(
-      padding: const EdgeInsets.all(24.0),
       alignment: Alignment.center,
+      height: height,
       child: CircularProgressIndicator(),
     );
   }
@@ -190,7 +65,7 @@ class DiscoverScreen extends StatelessWidget {
           stream: discoverBloc.restaurants,
           builder: (context, restaurantsSnapshot) {
             if (!locationSnapshot.hasData || (!restaurantsSnapshot.hasData && !restaurantsSnapshot.hasError)) {
-              return _loader();
+              return _loader(height: 200);
             }
             // ignore: sdk_version_set_literal
             Set<Marker> markers = {};
@@ -200,7 +75,7 @@ class DiscoverScreen extends StatelessWidget {
                   markerId: MarkerId(data.key),
                   position: LatLng(
                     double.parse(data.value['lat'].toString()),
-                    double.parse(data.value['lng'].toString()),
+                    double.parse(data.value['lon'].toString()),
                   ),
                   infoWindow: InfoWindow(
                     title: data.value['name'],
@@ -256,29 +131,23 @@ class DiscoverScreen extends StatelessWidget {
         if (restaurantsSnapshot.hasError) {
           return _error(error: restaurantsSnapshot.error);
         } else if (!restaurantsSnapshot.hasData) {
-          return _loader();
+          return _loader(height: 200);
         } else {
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 6.0),
-            child: SingleChildScrollView(
+            height: 200.0,
+            child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: restaurantsSnapshot.data.map((data) {
-                  return ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: 200.0,
-                    ),
-                    child: Container(
-                      margin: EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
-                      child: RestaurantPreviewWidget(
-                        firebaseUser: firebaseUser,
-                        restaurant: data,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
+                  child: RestaurantPreviewWidget(
+                    firebaseUser: firebaseUser,
+                    restaurant: restaurantsSnapshot.data.elementAt(index),
+                  ),
+                );
+              },
+              itemCount: restaurantsSnapshot.data.length,
             ),
           );
         }
@@ -293,16 +162,85 @@ class DiscoverScreen extends StatelessWidget {
         if (eventsSnapshot.hasError) {
           return _error(error: eventsSnapshot.error);
         } else if (!eventsSnapshot.hasData) {
-          return _loader();
+          return _loader(height: 200);
         } else {
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 6.0),
-            child: SingleChildScrollView(
+            height: 187.0,
+            child: ListView.separated(
+              separatorBuilder: (context, index) {
+                if (index == 0 ||
+                    DateFormat('ddMMyyyy').format(
+                          DateTime.fromMillisecondsSinceEpoch(
+                            eventsSnapshot.data.elementAt(index - 1).value['startTime'] * 1000,
+                          ),
+                        ) !=
+                        DateFormat('ddMMyyyy').format(
+                          DateTime.fromMillisecondsSinceEpoch(
+                            eventsSnapshot.data.elementAt(index).value['startTime'] * 1000,
+                          ),
+                        )) {
+                  return Container(
+                    margin: EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
+                    child: Card(
+                      margin: EdgeInsets.zero,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Icon(Icons.today),
+                            Container(height: 4.0),
+                            SingleLineText(
+                              DateFormat('MMM').format(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                  eventsSnapshot.data.elementAt(index).value['startTime'] * 1000,
+                                ),
+                              ),
+                            ),
+                            Container(height: 2.0),
+                            SingleLineText(
+                              DateFormat('d').format(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                  eventsSnapshot.data.elementAt(index).value['startTime'] * 1000,
+                                ),
+                              ),
+                              style: TextStyle(
+                                color: AppColors.primarySwatch.shade600,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SingleLineText(
+                              DateFormat('EEEE').format(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                  eventsSnapshot.data.elementAt(index).value['startTime'] * 1000,
+                                ),
+                              ),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                } else {
+                  return Container();
+                }
+              },
               scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: _eventWidgets(eventsSnapshot: eventsSnapshot),
-              ),
+              itemBuilder: (context, index) {
+                if (index == 0) return Container();
+                return Container(
+                  margin: EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
+                  child: EventPreviewWidget(
+                    firebaseUser: firebaseUser,
+                    event: eventsSnapshot.data.elementAt(index - 1),
+                  ),
+                );
+              },
+              itemCount: eventsSnapshot.data.length + 1,
             ),
           );
         }
@@ -336,7 +274,7 @@ class DiscoverScreen extends StatelessWidget {
                   Container(height: 12.0),
                   _events(stream: discoverBloc.events),
                   Container(height: 12.0),
-                  _nearbyHeader(context, localizations.nearby, localizations.showMapPage),
+                  _header(localizations.nearby),
                   Container(height: 12.0),
                   _map(discoverBloc: discoverBloc),
                   Container(height: 10.0),

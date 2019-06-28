@@ -22,14 +22,14 @@ class EventPreviewWidget extends StatelessWidget {
     if (dynamicTagArray != null) {
       Map<dynamic, dynamic> map = dynamicTagArray;
       map.forEach((key, value) {
-        tagList.add(Data(key, value));
+        tagList.add(Data(map['num'], map['text']));
       });
     }
     return tagList;
   }
 
   Widget _photoAndDistance(String distance) {
-    String url = (event.value['photoUrl'] ?? event.value['photoURL'] ?? '').toString();
+    String url = (event.value['photo'] ?? event.value['photo'] ?? '').toString();
     bool hasPhoto = url.isNotEmpty && url.toLowerCase() != 'none';
     if (!hasPhoto) url = 'https://img2.10bestmedia.com/static/img/placeholder-restaurants.jpg';
     return ClipRRect(

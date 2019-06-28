@@ -4,7 +4,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
-
 class FeedBloc {
   FeedBloc() {
     _firebaseDatabase.setPersistenceEnabled(true);
@@ -72,15 +71,13 @@ class FeedBloc {
       for (var post in map) {
         final nameResponse = await http.get('http://edibly.vassi.li/api/restaurants/'+post['rid'].toString());
         final name = json.decode(nameResponse.body)['name'];
-        post['restaurantName'] = name;
+        post['restaurantName'] = name;    
         posts.add(Data(index, post));
       }
       
-      print(posts);
       _postsInCurrentPage += 10;
       posts.remove(null);
       _posts.add(posts);
-      print(_posts);
 
       // Query query = _firebaseDatabase.reference().child('feedPosts').orderByKey().limitToLast(POSTS_PER_PAGE);
       // onChildAddedListener = query.onChildAdded.listen((event) {

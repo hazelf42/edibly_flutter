@@ -1,3 +1,6 @@
+import 'package:http/http.dart';
+import 'dart:convert';
+
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:photo_view/photo_view.dart';
@@ -156,10 +159,11 @@ class PostCommentWidget extends StatelessWidget {
   });
 
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return StreamBuilder<Event>(
-      stream: mainBloc.getUser(comment.value['userId'].toString()),
-      builder: (context, snapshot) {
-        Map<dynamic, dynamic> authorValue = snapshot?.data?.snapshot?.value;
+      return FutureBuilder<Response>(
+      future: mainBloc.getUser(comment.value['userId'].toString()),
+      builder: (context, response) {
+        final userMap = json.decode(response.data.body);
+        Map<dynamic, dynamic> authorValue = userMap;
         return Row(
           children: <Widget>[
             CircleAvatar(
@@ -194,7 +198,7 @@ class PostCommentWidget extends StatelessWidget {
                               child: Row(
                                 children: <Widget>[
                                   SingleLineText(
-                                    '${authorValue['firstName']} ${authorValue['lastName']}',
+                                    '${authorValue['firstname']} ${authorValue['lastName']}',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -325,10 +329,11 @@ class PostWidget extends StatelessWidget {
   }
 
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return StreamBuilder<Event>(
-      stream: mainBloc.getUser(post.value['reviewingUserId'].toString()),
-      builder: (context, snapshot) {
-        Map<dynamic, dynamic> authorValue = snapshot?.data?.snapshot?.value;
+    
+     return FutureBuilder<Response>(
+      future: mainBloc.getUser(post.value['reviewingUserId'].toString()),
+      builder: (context, response) {
+        Map<dynamic, dynamic> authorValue =  response.hasData ? json.decode(response.data.body) : null;
         return GestureDetector(
           onTap: () {
             Navigator.push(
@@ -345,7 +350,7 @@ class PostWidget extends StatelessWidget {
               children: <Widget>[
                 CircleAvatar(
                   radius: 24.0,
-                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
+                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photo'] ?? ''),
                   child: authorValue == null
                       ? SizedBox(
                           width: 46.0,
@@ -375,7 +380,7 @@ class PostWidget extends StatelessWidget {
                                   child: Row(
                                     children: <Widget>[
                                       SingleLineText(
-                                        '${authorValue['firstName']} ${authorValue['lastName']}',
+                                        '${authorValue['firstname']} ${authorValue['lastName']}',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -419,10 +424,11 @@ class PostWidget extends StatelessWidget {
   }
 
   Widget _restaurant({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return StreamBuilder<Event>(
-      stream: mainBloc.getRestaurant(post.value['restaurantKey'].toString()),
-      builder: (context, snapshot) {
-        Map<dynamic, dynamic> restaurantValue = snapshot?.data?.snapshot?.value;
+    return FutureBuilder<Response>(future: mainBloc.getRestaurant(post.value['rid'].toString()),
+    builder: (context, response) {
+        final restaurantMap = response.hasData ? json.decode(response.data.body) : null;
+        Map<dynamic, dynamic> restaurantValue = restaurantMap;
+        print(restaurantValue);
         if (restaurantValue == null ||
             (restaurantValue['address'] ?? restaurantValue['address1'] ?? restaurantValue['address2']) == null ||
             (restaurantValue['address'] ?? restaurantValue['address1'] ?? restaurantValue['address2']).toString().isEmpty) {
@@ -437,8 +443,7 @@ class PostWidget extends StatelessWidget {
             ),
           ),
         );
-      },
-    );
+      },);
   }
 
   Widget _photo({@required BuildContext context, @required MainBloc mainBloc, @required String photoURL}) {
@@ -499,7 +504,7 @@ class PostWidget extends StatelessWidget {
             SmoothStarRating(
               allowHalfRating: true,
               starCount: 5,
-              rating: post.value['numRating'] / 2.0 - 0.1,
+              rating: post.value['stars'] / 2.0 - 0.1,
               size: 16.0,
               color: AppColors.primarySwatch.shade900,
               borderColor: AppColors.primarySwatch.shade900,
@@ -508,7 +513,7 @@ class PostWidget extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              (post.value['numRating'] / 2.0 as double).toStringAsFixed(1),
+              (post.value['stars'] / 2.0 as double).toStringAsFixed(1),
               style: TextStyle(
                 color: Theme.of(context).hintColor,
               ),
@@ -520,7 +525,7 @@ class PostWidget extends StatelessWidget {
   }
 
   Widget _description() {
-    if (post.value['description'] == null || post.value['description'].toString().isEmpty) {
+    if (post.value['text'] == null || post.value['text'].toString().isEmpty) {
       return Container();
     }
     return Column(
@@ -529,16 +534,16 @@ class PostWidget extends StatelessWidget {
         Container(
           height: 12.0,
         ),
-        Text(post.value['description']),
+        Text(post.value['text']),
       ],
     );
   }
 
   Widget _tags() {
-    if (post.value['tagArray'] == null || post.value['tagArray'].toString().isEmpty) {
+    if (post.value['tags'] == null || post.value['tags'].toString().isEmpty) {
       return Container();
     }
-    List<String> tags = dynamicTagArrayToTagList(post.value['tagArray']);
+    List<String> tags = dynamicTagArrayToTagList(post.value['tags']);
     return Container(
       height: 32.0,
       margin: const EdgeInsets.only(top: 12.0),
@@ -606,7 +611,7 @@ class PostWidget extends StatelessWidget {
         _photo(
           context: context,
           mainBloc: mainBloc,
-          photoURL: post.value['imageUrl'],
+          photoURL: post.value['photo'],
         ),
         Container(
           padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 0.0),
@@ -620,7 +625,7 @@ class PostWidget extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => RestaurantScreen(
                             firebaseUserId: uid,
-                            restaurantKey: post.value['restaurantKey'],
+                            restaurantKey: post.value['rid'],
                           ),
                     ),
                   );
@@ -630,6 +635,7 @@ class PostWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Text(
+                      //TODO: - getRestaurant here
                       post.value['restaurantName'] ?? '',
                       style: Theme.of(context).textTheme.title,
                     ),

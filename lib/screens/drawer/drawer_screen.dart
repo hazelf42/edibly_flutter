@@ -63,7 +63,7 @@ class DrawerScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               SingleLineText(
-                                '${map['firstName']} ${map['lastName']}',
+                                '${map['firstname']} ${map['lastName']}',
                                 style: Theme.of(context).textTheme.body1.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
                               ),
                               Container(

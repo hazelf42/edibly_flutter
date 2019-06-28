@@ -1,9 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
-
+import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
 
 class RestaurantReviewsBloc {
@@ -39,7 +40,7 @@ class RestaurantReviewsBloc {
   }
 
   void getReviews() async {
-    /// if page is not fully loaded the return
+    /// if page is not fully loaded, return
     if (_fetchStarted && _reviewsInCurrentPage < REVIEWS_PER_PAGE) {
       return;
     }
@@ -51,7 +52,6 @@ class RestaurantReviewsBloc {
     }
 
     /// started fetching a page
-    onChildAddedListener?.cancel();
     _fetchStarted = true;
 
     /// make sure we have an array to put things in
@@ -66,85 +66,22 @@ class RestaurantReviewsBloc {
       _reviewsInCurrentPage = 0;
 
       /// network request
-      Query query = _firebaseDatabase.reference().child('reviews').child(restaurantKey).orderByKey().limitToLast(REVIEWS_PER_PAGE);
-      onChildAddedListener = query.onChildAdded.listen((event) async {
-        /// increment number of reviews in current page
-        _reviewsInCurrentPage++;
-
-        /// remove any null values, null values are shown as circular loaders
-        reviews.remove(null);
-
-        DataSnapshot dataSnapshot = await _firebaseDatabase.reference().child('feedPosts').child(event?.snapshot?.key).once();
-
-        /// insert newly acquired review to the start of new page
-        if (dataSnapshot?.key != null && dataSnapshot?.value != null) {
-          reviews.insert(oldReviewsLength, Data(dataSnapshot?.key, dataSnapshot?.value));
-        } else {
-          _reviewsInCurrentPage--;
-        }
-
-        /// if this was the last review in requested page, then show a circular loader at the end of page
-        if (_reviewsInCurrentPage == REVIEWS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) reviews.add(null);
-
-        /// publish an update to the stream
-        _reviews.add(reviews);
-      });
-      query.onValue.listen((event) {
-        _reviews.add(reviews);
-        onChildAddedListener?.cancel();
-      });
-      query.onChildRemoved.listen((event) {
-        reviews.removeWhere((review) => review != null && review.key == (event?.snapshot?.key ?? ''));
-
-        /// publish an update to the stream
-        _reviews.add(reviews);
-      });
-    }
-
-    /// if this is not the first page
-    else {
-      Query query = _firebaseDatabase
-          .reference()
-          .child('reviews')
-          .child(restaurantKey)
-          .orderByKey()
-          .endAt(reviews.lastWhere((review) => review != null).key.toString())
-          .limitToLast(REVIEWS_PER_PAGE + 1);
-      onChildAddedListener = query.onChildAdded.listen((event) async {
-        /// increment number of reviews in current page
-        _reviewsInCurrentPage++;
-
-        /// remove any null values, null values are shown as circular loaders
-        reviews.remove(null);
-
-        /// do not insert duplicate reviews
-        if (event?.snapshot?.key != reviews[oldReviewsLength - 1].key) {
-          DataSnapshot dataSnapshot = await _firebaseDatabase.reference().child('feedPosts').child(event?.snapshot?.key).once();
-
-          /// insert newly acquired review to the start of new page
-          if (dataSnapshot?.key != null && dataSnapshot?.value != null) {
-            reviews.insert(oldReviewsLength, Data(dataSnapshot?.key, dataSnapshot?.value));
-          } else {
-            _reviewsInCurrentPage--;
-          }
-        }
-
-        /// if this was the last review in requested page, then show a circular loader at the end of page
-        if (_reviewsInCurrentPage == REVIEWS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) reviews.add(null);
-
-        /// publish an update to the stream
-        _reviews.add(reviews);
-      });
-      query.onValue.listen((event) {
-        _reviews.add(reviews);
-        onChildAddedListener?.cancel();
-      });
-      query.onChildRemoved.listen((event) {
-        reviews.removeWhere((review) => review != null && review.key == (event?.snapshot?.key ?? ''));
-
-        /// publish an update to the stream
-        _reviews.add(reviews);
-      });
+      final url = "http://edibly.vassi.li/api/restaurants/$restaurantKey/reviews";
+      print(url);
+      final response = await http.get(url);
+      final allReviews = json.decode(response.body); 
+      if (allReviews.length > oldReviewsLength+REVIEWS_PER_PAGE) {
+        reviews.insert(oldReviewsLength, allReviews.sublist(oldReviewsLength, oldReviewsLength+REVIEWS_PER_PAGE));
+        _reviewsInCurrentPage += REVIEWS_PER_PAGE;
+      } else if (allReviews.length > 0){
+          var allReviewsSublist = allReviews.sublist(oldReviewsLength, allReviews.length);
+//        dishesMap.forEach((d) => dishesWithRating.add(Data(d['did'], d)));
+          allReviewsSublist.forEach((r) => reviews.add(Data(r['rrid'], r)));
+          reviews.add(null);
+      } else {
+        return;
+      }
+      _reviews.add(reviews);
     }
   }
 

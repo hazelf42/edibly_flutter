@@ -1,6 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-
+import 'dart:convert';
 import 'package:edibly/screens/restaurant/tips/restaurant_tips_bloc.dart';
 import 'package:edibly/screens/restaurant/restaurant_screen.dart';
 import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
@@ -9,6 +9,7 @@ import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 import 'package:edibly/main_bloc.dart';
+import 'package:http/http.dart';
 
 class RestaurantTipsScreen extends StatelessWidget {
   final String firebaseUserId;
@@ -149,10 +150,12 @@ class TipWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final MainBloc mainBloc = Provider.of<MainBloc>(context);
     final AppLocalizations localizations = AppLocalizations.of(context);
-    return StreamBuilder<Event>(
-      stream: mainBloc.getUser(tip.value['tipUserId'].toString()),
-      builder: (context, snapshot) {
-        Map<dynamic, dynamic> authorValue = snapshot?.data?.snapshot?.value;
+    
+    return FutureBuilder<Response>(
+      future: mainBloc.getUser(tip.value['tipUserId'].toString()),
+      builder: (context, response) {
+        final userMap = json.decode(response.data.body);
+        Map<dynamic, dynamic> authorValue = userMap;
         return Row(
           children: <Widget>[
             CircleAvatar(
@@ -187,7 +190,7 @@ class TipWidget extends StatelessWidget {
                               child: Row(
                                 children: <Widget>[
                                   SingleLineText(
-                                    '${authorValue['firstName']} ${authorValue['lastName']}',
+                                    '${authorValue['firstname']} ${authorValue['lastName']}',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,

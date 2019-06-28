@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:edibly/models/data.dart';
 
@@ -67,7 +69,9 @@ class NewPostBloc {
     if (!selected || tags.where((tag) => tag.value == true).length < 3) {
       tags.removeWhere((tag) => tag.key == tagKey);
       tags.add(Data(tagKey, selected));
-      tags.sort((a, b) => (a.key as String).toLowerCase().compareTo((b.key as String).toLowerCase()));
+      tags.sort((a, b) => (a.key as String)
+          .toLowerCase()
+          .compareTo((b.key as String).toLowerCase()));
       _tags.add(tags);
     }
   }
@@ -165,67 +169,108 @@ class NewPostBloc {
       photoUrl = await storageTaskSnapshot?.ref?.getDownloadURL();
     }
 
-    /// put photo info into database
-    if (photoUrl != null && photoUrl.isNotEmpty) {
-      await _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).push().set({
-        'imageUrl': photoUrl,
-        'userId': firebaseUserId,
-        'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
-        'isATest': false,
-      });
-    }
+    // /// put photo info into database)
+
+    // if (photoUrl != null && photoUrl.isNotEmpty) {
+    //   await _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).push().set({
+    //     'imageUrl': photoUrl,
+    //     'userId': firebaseUserId,
+    //     'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
+    //     'isATest': false,
+    //   });
+    // }
 
     /// create post value
-    var value = {
-      'reviewingUserId': firebaseUserId,
-      'restaurantName': restaurantName,
-      'restaurantKey': restaurantKey,
-      'description': review,
-      'numRating': rating,
+    var reviewBody = {
+      'uid': firebaseUserId,
+      'rid': restaurantKey,
+      'text': review,
+      'stars': rating,
       'postType': 0,
-      'tagArray': tags,
-      'imageUrl': photoUrl,
-      'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
-      'isATest': false,
+      'tags': tags
+    };
+    var photoValue = {
+      'uid': firebaseUserId,
+      'rid': restaurantKey,
+      'photo': photoUrl
     };
 
     /// start writing to database
-    DatabaseReference reviewReference = _firebaseDatabase.reference().child('reviews').child(restaurantKey).push();
-    await reviewReference.set(value);
-    await _firebaseDatabase.reference().child('feedPosts').child(reviewReference.key).set(value);
-    await _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(reviewReference.key).set(value);
-    await _submitRatedDishes(_likedDishes.value, reviewReference.key, true);
-    await _submitRatedDishes(_dislikedDishes.value, reviewReference.key, false);
-    await _submitAddedDishes(_likedDishes.value, reviewReference.key, true);
-    await _submitAddedDishes(_dislikedDishes.value, reviewReference.key, false);
-    await _updateRestaurantRating(rating: rating, tags: tags);
+    ///
+    ///
+
+    http.post("http://edibly.vassi.li/api/reviews/add",
+            body: json.encode(reviewBody))
+        .then((http.Response response) {
+      final int statusCode = response.statusCode;
+
+      if (statusCode < 200 || statusCode > 400 || reviewBody == null) {
+        throw new Exception("Error while sending data" + statusCode.toString());
+      }
+    });
     return true;
+    //   DatabaseReference reviewReference = _firebaseDatabase.reference().child('reviews').child(restaurantKey).push();
+    //   await reviewReference.set(value);
+    //   await _firebaseDatabase.reference().child('feedPosts').child(reviewReference.key).set(value);
+    //   await _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(reviewReference.key).set(value);
+    //   await _submitRatedDishes(_likedDishes.value, reviewReference.key, true);
+    //   await _submitRatedDishes(_dislikedDishes.value, reviewReference.key, false);
+    //   await _submitAddedDishes(_likedDishes.value, reviewReference.key, true);
+    //   await _submitAddedDishes(_dislikedDishes.value, reviewReference.key, false);
+    //   await _updateRestaurantRating(rating: rating, tags: tags);
+    //   return true;
+    // }
   }
 
-  Future<bool> _submitRatedDishes(List<Data> ratedDishes, String reviewKey, bool liked) async {
-    await Future.forEach((ratedDishes ?? []).where((d) => !d.key.toString().startsWith('_')), (dish) async {
-      await _firebaseDatabase.reference().child('dishReviews').child(restaurantKey).child(reviewKey).child(dish.key).set({
+  Future<bool> _submitRatedDishes(
+      List<Data> ratedDishes, String reviewKey, bool liked) async {
+    await Future.forEach(
+        (ratedDishes ?? []).where((d) => !d.key.toString().startsWith('_')),
+        (dish) async {
+      await _firebaseDatabase
+          .reference()
+          .child('dishReviews')
+          .child(restaurantKey)
+          .child(reviewKey)
+          .child(dish.key)
+          .set({
         'ratingString': liked ? 'Good' : 'Bad',
         'dishName': dish.value,
         'dishKey': dish.key,
         'reviewKey': reviewKey,
         'isATest': false,
       });
-      DatabaseReference ratingReference = _firebaseDatabase.reference().child('dishRatings').child(restaurantKey).child(dish.key);
+      DatabaseReference ratingReference = _firebaseDatabase
+          .reference()
+          .child('dishRatings')
+          .child(restaurantKey)
+          .child(dish.key);
       DataSnapshot ratingSnapshot = await ratingReference.once();
       await ratingReference.set({
-        'isGoodCount': _lookup(ratingSnapshot?.value, 'isGoodCount') ?? 0 + (liked ? 1 : 0),
-        'isBadCount': _lookup(ratingSnapshot?.value, 'isBadCount') ?? 0 + (!liked ? 1 : 0),
-        'isNotEdibleCount': _lookup(ratingSnapshot?.value, 'isNotEdibleCount') ?? 0,
+        'isGoodCount': _lookup(ratingSnapshot?.value, 'isGoodCount') ??
+            0 + (liked ? 1 : 0),
+        'isBadCount': _lookup(ratingSnapshot?.value, 'isBadCount') ??
+            0 + (!liked ? 1 : 0),
+        'isNotEdibleCount':
+            _lookup(ratingSnapshot?.value, 'isNotEdibleCount') ?? 0,
       });
     });
     return true;
   }
 
-  Future<bool> _submitAddedDishes(List<Data> addedDishes, String reviewKey, bool liked) async {
+  Future<bool> _submitAddedDishes(
+      List<Data> addedDishes, String reviewKey, bool liked) async {
     int counter = 0;
-    await Future.forEach((addedDishes ?? []).where((d) => d.key.toString().startsWith('_')), (dish) async {
-      await _firebaseDatabase.reference().child('addedDishes').child(restaurantKey).child(reviewKey).child('$counter').set({
+    await Future.forEach(
+        (addedDishes ?? []).where((d) => d.key.toString().startsWith('_')),
+        (dish) async {
+      await _firebaseDatabase
+          .reference()
+          .child('addedDishes')
+          .child(restaurantKey)
+          .child(reviewKey)
+          .child('$counter')
+          .set({
         'ratingString': liked ? 'Good' : 'Bad',
         'dishName': dish.value,
         'dishKey': 'Added($counter)',
@@ -241,14 +286,22 @@ class NewPostBloc {
     @required List<String> tags,
     @required double rating,
   }) async {
-    DatabaseReference ratingReference = _firebaseDatabase.reference().child('restaurantRatings').child(restaurantKey);
+    DatabaseReference ratingReference = _firebaseDatabase
+        .reference()
+        .child('restaurantRatings')
+        .child(restaurantKey);
     DataSnapshot ratingSnapshot = await ratingReference.once();
     int totalReviews = _lookup(ratingSnapshot?.value, 'totalReviews') ?? 0;
-    dynamic oldAverageRatingDynamic = _lookup(ratingSnapshot?.value, 'numRating') ?? -1;
-    double oldAverageRating = oldAverageRatingDynamic is int ? oldAverageRatingDynamic.toDouble() : oldAverageRatingDynamic as double;
-    double newAverageRating = oldAverageRating == -1 ? rating : ((totalReviews * oldAverageRating + rating) / (totalReviews + 1));
+    dynamic oldAverageRatingDynamic =
+        _lookup(ratingSnapshot?.value, 'numRating') ?? -1;
+    double oldAverageRating = oldAverageRatingDynamic is int
+        ? oldAverageRatingDynamic.toDouble()
+        : oldAverageRatingDynamic as double;
+    double newAverageRating = oldAverageRating == -1
+        ? rating
+        : ((totalReviews * oldAverageRating + rating) / (totalReviews + 1));
     dynamic tagValues = _lookup(ratingSnapshot?.value, 'tagDict') ?? {};
-    if(tagValues is List) tagValues = {};
+    if (tagValues is List) tagValues = {};
     tags.forEach((tag) {
       if (tagValues[tag] != null) {
         tagValues[tag] += 1;
@@ -271,14 +324,20 @@ class NewPostBloc {
 
   /// Other
   void getDishes() async {
-    _firebaseDatabase.reference().child('dishes').child(restaurantKey).onValue.listen((event) async {
+    _firebaseDatabase
+        .reference()
+        .child('dishes')
+        .child(restaurantKey)
+        .onValue
+        .listen((event) async {
       Map<dynamic, dynamic> dishesMap = event?.snapshot?.value;
       if (dishesMap == null || dishesMap.isEmpty) {
         _dishes.add([]);
         return;
       }
       List<Data> dishesWithoutRating = [];
-      dishesMap.forEach((key, value) => dishesWithoutRating.add(Data(key, value)));
+      dishesMap
+          .forEach((key, value) => dishesWithoutRating.add(Data(key, value)));
 
       /// publish an update to the stream
       _dishes.add(dishesWithoutRating);

@@ -112,6 +112,7 @@ class RestaurantDishesScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           );
+          //TODO: - Can be made sorting  ? ?? ? ? ? ? 
         } else if (dishes.elementAt(position - 1).value[_dietToConstantString(diet)] == true &&
             dishes.elementAt(position).value[_dietToConstantString(diet)] == false) {
           return Container(
@@ -201,11 +202,9 @@ class RestaurantDishesScreen extends StatelessWidget {
                         /// only get relevant dishes considering the diet
                         List<Data> filteredDishes = [];
                         if (diet == Diet.VEGETARIAN) {
-                          dishesSnapshot.data.forEach((d) => d.value['vegetarian'] == true ? filteredDishes.add(d) : null);
-                          dishesSnapshot.data.forEach((d) => d.value['canBeMadeVegetarian'] == true ? filteredDishes.add(d) : null);
+                          dishesSnapshot.data.forEach((d) => (d.value['vegetarianlevel'] >= 1) ? filteredDishes.add(d) : null);
                         } else {
-                          dishesSnapshot.data.forEach((d) => d.value['vegan'] == true ? filteredDishes.add(d) : null);
-                          dishesSnapshot.data.forEach((d) => d.value['canBeMadeVegan'] == true ? filteredDishes.add(d) : null);
+                          dishesSnapshot.data.forEach((d) => (d.value['veganlevel'] >= 1) ? filteredDishes.add(d) : null);
                         }
 
                         return DefaultTabController(
@@ -225,6 +224,7 @@ class RestaurantDishesScreen extends StatelessWidget {
                               ),
                             ),
                             body: TabBarView(
+                              //TODO: - Hide tabs when no dishes available for appetizers, sides
                               children: [
                                 _listView(
                                   diet: diet,
@@ -238,7 +238,7 @@ class RestaurantDishesScreen extends StatelessWidget {
                                   context: context,
                                   localizations: localizations,
                                   restaurantDishesBloc: restaurantDishesBloc,
-                                  dishes: filteredDishes.where((d) => d.value['category'].toString().toLowerCase() == 'e').toList(),
+                                  dishes: filteredDishes.where((d) => (d.value['category'].toString().toLowerCase() != 'a' || d.value['category'].toString().toLowerCase() != 'd')).toList(),
                                 ),
                                 _listView(
                                   diet: diet,

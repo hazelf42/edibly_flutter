@@ -119,7 +119,7 @@ class RestaurantReviewsScreen extends StatelessWidget {
                           child: Card(
                             margin: EdgeInsets.zero,
                             child: PostPreviewWidget(
-                              uid: reviewsSnapshot.data.elementAt(position).value['reviewingUserId'],
+                              uid: reviewsSnapshot.data.elementAt(position).value['uid'],
                               post: reviewsSnapshot.data.elementAt(position),
                             ),
                           ),

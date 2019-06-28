@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:edibly/bloc_helper/validators.dart';
 import 'package:edibly/values/pref_keys.dart';
 import 'package:edibly/models/data.dart';
@@ -29,13 +32,15 @@ class MainBloc extends Object with Validators {
   static const Diet dietDefaultValue = Diet.VEGAN;
 
   /// Subjects
-  final _bottomNavigationBarCurrentIndex = BehaviorSubject<int>.seeded(bottomNavigationBarCurrentIndexDefaultValue);
+  final _bottomNavigationBarCurrentIndex =
+      BehaviorSubject<int>.seeded(bottomNavigationBarCurrentIndexDefaultValue);
   final _darkModeEnabled = BehaviorSubject<bool>();
   final _glutenFree = BehaviorSubject<bool>.seeded(glutenFreeDefaultValue);
   final _diet = BehaviorSubject<Diet>.seeded(dietDefaultValue);
 
   /// Stream getters
-  Stream<int> get bottomNavigationBarCurrentIndex => _bottomNavigationBarCurrentIndex.stream;
+  Stream<int> get bottomNavigationBarCurrentIndex =>
+      _bottomNavigationBarCurrentIndex.stream;
 
   Stream<bool> get darkModeEnabled => _darkModeEnabled.stream;
 
@@ -89,24 +94,53 @@ class MainBloc extends Object with Validators {
     return await _firebaseAuth.currentUser();
   }
 
-  Stream<Event> getUser(String uid) {
-    return _firebaseDatabase.reference().child('userProfiles/$uid').onValue;
+  Future<http.Response> getUser(String uid) async {
+    final url = "http://edibly.vassi.li/api/profiles/$uid";
+    final response = await http.get(url);
+    return response;
   }
 
-  Stream<Event> getRestaurant(String key) {
-    return _firebaseDatabase.reference().child('restaurants').child('$key').onValue;
+  Future<http.Response> getRestaurant(String key) async {
+    final url = "http://edibly.vassi.li/api/restaurants/$key";
+    final response = await http.get(url);
+    return response;
   }
 
   void deletePost({
     @required Data post,
     @required String firebaseUserId,
   }) {
-    _firebaseDatabase.reference().child('reviews').child(post.value['restaurantKey']).child(post.key).remove();
-    _firebaseDatabase.reference().child('dishReviews').child(post.value['restaurantKey']).child(post.key).remove();
-    _firebaseDatabase.reference().child('restaurantImages').child(post.value['restaurantKey']).child(post.key).remove();
+    _firebaseDatabase
+        .reference()
+        .child('reviews')
+        .child(post.value['restaurantKey'])
+        .child(post.key)
+        .remove();
+    _firebaseDatabase
+        .reference()
+        .child('dishReviews')
+        .child(post.value['restaurantKey'])
+        .child(post.key)
+        .remove();
+    _firebaseDatabase
+        .reference()
+        .child('restaurantImages')
+        .child(post.value['restaurantKey'])
+        .child(post.key)
+        .remove();
     _firebaseDatabase.reference().child('feedPosts').child(post.key).remove();
-    _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(post.key).remove();
-    _firebaseDatabase.reference().child('restaurantTips').child(post.value['restaurantKey']).child(post.key).remove();
+    _firebaseDatabase
+        .reference()
+        .child('postsByUser')
+        .child(firebaseUserId)
+        .child(post.key)
+        .remove();
+    _firebaseDatabase
+        .reference()
+        .child('restaurantTips')
+        .child(post.value['restaurantKey'])
+        .child(post.key)
+        .remove();
   }
 
   /// Post like functions
@@ -122,8 +156,15 @@ class MainBloc extends Object with Validators {
     });
   }
 
-  Stream<Event> isPostLikedByUser({@required String postKey, @required String uid}) {
-    return _firebaseDatabase.reference().child('likes').child(postKey).child(uid).onValue;
+  Stream<Event> isPostLikedByUser(
+      {@required String postKey, @required String uid}) {
+        return null;
+    // return _firebaseDatabase
+    //     .reference()
+    //     .child('likes')
+    //     .child(postKey)
+    //     .child(uid)
+    //     .onValue;
   }
 
   /// Dispose function

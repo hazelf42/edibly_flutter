@@ -30,7 +30,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
   }
 
   Widget _rating({@required BuildContext context, @required dynamic value}) {
-    if (value == null || value['numRating'] == null) {
+    if (value == null) {
       return Container();
     }
     return Container(
@@ -43,7 +43,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
             SmoothStarRating(
               allowHalfRating: true,
               starCount: 5,
-              rating: value['numRating'] / 2.0 - 0.1,
+              rating: value / 2.0 - 0.1,
               size: 16.0,
               color: AppColors.primarySwatch.shade900,
               borderColor: AppColors.primarySwatch.shade900,
@@ -52,7 +52,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              (double.parse(value['numRating'].toString()) / 2.0).toStringAsFixed(1),
+              (double.parse(value.toString()) / 2.0).toStringAsFixed(1),
               style: TextStyle(
                 color: Theme.of(context).hintColor,
               ),
@@ -64,70 +64,63 @@ class RestaurantPreviewWidget extends StatelessWidget {
   }
 
   Widget _tags({@required BuildContext context, @required dynamic value}) {
-    if (value == null || value['tagDict'] == null || value['tagDict'].toString().isEmpty) {
+    if (value == null || value['tags'] == null || value['tags'].toString().isEmpty) {
       return Container();
     }
-    List<Data> tags = dynamicTagArrayToTagList(value['tagDict']);
+
+    List<Data> tags = dynamicTagArrayToTagList(value['tags']);
     tags.sort((a, b) => b.value - a.value);
     return Container(
-        margin: const EdgeInsets.only(top: 6.0),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: tags.map((data) {
-              return Container(
-                margin: EdgeInsets.only(
-                  top: 1.0,
-                  bottom: 1.0,
-                  left: data.key == tags.first.key ? 0 : 6.0,
-                ),
-                child: CustomTag(
-                  '${data.key} (${data.value})',
-                  fontSize: 10.0,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 2.0,
-                    horizontal: 3.0,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ));
+      height: 20.0,
+      margin: const EdgeInsets.only(top: 6.0),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        separatorBuilder: (context, position) {
+          return Container(width: 6.0, height: 1.0);
+        },
+        itemCount: tags.length,
+        itemBuilder: (context, position) {
+          return CustomTag(
+            '${tags.elementAt(position).key} (${tags.elementAt(position).value})',
+            fontSize: 10.0,
+            padding: const EdgeInsets.symmetric(
+              vertical: 2.0,
+              horizontal: 3.0,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Widget _photoAndDistance(String distance) {
-    String url = (restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '').toString();
+    String url = (restaurant.value['photo'] ?? '').toString();
     bool hasPhoto = url.isNotEmpty && url.toLowerCase() != 'none';
-    if (!hasPhoto) {
-      url = 'https://images.pexels.com/photos/6267/menu-restaurant-vintage-table.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500';
-      hasPhoto = true;
-    }
+    if (!hasPhoto) url = 'https://img2.10bestmedia.com/static/img/placeholder-restaurants.jpg';
     return ClipRRect(
       borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(hasPhoto ? 4.0 : 0.0),
-        topRight: Radius.circular(hasPhoto ? 4.0 : 0.0),
+        topLeft: Radius.circular(4.0),
+        topRight: Radius.circular(4.0),
       ),
       child: Container(
-        height: hasPhoto ? 120.0 : null,
-        color: hasPhoto ? Colors.white : null,
+        height: 120.0,
+        color: Colors.white,
         child: Stack(
           children: <Widget>[
-            hasPhoto
-                ? CachedNetworkImage(
-                    imageUrl: url,
-                    width: 200.0,
-                    height: 120.0,
-                    fit: BoxFit.cover,
-                    placeholder: (context, imageUrl) {
-                      return Container(
-                        width: 200.0,
-                        height: 120.0,
-                        alignment: Alignment.center,
-                        child: CircularProgressIndicator(),
-                      );
-                    },
-                  )
-                : Container(),
+            CachedNetworkImage(
+              imageUrl: url,
+              width: 200.0,
+              height: 120.0,
+              fit: BoxFit.cover,
+              placeholder: (context, imageUrl) {
+                return Container(
+                  width: 200.0,
+                  height: 120.0,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(),
+                );
+              },
+            ),
             Container(
               padding: const EdgeInsets.symmetric(
                 vertical: 4.0,
@@ -150,8 +143,6 @@ class RestaurantPreviewWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String url = (restaurant.value['photoUrl'] ?? restaurant.value['photoURL'] ?? '').toString();
-    bool hasPhoto = url.isNotEmpty && url.toLowerCase() != 'none';
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -170,7 +161,6 @@ class RestaurantPreviewWidget extends StatelessWidget {
         child: Card(
           margin: EdgeInsets.zero,
           child: Column(
-            mainAxisAlignment: hasPhoto ? MainAxisAlignment.start : MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               _photoAndDistance(restaurant.value['distance'] != null
@@ -179,7 +169,6 @@ class RestaurantPreviewWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Row(
@@ -200,7 +189,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
                               ),
                               _rating(
                                 context: context,
-                                value: restaurant.value['rating'],
+                                value: restaurant.value['averagerating'],
                               ),
                             ],
                           ),
@@ -209,7 +198,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
                     ),
                     _tags(
                       context: context,
-                      value: restaurant.value['rating'],
+                      value: restaurant.value,
                     ),
                   ],
                 ),

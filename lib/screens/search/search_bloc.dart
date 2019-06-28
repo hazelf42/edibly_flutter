@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/models/data.dart';
 
+//TODO: - Sort search by distance by default
 enum AddReviewState {
   SUCCESSFUL,
   FAILED,

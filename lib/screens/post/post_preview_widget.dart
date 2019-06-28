@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:http/http.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as TimeAgo;
+import 'dart:convert';
 
 import 'package:edibly/screens/post/post_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
@@ -48,17 +50,18 @@ class PostPreviewWidget extends StatelessWidget {
   }
 
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return StreamBuilder<Event>(
-      stream: mainBloc.getUser(post.value['reviewingUserId'].toString()),
-      builder: (context, snapshot) {
-        Map<dynamic, dynamic> authorValue = snapshot?.data?.snapshot?.value;
+    return FutureBuilder<Response>(
+      future: mainBloc.getUser(post.value['uid'].toString()),
+      builder: (context, response) {
+        Map<dynamic, dynamic> authorValue = (response.hasData) ?  json.decode(response?.data?.body) : null;
+        print(authorValue);
         return Container(
           padding: const EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
           child: Row(
             children: <Widget>[
               CircleAvatar(
                 radius: 24.0,
-                backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
+               // backgroundImage: authorValue['photo'] == null ? null : NetworkImage(authorValue['photo']),
                 child: authorValue == null
                     ? SizedBox(
                         width: 46.0,
@@ -88,14 +91,15 @@ class PostPreviewWidget extends StatelessWidget {
                                 child: Row(
                                   children: <Widget>[
                                     SingleLineText(
-                                      '${authorValue['firstName']} ${authorValue['lastName']}',
+                                      '${authorValue['firstname']} ${authorValue['lastname']}   ',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     SingleLineText(
-                                      ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                                      
+                                    ((authorValue['veglevel'] == 1) ? '${localizations.vegetarian}' : '${localizations.vegan}') + " " + ((authorValue['glutenfree'] == 1) ? 'glutenfree' : ''),
                                       style: TextStyle(
                                         color: Theme.of(context).hintColor,
                                         fontSize: 14,
@@ -110,9 +114,9 @@ class PostPreviewWidget extends StatelessWidget {
                               ),
                               SingleLineText(
                                 '${_postTypeToText(
-                                  postType: post.value['postType'],
+                                  postType: post.value['type'],
                                   localizations: localizations,
-                                )} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timeStamp'].toString())).toInt() * 1000))}',
+                                )} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timestamp'].toString())).toInt() * 1000))}',
                                 style: TextStyle(
                                   color: Theme.of(context).hintColor,
                                   fontSize: 12,
@@ -160,7 +164,7 @@ class PostPreviewWidget extends StatelessWidget {
   }
 
   Widget _rating({@required BuildContext context}) {
-    if (post.value['numRating'] == null) {
+    if (post.value['stars'] == null) {
       return Container();
     }
     return Column(
@@ -174,7 +178,7 @@ class PostPreviewWidget extends StatelessWidget {
             SmoothStarRating(
               allowHalfRating: true,
               starCount: 5,
-              rating: post.value['numRating'] / 2.0 - 0.1,
+              rating: post.value['stars'] / 2.0 - 0.1,
               size: 16.0,
               color: AppColors.primarySwatch.shade900,
               borderColor: AppColors.primarySwatch.shade900,
@@ -183,7 +187,7 @@ class PostPreviewWidget extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              (post.value['numRating'] / 2.0 as double).toStringAsFixed(1),
+              (post.value['stars'] / 2.0 as double).toStringAsFixed(1),
               style: TextStyle(
                 color: Theme.of(context).hintColor,
               ),
@@ -195,7 +199,8 @@ class PostPreviewWidget extends StatelessWidget {
   }
 
   Widget _description() {
-    if (post.value['description'] == null || post.value['description'].toString().isEmpty) {
+    //TODO: - Change this when Vassili changes the database
+    if (post.value['text'] == null || post.value['text'].toString().isEmpty) {
       return Container();
     }
     return Column(
@@ -204,16 +209,16 @@ class PostPreviewWidget extends StatelessWidget {
         Container(
           height: 12.0,
         ),
-        Text(post.value['description']),
+        Text(post.value['text']),
       ],
     );
   }
 
   Widget _tags() {
-    if (post.value['tagArray'] == null || post.value['tagArray'].toString().isEmpty) {
+    if (post.value['tags'] == null || post.value['tags'].toString().isEmpty) {
       return Container();
     }
-    List<String> tags = dynamicTagArrayToTagList(post.value['tagArray']);
+    List<String> tags = dynamicTagArrayToTagList(post.value['tags']);
     return Container(
       height: 32.0,
       margin: const EdgeInsets.only(top: 12.0),
@@ -272,7 +277,7 @@ class PostPreviewWidget extends StatelessWidget {
     final MainBloc mainBloc = Provider.of<MainBloc>(context);
     final AppLocalizations localizations = AppLocalizations.of(context);
     return GestureDetector(
-      key: Key(post.key),
+      key: Key(post.key.toString()),
       behavior: HitTestBehavior.translucent,
       onTap: () {
         Navigator.push(
@@ -293,7 +298,7 @@ class PostPreviewWidget extends StatelessWidget {
           ),
           _photo(
             mainBloc: mainBloc,
-            photoURL: post.value['imageUrl'] ?? post.value['imageURL'],
+            photoURL: post.value['photo'],
           ),
           Container(
             padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 0.0),

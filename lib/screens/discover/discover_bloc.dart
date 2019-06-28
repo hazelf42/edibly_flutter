@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:convert';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -6,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:location/location.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/models/data.dart';
@@ -58,29 +60,34 @@ class DiscoverBloc {
     _restaurants.add(null);
 
     /// network request
-    _firebaseDatabase.reference().child('restaurants').onValue.listen((event) async {
+    
+    final response = await http.get('http://edibly.vassi.li/api/restaurants');
+    final map = json.decode(response.body);
+    
+      final restaurantsWithoutRatingMap = Map<dynamic, dynamic>();  
+      map.forEach((r) => restaurantsWithoutRatingMap[r['rid'].toString()] = r);
+
       List<Data> restaurantsWithExtraData = [];
       List<Data> restaurantsWithoutExtraData = [];
-      if (event?.snapshot?.value != null) {
-        Map<dynamic, dynamic> restaurantsWithoutRatingMap = event.snapshot.value;
-        restaurantsWithoutRatingMap.forEach((key, value) => restaurantsWithoutExtraData.add(Data(key, value)));
-      }
-
-      /// get extra data
+     restaurantsWithoutRatingMap.forEach((key, value) => restaurantsWithoutExtraData.add(Data(key, value)));
       await Future.forEach(restaurantsWithoutExtraData, (Data dataWithoutRating) async {
-        DataSnapshot ratingSnapshot = await _firebaseDatabase.reference().child('restaurantRatings').child(dataWithoutRating.key).once();
+        
+        //I filter out unrated and lower than rated 7 restaurants. Comment me out before production.
+        if (dataWithoutRating.value['averagerating'] != null && dataWithoutRating.value['averagerating'] >= 1) { 
         Data dataWithRating = Data(dataWithoutRating.key, dataWithoutRating.value);
-        try {
-          dataWithRating.value['rating'] = ratingSnapshot?.value;
+
+          //TODO - fix whatever the fuck happened w lat and lon
+          dataWithRating.value['averagerating'] = dataWithoutRating.value['averagerating'];
+          dataWithRating.value['lat'] = (dataWithRating.value['lat']/10000000);
+          dataWithRating.value['lon'] = (dataWithRating.value['lon']/1000000);
           dataWithRating.value['distance'] = _distanceFromMeToDestination(LatLng(
-            double.parse(dataWithRating.value['lat'].toString()),
-            double.parse(dataWithRating.value['lng'].toString()),
+            double.parse((dataWithRating.value['lat']).toString()),
+            double.parse((dataWithRating.value['lon']).toString()),
           ));
           restaurantsWithExtraData.add(dataWithRating);
-        } catch (_) {}
+        }
         return null;
       });
-
       /// sort by distance
       restaurantsWithExtraData.sort((a, b) {
         double diff = a.value['distance'] - b.value['distance'];
@@ -89,7 +96,8 @@ class DiscoverBloc {
 
       /// add nearby restaurants
       List<Data> nearbyRestaurants =
-          restaurantsWithExtraData.where((r) => r.value['rating'] != null && r.value['rating']['numRating'] >= 7).take(10).toList();
+      //TODO: - Sort by rating whenever vassili gets ratings...... ugh
+          restaurantsWithExtraData.where((r) => r.value['averagerating'] == null || r.value['averagerating'] == 1).take(10).toList(); //|| r.value['averagerating'] >= 7).take(10).toList();
       if (nearbyRestaurants.isNotEmpty) {
         _nearbyRestaurants.add(nearbyRestaurants);
       } else {
@@ -106,13 +114,12 @@ class DiscoverBloc {
 
       /// add restaurants
       _restaurants.add(restaurantsWithExtraData);
-    });
-  }
+    }
+  
 
   void _fetchEvents() async {
     /// start showing loaders
     _events.add(null);
-
     /// network request
     _firebaseDatabase.reference().child('events').onValue.listen((event) async {
       List<Data> eventsWithExtraData = [];
@@ -192,3 +199,4 @@ class DiscoverBloc {
     _events.close();
   }
 }
+

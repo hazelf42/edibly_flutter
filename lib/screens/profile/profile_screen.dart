@@ -1,6 +1,8 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'dart:convert';
 
 import 'package:edibly/screens/common/full_screen_image.dart';
 import 'package:edibly/screens/post/post_preview_widget.dart';
@@ -17,10 +19,10 @@ class ProfileScreen extends StatelessWidget {
   ProfileScreen({@required this.uid});
 
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return StreamBuilder<Event>(
-      stream: mainBloc.getUser(uid),
-      builder: (context, snapshot) {
-        Map<dynamic, dynamic> authorValue = snapshot?.data?.snapshot?.value;
+    return FutureBuilder<Response>(
+      future: mainBloc.getUser(uid),
+      builder: (context, response) {
+        Map<dynamic, dynamic> authorValue = (response.hasData) ?  json.decode(response?.data?.body) : null;
         return Container(
           padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
           child: Column(
@@ -59,7 +61,7 @@ class ProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         SingleLineText(
-                          '${authorValue['firstName']} ${authorValue['lastName']}',
+                          '${authorValue['firstname']} ${authorValue['lastName']}',
                           style: Theme.of(context).textTheme.title,
                         ),
                         SingleLineText(

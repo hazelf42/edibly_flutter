@@ -23,6 +23,8 @@ class HomeScreen extends StatelessWidget {
         return FeedScreen();
       case 1:
         return DiscoverScreen(firebaseUser: firebaseUser);
+      case 2:
+        return SearchScreen(firebaseUser: firebaseUser,);
       default: // case 2
         return BookmarksScreen(firebaseUser: firebaseUser);
     }
@@ -48,6 +50,7 @@ class HomeScreen extends StatelessWidget {
           bottomNavigationBar: BottomNavigationBar(
             fixedColor: darkModeEnabled ? null : AppColors.primarySwatch.shade700,
             currentIndex: snapshot.data,
+            unselectedItemColor: Colors.grey,
             items: [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home),
@@ -57,6 +60,11 @@ class HomeScreen extends StatelessWidget {
                 icon: Icon(Icons.location_on),
                 title: SingleLineText(localizations.discover),
               ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search),
+                //TODO: Localization
+                title: SingleLineText("Search")
+                ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.bookmark),
                 title: SingleLineText(localizations.bookmarks),
