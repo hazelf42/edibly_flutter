@@ -172,12 +172,12 @@ class DiscoverScreen extends StatelessWidget {
                 if (index == 0 ||
                     DateFormat('ddMMyyyy').format(
                           DateTime.fromMillisecondsSinceEpoch(
-                            eventsSnapshot.data.elementAt(index - 1).value['startTime'] * 1000,
+                            eventsSnapshot.data.elementAt(index - 1).value['start'] * 1000,
                           ),
                         ) !=
                         DateFormat('ddMMyyyy').format(
                           DateTime.fromMillisecondsSinceEpoch(
-                            eventsSnapshot.data.elementAt(index).value['startTime'] * 1000,
+                            eventsSnapshot.data.elementAt(index).value['start'] * 1000,
                           ),
                         )) {
                   return Container(
@@ -194,7 +194,7 @@ class DiscoverScreen extends StatelessWidget {
                             SingleLineText(
                               DateFormat('MMM').format(
                                 DateTime.fromMillisecondsSinceEpoch(
-                                  eventsSnapshot.data.elementAt(index).value['startTime'] * 1000,
+                                  eventsSnapshot.data.elementAt(index).value['start'] * 1000,
                                 ),
                               ),
                             ),
@@ -202,7 +202,7 @@ class DiscoverScreen extends StatelessWidget {
                             SingleLineText(
                               DateFormat('d').format(
                                 DateTime.fromMillisecondsSinceEpoch(
-                                  eventsSnapshot.data.elementAt(index).value['startTime'] * 1000,
+                                  eventsSnapshot.data.elementAt(index).value['start'] * 1000,
                                 ),
                               ),
                               style: TextStyle(
@@ -213,7 +213,7 @@ class DiscoverScreen extends StatelessWidget {
                             SingleLineText(
                               DateFormat('EEEE').format(
                                 DateTime.fromMillisecondsSinceEpoch(
-                                  eventsSnapshot.data.elementAt(index).value['startTime'] * 1000,
+                                  eventsSnapshot.data.elementAt(index).value['start'] * 1000,
                                 ),
                               ),
                               style: TextStyle(

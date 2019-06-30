@@ -1,9 +1,9 @@
 import 'dart:async';
-
+import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
-
+import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
 
 class RestaurantTipsBloc {
@@ -63,78 +63,27 @@ class RestaurantTipsBloc {
     if (tips == null || tips.isEmpty) {
       /// make sure variables reflects this being the first page
       _currentPage = 0;
-      _tipsInCurrentPage = 0;
+      _tipsInCurrentPage = 0; }
 
       /// network request
-      Query query = _firebaseDatabase.reference().child('restaurantTips').child(restaurantKey).orderByKey().limitToLast(TIPS_PER_PAGE);
-      onChildAddedListener = query.onChildAdded.listen((event) async {
-        /// increment number of tips in current page
-        _tipsInCurrentPage++;
-
-        /// remove any null values, null values are shown as circular loaders
-        tips.remove(null);
-
-        /// insert newly acquired tip to the start of new page
-        tips.insert(oldTipsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
-
-        /// if this was the last tip in requested page, then show a circular loader at the end of page
-        if (_tipsInCurrentPage == TIPS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) tips.add(null);
-
-        /// publish an update to the stream
+      final url = "http://edibly.vassi.li/api/restaurants/$restaurantKey/tips";
+      final response = await http.get(url);
+      final allTips = json.decode(response.body);
+      if (allTips.length > oldTipsLength+TIPS_PER_PAGE) {
+        tips.insert(oldTipsLength, allTips.sublist(oldTipsLength, oldTipsLength+TIPS_PER_PAGE));
+        _tipsInCurrentPage += TIPS_PER_PAGE;
+      } else if (allTips.length > 0) {
+        var allTipsSublist = allTips.sublist(oldTipsLength, allTips.length);
+        allTipsSublist.forEach((t) => tips.add(Data(t['rtid'], t)));
+        tips.add(null);
+      } else {
+        return;
+      }
         _tips.add(tips);
-      });
-      query.onValue.listen((event) {
-        _tips.add(tips);
-        onChildAddedListener?.cancel();
-      });
-      query.onChildRemoved.listen((event) {
-        tips.removeWhere((tip) => tip != null && tip.key == (event?.snapshot?.key ?? ''));
+      } 
 
-        /// publish an update to the stream
-        _tips.add(tips);
-      });
-    }
-
-    /// if this is not the first page
-    else {
-      Query query = _firebaseDatabase
-          .reference()
-          .child('restaurantTips')
-          .child(restaurantKey)
-          .orderByKey()
-          .endAt(tips.lastWhere((tip) => tip != null).key.toString())
-          .limitToLast(TIPS_PER_PAGE + 1);
-      onChildAddedListener = query.onChildAdded.listen((event) async {
-        /// increment number of tips in current page
-        _tipsInCurrentPage++;
-
-        /// remove any null values, null values are shown as circular loaders
-        tips.remove(null);
-
-        /// do not insert duplicate tips
-        if (event?.snapshot?.key != tips[oldTipsLength - 1].key) {
-          /// insert newly acquired tip to the start of new page
-          tips.insert(oldTipsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
-        }
-
-        /// if this was the last tip in requested page, then show a circular loader at the end of page
-        if (_tipsInCurrentPage == TIPS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) tips.add(null);
-
-        /// publish an update to the stream
-        _tips.add(tips);
-      });
-      query.onValue.listen((event) {
-        _tips.add(tips);
-        onChildAddedListener?.cancel();
-      });
-      query.onChildRemoved.listen((event) {
-        tips.removeWhere((tip) => tip != null && tip.key == (event?.snapshot?.key ?? ''));
-
-        /// publish an update to the stream
-        _tips.add(tips);
-      });
-    }
-  }
+    /// if this is not the first pagem
+  
 
   /// Dispose function
   void dispose() {

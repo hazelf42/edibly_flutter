@@ -308,7 +308,7 @@ class PostWidget extends StatelessWidget {
   }
 
   Widget _deleteButton({@required BuildContext context, @required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    if (uid != post.value['reviewingUserId']) {
+    if (uid != post.value['uid']) {
       return Container();
     } else {
       return Container(

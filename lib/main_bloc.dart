@@ -110,37 +110,24 @@ class MainBloc extends Object with Validators {
     @required Data post,
     @required String firebaseUserId,
   }) {
-    _firebaseDatabase
-        .reference()
-        .child('reviews')
-        .child(post.value['restaurantKey'])
-        .child(post.key)
-        .remove();
-    _firebaseDatabase
-        .reference()
-        .child('dishReviews')
-        .child(post.value['restaurantKey'])
-        .child(post.key)
-        .remove();
-    _firebaseDatabase
-        .reference()
-        .child('restaurantImages')
-        .child(post.value['restaurantKey'])
-        .child(post.key)
-        .remove();
-    _firebaseDatabase.reference().child('feedPosts').child(post.key).remove();
-    _firebaseDatabase
-        .reference()
-        .child('postsByUser')
-        .child(firebaseUserId)
-        .child(post.key)
-        .remove();
-    _firebaseDatabase
-        .reference()
-        .child('restaurantTips')
-        .child(post.value['restaurantKey'])
-        .child(post.key)
-        .remove();
+    var url = '';
+
+    switch (post.value['type']) {
+      case 0:
+        final id = post.value['rrid'];
+        url = "http://edibly.vassi.li/api/reviews/$id";
+        break;
+      case 1:
+        final id = post.value['rpid'];
+        url = "http://edibly.vassi.li/api/pictures/$id";
+        break;
+      case 2:
+        final id = post.value['rtid'];
+        url = "http://edibly.vassi.li/api/tips/$id";
+        break;
+    }
+    //TODO: - why dont this work;;;;;;;;;;;
+    http.delete(url);
   }
 
   /// Post like functions
@@ -158,7 +145,7 @@ class MainBloc extends Object with Validators {
 
   Stream<Event> isPostLikedByUser(
       {@required String postKey, @required String uid}) {
-        return null;
+    return null;
     // return _firebaseDatabase
     //     .reference()
     //     .child('likes')

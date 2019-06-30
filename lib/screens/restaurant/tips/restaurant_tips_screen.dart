@@ -152,7 +152,7 @@ class TipWidget extends StatelessWidget {
     final AppLocalizations localizations = AppLocalizations.of(context);
     
     return FutureBuilder<Response>(
-      future: mainBloc.getUser(tip.value['tipUserId'].toString()),
+      future: mainBloc.getUser(tip.value['uid'].toString()),
       builder: (context, response) {
         final userMap = json.decode(response.data.body);
         Map<dynamic, dynamic> authorValue = userMap;
@@ -190,7 +190,7 @@ class TipWidget extends StatelessWidget {
                               child: Row(
                                 children: <Widget>[
                                   SingleLineText(
-                                    '${authorValue['firstname']} ${authorValue['lastName']}',
+                                    '${authorValue['firstname']} ${authorValue['lastname']}',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,

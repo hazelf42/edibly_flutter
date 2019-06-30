@@ -67,7 +67,6 @@ class RestaurantReviewsBloc {
 
       /// network request
       final url = "http://edibly.vassi.li/api/restaurants/$restaurantKey/reviews";
-      print(url);
       final response = await http.get(url);
       final allReviews = json.decode(response.body); 
       if (allReviews.length > oldReviewsLength+REVIEWS_PER_PAGE) {
@@ -82,6 +81,8 @@ class RestaurantReviewsBloc {
         return;
       }
       _reviews.add(reviews);
+    } else {
+      
     }
   }
 
