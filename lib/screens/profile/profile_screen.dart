@@ -30,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
             children: <Widget>[
               GestureDetector(
                 onTap: () {
-                  String url = (authorValue == null ? null : (authorValue['photoUrl'] ?? authorValue['photoURL']));
+                  String url = (authorValue == null ? null : (authorValue['photo']));
                   if (url == null || url.isEmpty) return;
                   Navigator.push(
                     context,
@@ -40,7 +40,7 @@ class ProfileScreen extends StatelessWidget {
                 behavior: HitTestBehavior.translucent,
                 child: CircleAvatar(
                   radius: 36.0,
-                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
+                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photo'] ?? ''),
                   child: authorValue == null
                       ? SizedBox(
                           width: 70.0,
@@ -73,6 +73,9 @@ class ProfileScreen extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        uid != null ?
+                        BoldFlatButton(text: "Follow", textColor: Colors.deepOrangeAccent,onPressed: (){ProfileBloc(uid: uid).followUser();},) :
+                        Container()
                       ],
                     ),
             ],

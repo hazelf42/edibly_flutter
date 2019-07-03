@@ -54,7 +54,6 @@ class PostPreviewWidget extends StatelessWidget {
       future: mainBloc.getUser(post.value['uid'].toString()),
       builder: (context, response) {
         Map<dynamic, dynamic> authorValue = (response.hasData) ?  json.decode(response?.data?.body) : null;
-        print(authorValue);
         return Container(
           padding: const EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
           child: Row(
@@ -247,6 +246,7 @@ class PostPreviewWidget extends StatelessWidget {
             onPressed: () {
               mainBloc.unlikePostByUser(
                 postKey: post?.key.toString(),
+                postType: post.value['type'],
                 uid: uid,
               );
             },
@@ -262,6 +262,7 @@ class PostPreviewWidget extends StatelessWidget {
           onPressed: () {
             mainBloc.likePostByUser(
               postKey: post?.key.toString(),
+              postType: post.value['type'],
               uid: uid,
             );
           },

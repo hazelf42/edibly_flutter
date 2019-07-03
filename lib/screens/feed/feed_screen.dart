@@ -11,7 +11,7 @@ class FeedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DisposableProvider<FeedBloc>(
-      packageBuilder: (context) => FeedBloc(),
+      packageBuilder: (context) => FeedBloc(feedType: "nearby"),
       child: Builder(
         builder: (context) {
           final MainBloc mainBloc = Provider.of<MainBloc>(context);

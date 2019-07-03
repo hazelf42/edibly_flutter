@@ -1,9 +1,12 @@
 import 'dart:async';
-
+import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:edibly/main_bloc.dart';
 import 'package:edibly/models/data.dart';
 
 class ProfileBloc {
@@ -38,6 +41,31 @@ class ProfileBloc {
     _currentPage = 0;
   }
 
+  void followUser() async {
+    final currentUser = await MainBloc().getCurrentFirebaseUser();
+    final currentUid = currentUser.uid;
+    if (currentUid == uid) {
+      print("You can't follow yourself");
+      return;
+    }
+    if (currentUid != null) {
+      final body = {'uid': currentUid, 'follow': uid};
+      //TODO: - why dont this work
+      http.post("http://edibly.vassi.li/api/follow",
+          body: json.encode(body),
+          headers: {
+            HttpHeaders.contentTypeHeader: 'application/json',
+          }).then((http.Response response) {
+        final int statusCode = response.statusCode;
+
+        if (statusCode < 200 || statusCode > 400) {
+          throw new Exception(
+              "Error while sending data" + statusCode.toString());
+        }
+      });
+    }
+  }
+
   void getPosts() async {
     /// if page is not fully loaded the return
     if (_fetchStarted && _postsInCurrentPage < POSTS_PER_PAGE) {
@@ -45,7 +73,8 @@ class ProfileBloc {
     }
 
     /// if page is fully loaded then start loading next page
-    else if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
+    else if (_postsInCurrentPage ==
+        POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
       _currentPage++;
       _postsInCurrentPage = 0;
     }
@@ -66,7 +95,11 @@ class ProfileBloc {
       _postsInCurrentPage = 0;
 
       /// network request
-      Query query = _firebaseDatabase.reference().child('postsByUser/$uid').orderByKey().limitToLast(POSTS_PER_PAGE);
+      Query query = _firebaseDatabase
+          .reference()
+          .child('postsByUser/$uid')
+          .orderByKey()
+          .limitToLast(POSTS_PER_PAGE);
       onChildAddedListener = query.onChildAdded.listen((event) {
         /// increment number of posts in current page
         _postsInCurrentPage++;
@@ -75,10 +108,12 @@ class ProfileBloc {
         posts.remove(null);
 
         /// insert newly acquired post to the start of new page
-        posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
+        posts.insert(
+            oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
 
         /// if this was the last post in requested page, then show a circular loader at the end of page
-        if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
+        if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1))
+          posts.add(null);
 
         /// publish an update to the stream
         _posts.add(posts);
@@ -88,7 +123,8 @@ class ProfileBloc {
         onChildAddedListener?.cancel();
       });
       query.onChildRemoved.listen((event) {
-        posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+        posts.removeWhere(
+            (post) => post != null && post.key == (event?.snapshot?.key ?? ''));
 
         /// publish an update to the stream
         _posts.add(posts);
@@ -113,11 +149,13 @@ class ProfileBloc {
         /// do not insert duplicate posts
         if (event?.snapshot?.key != posts[oldPostsLength - 1].key) {
           /// insert newly acquired post to the start of new page
-          posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
+          posts.insert(oldPostsLength,
+              Data(event?.snapshot?.key, event?.snapshot?.value));
         }
 
         /// if this was the last post in requested page, then show a circular loader at the end of page
-        if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
+        if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1))
+          posts.add(null);
 
         /// publish an update to the stream
         _posts.add(posts);
@@ -127,7 +165,8 @@ class ProfileBloc {
         onChildAddedListener?.cancel();
       });
       query.onChildRemoved.listen((event) {
-        posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+        posts.removeWhere(
+            (post) => post != null && post.key == (event?.snapshot?.key ?? ''));
 
         /// publish an update to the stream
         _posts.add(posts);

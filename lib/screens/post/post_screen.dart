@@ -160,10 +160,9 @@ class PostCommentWidget extends StatelessWidget {
 
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
       return FutureBuilder<Response>(
-      future: mainBloc.getUser(comment.value['userId'].toString()),
+      future: mainBloc.getUser(comment.value['uid'].toString()),
       builder: (context, response) {
-        final userMap = json.decode(response.data.body);
-        Map<dynamic, dynamic> authorValue = userMap;
+        final authorValue = json.decode(response.data.body);
         return Row(
           children: <Widget>[
             CircleAvatar(
@@ -198,7 +197,7 @@ class PostCommentWidget extends StatelessWidget {
                               child: Row(
                                 children: <Widget>[
                                   SingleLineText(
-                                    '${authorValue['firstname']} ${authorValue['lastName']}',
+                                    '${authorValue['firstname']} ${authorValue['lastname']}',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -331,7 +330,7 @@ class PostWidget extends StatelessWidget {
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
     
      return FutureBuilder<Response>(
-      future: mainBloc.getUser(post.value['reviewingUserId'].toString()),
+      future: mainBloc.getUser(post.value['uid'].toString()),
       builder: (context, response) {
         Map<dynamic, dynamic> authorValue =  response.hasData ? json.decode(response.data.body) : null;
         return GestureDetector(
@@ -339,7 +338,7 @@ class PostWidget extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ProfileScreen(uid: post.value['reviewingUserId']),
+                builder: (context) => ProfileScreen(uid: post.value['uid']),
               ),
             );
           },
@@ -380,14 +379,15 @@ class PostWidget extends StatelessWidget {
                                   child: Row(
                                     children: <Widget>[
                                       SingleLineText(
-                                        '${authorValue['firstname']} ${authorValue['lastName']}',
+                                        '${authorValue['firstname']} ${authorValue['lastname']}',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       SingleLineText(
-                                        ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                                       "Hello",
+                                       // ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
                                         style: TextStyle(
                                           color: Theme.of(context).hintColor,
                                           fontSize: 14,
@@ -401,7 +401,7 @@ class PostWidget extends StatelessWidget {
                                   height: 4.0,
                                 ),
                                 SingleLineText(
-                                  '${post.value['postType'] == 0 ? localizations.wroteReview : localizations.addedTip} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timeStamp'].toString())).toInt() * 1000))}',
+                                  '${post.value['postType'] == 0 ? localizations.wroteReview : localizations.addedTip} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timestamp'].toString())).toInt() * 1000))}',
                                   style: TextStyle(
                                     color: Theme.of(context).hintColor,
                                     fontSize: 12,
@@ -490,7 +490,7 @@ class PostWidget extends StatelessWidget {
   }
 
   Widget _rating({@required BuildContext context}) {
-    if (post.value['numRating'] == null) {
+    if (post.value['stars'] == null) {
       return Container();
     }
     return Column(
@@ -572,6 +572,7 @@ class PostWidget extends StatelessWidget {
             onPressed: () {
               mainBloc.unlikePostByUser(
                 postKey: post?.key.toString(),
+                postType: post.value['type'],
                 uid: uid,
               );
             },
@@ -587,6 +588,7 @@ class PostWidget extends StatelessWidget {
           onPressed: () {
             mainBloc.likePostByUser(
               postKey: post?.key.toString(),
+              postType: post.value['type'],
               uid: uid,
             );
           },

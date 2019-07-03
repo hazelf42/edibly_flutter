@@ -131,15 +131,56 @@ class MainBloc extends Object with Validators {
   }
 
   /// Post like functions
-  void likePostByUser({@required String postKey, @required String uid}) {
-    _firebaseDatabase.reference().child('likes').child(postKey).update({
-      uid: 1,
+  void likePostByUser(
+      {@required String postKey,
+      @required String uid,
+      @required int postType}) async {
+    var type = "";
+    //Tried to make this a switch but aaaaa
+    if (postType == 0) {
+      type = "review";
+    } else if (postType == 1) {
+      type = "photo";
+    } else if (postType == 2) {
+      type = "tip";
+    } else {
+      type = "review";
+    }
+    await http
+        .post("http://edibly.vassi.li/api/like",
+            body: json.encode({
+              'uid': uid,
+              'type': type,
+              'id': postKey,
+            }))
+        .then((http.Response response) {
+      print(response.statusCode);
     });
   }
 
-  void unlikePostByUser({@required String postKey, @required String uid}) {
-    _firebaseDatabase.reference().child('likes').child(postKey).update({
-      uid: 0,
+  void unlikePostByUser(  {@required String postKey,
+      @required String uid,
+      @required int postType}) async {
+    var type = "";
+    //Tried to make this a switch but aaaaa
+    if (postType == 0) {
+      type = "review";
+    } else if (postType == 1) {
+      type = "photo";
+    } else if (postType == 2) {
+      type = "tip";
+    } else {
+      type = "review";
+    }
+    await http
+        .post("http://edibly.vassi.li/api/unlike",
+            body: json.encode({
+              'uid': uid,
+              'type': type,
+              'id': postKey,
+            }))
+        .then((http.Response response) {
+      print(response.statusCode);
     });
   }
 
