@@ -113,8 +113,8 @@ class RestaurantDishesScreen extends StatelessWidget {
             ),
           );
           //TODO: - Can be made sorting  ? ?? ? ? ? ? 
-        } else if (dishes.elementAt(position - 1).value[_dietToConstantString(diet)] == true &&
-            dishes.elementAt(position).value[_dietToConstantString(diet)] == false) {
+        } else if (dishes.elementAt(position - 1).value["${_dietToConstantString(diet)}level"] == 2 &&
+            dishes.elementAt(position).value["${_dietToConstantString(diet)}level"] == 1) {
           return Container(
             color: Theme.of(context).primaryColor,
             padding: const EdgeInsets.symmetric(
@@ -203,10 +203,17 @@ class RestaurantDishesScreen extends StatelessWidget {
                         List<Data> filteredDishes = [];
                         if (diet == Diet.VEGETARIAN) {
                           dishesSnapshot.data.forEach((d) => (d.value['vegetarianlevel'] >= 1) ? filteredDishes.add(d) : null);
+                          filteredDishes.sort((a,b) {
+                            return a.value['vegetarianlevel'].compareTo(b.value['vegetarianlevel']);
+                          });
                         } else {
                           dishesSnapshot.data.forEach((d) => (d.value['veganlevel'] >= 1) ? filteredDishes.add(d) : null);
+                          filteredDishes.sort((a,b) {
+                            return b.value['veganlevel'].compareTo(a.value['veganlevel']);
+                          });
+                          filteredDishes.forEach((d) => print(d.value));
                         }
-
+                
                         return DefaultTabController(
                           length: 3,
                           initialIndex: 1,

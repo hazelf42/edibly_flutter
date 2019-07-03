@@ -2,12 +2,10 @@ import 'dart:io';
 import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:http_parser/http_parser.dart';
 import 'package:edibly/models/data.dart';
 
 class NewPostBloc {
@@ -158,6 +156,16 @@ class NewPostBloc {
     /// upload photo
     String photoUrl;
     if (photo != null) {
+      var request = new http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/upload"));
+      request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
+      request.send().then((response) {
+        if (response.statusCode == 200) { print("Uploaded!"); }
+        else {
+          print(response.statusCode);
+        }
+      });
+
+      /*
       String imageUuid = Uuid().v1();
       StorageTaskSnapshot storageTaskSnapshot = await FirebaseStorage.instance
           ?.ref()
@@ -167,6 +175,7 @@ class NewPostBloc {
           ?.putFile(photo)
           ?.onComplete;
       photoUrl = await storageTaskSnapshot?.ref?.getDownloadURL();
+      */
     }
 
     // /// put photo info into database)

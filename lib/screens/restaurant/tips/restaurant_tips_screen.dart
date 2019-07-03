@@ -154,13 +154,12 @@ class TipWidget extends StatelessWidget {
     return FutureBuilder<Response>(
       future: mainBloc.getUser(tip.value['uid'].toString()),
       builder: (context, response) {
-        final userMap = json.decode(response.data.body);
-        Map<dynamic, dynamic> authorValue = userMap;
+        var authorValue = response.hasData ? json.decode(response.data.body) : null;
         return Row(
           children: <Widget>[
             CircleAvatar(
               radius: 18.0,
-              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
+              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photo'] ?? authorValue['photoURL'] ?? ''),
               child: authorValue == null
                   ? SizedBox(
                       width: 36.0,
@@ -197,7 +196,8 @@ class TipWidget extends StatelessWidget {
                                     ),
                                   ),
                                   SingleLineText(
-                                    ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                                    //' (${authorValue['dietName']}${(authorValue['gluten'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                                    'Hello',
                                     style: TextStyle(
                                       color: Theme.of(context).hintColor,
                                       fontSize: 14,
@@ -208,7 +208,7 @@ class TipWidget extends StatelessWidget {
                               ),
                             ),
                             Container(height: 6.0),
-                            Text(tip.value['description']),
+                            Text(tip.value['text'] ?? ''),
                           ],
                         ),
                 ],

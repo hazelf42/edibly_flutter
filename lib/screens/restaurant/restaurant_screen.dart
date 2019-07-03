@@ -286,7 +286,7 @@ class RestaurantScreen extends StatelessWidget {
                 SmoothStarRating(
                   allowHalfRating: true,
                   starCount: 5,
-                  rating: snapshot.data.value['numRating'] / 2.0 - 0.1,
+                  rating: snapshot.data.value['rating'] / 2.0 - 0.1,
                   size: 16.0,
                   color: AppColors.primarySwatch.shade900,
                   borderColor: AppColors.primarySwatch.shade900,
@@ -295,7 +295,7 @@ class RestaurantScreen extends StatelessWidget {
                   width: 8.0,
                 ),
                 SingleLineText(
-                  (double.parse(snapshot.data.value['numRating'].toString()) /
+                  (double.parse(snapshot.data.value['rating'].toString()) /
                           2.0)
                       .toStringAsFixed(1),
                   style: TextStyle(
@@ -339,7 +339,7 @@ class RestaurantScreen extends StatelessWidget {
             return Container();
           }
           if (snapshot?.data?.value == null) return Container();
-          dynamic tagDict = snapshot?.data?.value['tagDict'];
+          dynamic tagDict = snapshot?.data?.value['tags'];
           if (tagDict == null) return Container();
           List<Data> tags = dynamicTagArrayToTagList(tagDict);
           tags.sort((a, b) => b.value - a.value);
@@ -717,11 +717,11 @@ class RestaurantScreen extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                featuredTip['tip'] != null
+                                featuredTip['text'] != null
                                     ? Container(
                                         margin: const EdgeInsets.only(top: 4.0),
                                         child: Text(
-                                          featuredTip['tip'],
+                                          featuredTip['text'],
                                           style: TextStyle(fontSize: 13.0),
                                         ),
                                       )

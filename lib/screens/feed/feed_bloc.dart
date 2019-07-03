@@ -4,8 +4,14 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
+import 'package:flutter/foundation.dart';
+
 class FeedBloc {
-  FeedBloc() {
+  String feedType;
+
+  FeedBloc({
+    @required this.feedType,
+  }) {
     _firebaseDatabase.setPersistenceEnabled(true);
     _firebaseDatabase.setPersistenceCacheSizeBytes(10000000);
   }
@@ -34,14 +40,15 @@ class FeedBloc {
     _currentPage = 0;
   }
 
-  void getPosts() async {
-    /// if page is not fully loaded the return
+  void getPosts(String feedType) async {
+    /// if page is not fully loaded then return
     if (_fetchStarted && _postsInCurrentPage < POSTS_PER_PAGE) {
       return;
     }
 
     /// if page is fully loaded then start loading next page
-    else if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
+    else if (_postsInCurrentPage ==
+        POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
       _currentPage++;
       _postsInCurrentPage = 0;
     }
@@ -62,19 +69,26 @@ class FeedBloc {
       _postsInCurrentPage = 0;
 
       /// network request
-      final response = await http.get('http://edibly.vassi.li/api/posts');
-
+      /// TODO: - Localization ?
+      http.Response response;
+      if (feedType == 'nearby') {
+        //TODO: - Actually make it posts from nearby lol
+         response = await http.get('http://edibly.vassi.li/api/posts');
+      } else {
+         response = await http.get('http://edibly.vassi.li/api/posts');
+      }
       final map = json.decode(response.body);
       final postsMap = Map<dynamic, dynamic>();
       map.forEach((p) => postsMap[p['rrid'].toString()] = p);
       var index = 0;
       for (var post in map) {
-        final nameResponse = await http.get('http://edibly.vassi.li/api/restaurants/'+post['rid'].toString());
+        final nameResponse = await http.get(
+            'http://edibly.vassi.li/api/restaurants/' + post['rid'].toString());
         final name = json.decode(nameResponse.body)['name'];
-        post['restaurantName'] = name;    
+        post['restaurantName'] = name;
         posts.add(Data(index, post));
       }
-      
+
       _postsInCurrentPage += 10;
       posts.remove(null);
       _posts.add(posts);
@@ -106,7 +120,7 @@ class FeedBloc {
       //   /// publish an update to the stream
       //   _posts.add(posts);
       //   print("Posts!");
-        
+
       //   print(_posts);
       // });
     }
@@ -129,11 +143,13 @@ class FeedBloc {
         /// do not insert duplicate posts
         if (event?.snapshot?.key != posts[oldPostsLength - 1].key) {
           /// insert newly acquired post to the start of new page
-          posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
+          posts.insert(oldPostsLength,
+              Data(event?.snapshot?.key, event?.snapshot?.value));
         }
 
         /// if this was the last post in requested page, then show a circular loader at the end of page
-        if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
+        if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1))
+          posts.add(null);
 
         /// publish an update to the stream
         _posts.add(posts);
@@ -143,7 +159,8 @@ class FeedBloc {
         onChildAddedListener?.cancel();
       });
       query.onChildRemoved.listen((event) {
-        posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+        posts.removeWhere(
+            (post) => post != null && post.key == (event?.snapshot?.key ?? ''));
 
         /// publish an update to the stream
         _posts.add(posts);

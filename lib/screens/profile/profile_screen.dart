@@ -61,11 +61,12 @@ class ProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         SingleLineText(
-                          '${authorValue['firstname']} ${authorValue['lastName']}',
+                          '${authorValue['firstname']} ${authorValue['lastname']}',
                           style: Theme.of(context).textTheme.title,
                         ),
                         SingleLineText(
-                          '${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')}',
+                          'hello',
+                          //'${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')}',
                           style: TextStyle(
                             color: Theme.of(context).hintColor,
                             fontSize: 14,
@@ -97,7 +98,7 @@ class ProfileScreen extends StatelessWidget {
             final MainBloc mainBloc = Provider.of<MainBloc>(context);
             final ProfileBloc feedBloc = Provider.of<ProfileBloc>(context);
             return FutureBuilder<FirebaseUser>(
-              future: mainBloc.getCurrentFirebaseUser(),
+              future: mainBloc. getCurrentFirebaseUser(),
               builder: (context, firebaseUserSnapshot) {
                 return Container(
                   color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,

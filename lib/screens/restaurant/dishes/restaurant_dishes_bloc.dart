@@ -35,7 +35,7 @@ class RestaurantDishesBloc {
     final url =
         ('http://edibly.vassi.li/api/restaurants/' + restaurantKey + '/dishes');
     final response = await http.get(url);
-    final dishesMap = json.decode(response.body);
+    final dishesMap = json.decode(response.body).reversed;
 
     //TODO: - Dish reviews
     List<Data> dishesWithoutRating = [];

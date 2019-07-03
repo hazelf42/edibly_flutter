@@ -625,7 +625,7 @@ class PostWidget extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => RestaurantScreen(
                             firebaseUserId: uid,
-                            restaurantKey: post.value['rid'],
+                            restaurantKey: post.value['rid'].toString(),
                           ),
                     ),
                   );

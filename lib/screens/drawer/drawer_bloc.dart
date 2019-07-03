@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -6,6 +8,8 @@ import 'package:rxdart/rxdart.dart';
 
 import 'package:edibly/bloc_helper/validators.dart';
 import 'package:edibly/bloc_helper/app_error.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 enum UpdatePasswordState {
   INVALID_PASSWORD,
@@ -38,10 +42,23 @@ class DrawerBloc {
 
   Stream<String> get newPassword => _newPassword.stream;
 
+  // Stream<File> get photo => _photo.stream;
+
   /// Setters
   Function(UpdatePasswordState) get setUpdatePasswordState => _updatePasswordState.add;
 
+  // Function(File) get setPhoto => _photo.add;
+
+  // Value getters
+
+  // File photoValue() {
+  //   return _photo.value;
+  // }f
+
+
   /// Void functions
+  /// 
+  
   void setOldPassword(String password) {
     _oldPassword.add(password);
     _updatePasswordState.add(UpdatePasswordState.IDLE);
@@ -103,13 +120,43 @@ class DrawerBloc {
 
   /// Other functions
   Stream<Event> getUser({@required String uid}) {
+    //Returns stuff like email, password until we have a better way of storing
+
     return _firebaseDatabase.reference().child('userProfiles/$uid').onValue;
   }
+
+  Future<http.Response> getVassilibaseUser(String uid) async {
+    //Returns all other info: Name, diet, image, etc.
+
+    final url = "http://edibly.vassi.li/api/profiles/$uid";
+    final response = await http.get(url);
+    return response;
+  }
+
 
   Future<void> logOut() async {
     final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
     return _firebaseAuth.signOut();
   }
+
+  Future<bool> changeProfilePicture({
+    @required File photo,
+  }) async {
+    /// upload photo
+    String photoUrl;
+    if (photo != null) {
+      var request = new http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+      request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
+      request.send().then((response) {
+        if (response.statusCode == 200) { print("Uploaded!"); }
+        else {
+          print(response.statusCode);
+        }
+        photoUrl = "http://edibly.vassi.li/images/${response.request}";
+      });
+    }
+  }
+
 
   /// Dispose function
   void dispose() {

@@ -26,7 +26,7 @@ class FeedScreen extends StatelessWidget {
                   stream: feedBloc.posts,
                   builder: (context, postsSnapshot) {
                     if (firebaseUserSnapshot?.data == null || postsSnapshot?.data == null || postsSnapshot.data.isEmpty) {
-                      feedBloc.getPosts();
+                      feedBloc.getPosts('nearby');
                       return CircularProgressIndicator();
                     }
                     return RefreshIndicator(
@@ -38,7 +38,7 @@ class FeedScreen extends StatelessWidget {
                         itemCount: postsSnapshot.data.length,
                         itemBuilder: (context, position) {
                           if (postsSnapshot.data.elementAt(position) == null) {
-                            feedBloc.getPosts();
+                            feedBloc.getPosts('nearby');
                             return Container(
                               padding: const EdgeInsets.symmetric(
                                 vertical: 12.0,
@@ -65,7 +65,7 @@ class FeedScreen extends StatelessWidget {
                       ),
                       onRefresh: () {
                         feedBloc.clearPosts();
-                        feedBloc.getPosts();
+                        feedBloc.getPosts('nearby');
                         return Future.delayed(Duration(seconds: 1));
                       },
                     );

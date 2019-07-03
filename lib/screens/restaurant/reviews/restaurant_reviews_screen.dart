@@ -29,6 +29,7 @@ class RestaurantReviewsScreen extends StatelessWidget {
       body: DisposableProvider<RestaurantReviewsBloc>(
         packageBuilder: (context) => RestaurantReviewsBloc(
               restaurantKey: restaurantKey,
+              restaurantName: restaurantName
             ),
         child: Builder(
           builder: (context) {

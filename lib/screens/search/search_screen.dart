@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-
+import 'dart:async';
 import 'package:edibly/screens/search/restaurant_preview_widget.dart';
 import 'package:edibly/screens/restaurant/restaurant_screen.dart';
 import 'package:edibly/screens/new_post/new_post_screen.dart';
@@ -36,7 +36,9 @@ class SearchScreen extends StatelessWidget {
           ),
           infoWindow: InfoWindow(
             title: data.value['name'],
-            snippet: data.value['address'] ?? data.value['address1'] ?? data.value['address2'],
+            snippet: data.value['address'] ??
+                data.value['address1'] ??
+                data.value['address2'],
             onTap: () {
               Navigator.push(
                 context,
@@ -63,7 +65,8 @@ class SearchScreen extends StatelessWidget {
         myLocationEnabled: true,
         gestureRecognizers: Set()
           ..add(Factory<PanGestureRecognizer>(() => PanGestureRecognizer()))
-          ..add(Factory<VerticalDragGestureRecognizer>(() => VerticalDragGestureRecognizer())),
+          ..add(Factory<VerticalDragGestureRecognizer>(
+              () => VerticalDragGestureRecognizer())),
         markers: markers,
       ),
     );
@@ -117,7 +120,9 @@ class SearchScreen extends StatelessWidget {
                           searchBloc.setRatingSliderValue(value);
                         },
                         activeColor: Theme.of(context).toggleableActiveColor,
-                        inactiveColor: Theme.of(context).toggleableActiveColor.withOpacity(0.25),
+                        inactiveColor: Theme.of(context)
+                            .toggleableActiveColor
+                            .withOpacity(0.25),
                       ),
                     ],
                   );
@@ -158,7 +163,9 @@ class SearchScreen extends StatelessWidget {
                           searchBloc.setDistanceSliderValue(value);
                         },
                         activeColor: Theme.of(context).toggleableActiveColor,
-                        inactiveColor: Theme.of(context).toggleableActiveColor.withOpacity(0.25),
+                        inactiveColor: Theme.of(context)
+                            .toggleableActiveColor
+                            .withOpacity(0.25),
                       ),
                     ],
                   );
@@ -234,7 +241,8 @@ class SearchScreen extends StatelessWidget {
 
   /// add review
 
-  Widget _restaurantNameField(SearchBloc searchBloc, AppLocalizations localizations) {
+  Widget _restaurantNameField(
+      SearchBloc searchBloc, AppLocalizations localizations) {
     return StreamBuilder<String>(
       stream: searchBloc.restaurantName,
       builder: (context, nameSnapshot) {
@@ -248,12 +256,15 @@ class SearchScreen extends StatelessWidget {
                 labelText: localizations.restaurantName,
                 prefixIcon: Icon(
                   Icons.short_text,
-                  color: nameSnapshot.hasError ? Theme.of(context).errorColor : null,
+                  color: nameSnapshot.hasError
+                      ? Theme.of(context).errorColor
+                      : null,
                 ),
                 errorText: nameSnapshot.error,
               ),
               onChanged: searchBloc.setRestaurantName,
-              enabled: stateSnapshot.data == AddReviewState.TRYING ? false : true,
+              enabled:
+                  stateSnapshot.data == AddReviewState.TRYING ? false : true,
             );
           },
         );
@@ -261,7 +272,8 @@ class SearchScreen extends StatelessWidget {
     );
   }
 
-  Widget _restaurantLocationField(SearchBloc searchBloc, AppLocalizations localizations) {
+  Widget _restaurantLocationField(
+      SearchBloc searchBloc, AppLocalizations localizations) {
     return StreamBuilder<String>(
       stream: searchBloc.restaurantLocation,
       builder: (context, locationSnapshot) {
@@ -275,12 +287,15 @@ class SearchScreen extends StatelessWidget {
                 labelText: localizations.restaurantLocation,
                 prefixIcon: Icon(
                   Icons.location_on,
-                  color: locationSnapshot.hasError ? Theme.of(context).errorColor : null,
+                  color: locationSnapshot.hasError
+                      ? Theme.of(context).errorColor
+                      : null,
                 ),
                 errorText: locationSnapshot.error,
               ),
               onChanged: searchBloc.setRestaurantLocation,
-              enabled: stateSnapshot.data == AddReviewState.TRYING ? false : true,
+              enabled:
+                  stateSnapshot.data == AddReviewState.TRYING ? false : true,
             );
           },
         );
@@ -312,7 +327,8 @@ class SearchScreen extends StatelessWidget {
               )
             : FlatButton(
                 onPressed: () async {
-                  Data restaurant = await searchBloc.addReview(localizations: localizations);
+                  Data restaurant =
+                      await searchBloc.addReview(localizations: localizations);
                   if (restaurant != null) {
                     final addedNewPost = await Navigator.of(context).push(
                       MaterialPageRoute(
@@ -323,7 +339,9 @@ class SearchScreen extends StatelessWidget {
                             ),
                       ),
                     );
-                    if (addedNewPost != null && addedNewPost is bool && addedNewPost) {
+                    if (addedNewPost != null &&
+                        addedNewPost is bool &&
+                        addedNewPost) {
                       final snackBar = SnackBar(
                         content: Text(localizations.reviewAddedSuccessText),
                       );
@@ -398,7 +416,8 @@ class SearchScreen extends StatelessWidget {
             builder: (context) {
               return AlertDialog(
                 content: Text(localizations.reviewAddedSuccessText),
-                contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
+                contentPadding:
+                    const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
                 actions: <Widget>[
                   FlatButton(
                     child: Text(localizations.ok.toUpperCase()),
@@ -425,7 +444,9 @@ class SearchScreen extends StatelessWidget {
         builder: (context) {
           final SearchBloc searchBloc = Provider.of<SearchBloc>(context);
           return Container(
-            color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? null
+                : Colors.grey.shade300,
             alignment: Alignment.center,
             child: FutureBuilder(
                 future: searchBloc.getCurrentLocation(),
@@ -437,7 +458,8 @@ class SearchScreen extends StatelessWidget {
                     stream: searchBloc.allRestaurants,
                     builder: (context, allRestaurantsSnapshot) {
                       if (allRestaurantsSnapshot?.data == null) {
-                        if (allRestaurantsSnapshot.connectionState == ConnectionState.waiting) {
+                        if (allRestaurantsSnapshot.connectionState ==
+                            ConnectionState.waiting) {
                           searchBloc.getAllRestaurants();
                         }
                         return CircularProgressIndicator();
@@ -447,8 +469,14 @@ class SearchScreen extends StatelessWidget {
                           stream: searchBloc.filteredRestaurants,
                           initialData: allRestaurantsSnapshot?.data,
                           builder: (context, filteredRestaurantsSnapshot) {
-                            bool filteredRestaurantsValueIsNull = filteredRestaurantsSnapshot?.data == null;
-                            int listViewItemCount = (filteredRestaurantsValueIsNull ? 0 : filteredRestaurantsSnapshot.data.length) + 2;
+                            bool filteredRestaurantsValueIsNull =
+                                filteredRestaurantsSnapshot?.data == null;
+                            int listViewItemCount =
+                                (filteredRestaurantsValueIsNull
+                                        ? 0
+                                        : filteredRestaurantsSnapshot
+                                            .data.length) +
+                                    2;
                             return ListView.separated(
                               padding: const EdgeInsets.only(bottom: 10.0),
                               separatorBuilder: (context, position) {
@@ -464,34 +492,50 @@ class SearchScreen extends StatelessWidget {
                                 } else if (position == 0) {
                                   return _map(
                                     context: context,
-                                    currentLocationSnapshot: currentLocationSnapshot,
-                                    allRestaurantsSnapshot: allRestaurantsSnapshot,
+                                    currentLocationSnapshot:
+                                        currentLocationSnapshot,
+                                    allRestaurantsSnapshot:
+                                        allRestaurantsSnapshot,
                                   );
                                 } else if (position == 1) {
                                   return Column(
                                     children: <Widget>[
                                       Card(
-                                        margin: const EdgeInsets.symmetric(horizontal: 10.0),
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 10.0),
                                         child: Row(
                                           children: <Widget>[
                                             Expanded(
                                               child: TextField(
-                                                onChanged: (keyword) {
-                                                  searchBloc.filterRestaurants(keyword);
+                                                onSubmitted:  (keyword) {
+                                                    searchBloc
+                                                        .filterRestaurants(
+                                                            keyword);
                                                 },
+                                                // onChanged: (keyword) {
+                                                //   var doABarrelRoll = Timer(Duration(seconds: 1), (){searchBloc.filterRestaurants(keyword);});
+                                                //   doABarrelRoll.cancel();
+                                                // },
                                                 decoration: InputDecoration(
                                                   border: InputBorder.none,
                                                   isDense: true,
-                                                  hintText: localizations.searchExampleText,
-                                                  labelText: localizations.search,
-                                                  prefixIcon: Icon(Icons.search),
+                                                  hintText: localizations
+                                                      .searchExampleText,
+                                                  labelText:
+                                                      localizations.search,
+                                                  prefixIcon:
+                                                      Icon(Icons.search),
                                                 ),
                                               ),
                                             ),
                                             IconButton(
                                               icon: Icon(
                                                 Icons.tune,
-                                                color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey,
+                                                color: Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.dark
+                                                    ? null
+                                                    : Colors.grey,
                                               ),
                                               onPressed: () {
                                                 _openFilters(
@@ -505,7 +549,8 @@ class SearchScreen extends StatelessWidget {
                                         ),
                                       ),
                                       Builder(builder: (context) {
-                                        if (listViewItemCount == 2 && filteredRestaurantsValueIsNull) {
+                                        if (listViewItemCount == 2 &&
+                                            filteredRestaurantsValueIsNull) {
                                           return Container(
                                             margin: const EdgeInsets.all(24.0),
                                             child: CircularProgressIndicator(),
@@ -517,17 +562,20 @@ class SearchScreen extends StatelessWidget {
                                               children: <Widget>[
                                                 Icon(
                                                   Icons.warning,
-                                                  color: Theme.of(context).hintColor,
+                                                  color: Theme.of(context)
+                                                      .hintColor,
                                                   size: 48.0,
                                                 ),
                                                 Container(
                                                   height: 12.0,
                                                 ),
                                                 Text(
-                                                  localizations.noRestaurantsFound,
+                                                  localizations
+                                                      .noRestaurantsFound,
                                                   style: TextStyle(
                                                     fontSize: 18.0,
-                                                    color: Theme.of(context).hintColor,
+                                                    color: Theme.of(context)
+                                                        .hintColor,
                                                   ),
                                                 ),
                                               ],
@@ -540,10 +588,12 @@ class SearchScreen extends StatelessWidget {
                                   );
                                 }
                                 return Container(
-                                  margin: EdgeInsets.symmetric(horizontal: 10.0),
+                                  margin:
+                                      EdgeInsets.symmetric(horizontal: 10.0),
                                   child: RestaurantPreviewWidget(
                                     firebaseUser: firebaseUser,
-                                    restaurant: filteredRestaurantsSnapshot.data.elementAt(position - 2),
+                                    restaurant: filteredRestaurantsSnapshot.data
+                                        .elementAt(position - 2),
                                   ),
                                 );
                               },

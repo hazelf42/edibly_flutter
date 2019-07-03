@@ -1,9 +1,10 @@
-import 'package:firebase_database/firebase_database.dart';
+import 'dart:convert';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info/package_info.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:edibly/screens/profile/profile_screen.dart';
 import 'package:edibly/screens/drawer/drawer_bloc.dart';
@@ -22,15 +23,13 @@ class DrawerScreen extends StatelessWidget {
   DrawerScreen(this._firebaseUser);
 
   Widget _userInfo(MainBloc mainBloc, DrawerBloc drawerBloc) {
-    return StreamBuilder<Event>(
-      stream: drawerBloc.getUser(
-        uid: _firebaseUser.uid,
-      ),
+    return FutureBuilder<http.Response>(
+      future: drawerBloc.getVassilibaseUser(_firebaseUser.uid),
       builder: (context, snapshot) {
-        Map<dynamic, dynamic> map = snapshot.hasData ? snapshot?.data?.snapshot?.value : null;
+        Map<dynamic, dynamic> map = snapshot.hasData ? json.decode(snapshot.data.body) : null;
         if (map != null) {
-          mainBloc.setDiet(null, map['dietName'].toString().toLowerCase() == 'Vegan'.toLowerCase() ? Diet.VEGAN : Diet.VEGETARIAN);
-          mainBloc.setGlutenFree(null, map['isGlutenFree'] ?? false);
+          mainBloc.setDiet(null, map['veglevel'].toString().toLowerCase() == '2'.toLowerCase() ? Diet.VEGAN : Diet.VEGETARIAN);
+          mainBloc.setGlutenFree(null, (map['glutenfree'] == 0) ? true : false );
         }
         return Container(
           padding: EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
@@ -38,7 +37,7 @@ class DrawerScreen extends StatelessWidget {
             children: <Widget>[
               CircleAvatar(
                 radius: 24.0,
-                backgroundImage: map == null ? null : NetworkImage(map['photoUrl'] ?? map['photoURL'] ?? ''),
+                backgroundImage: map == null ? null : NetworkImage(map['photo'] ?? ''),
                 child: map == null
                     ? SizedBox(
                         width: 46.0,
@@ -63,7 +62,7 @@ class DrawerScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               SingleLineText(
-                                '${map['firstname']} ${map['lastName']}',
+                                '${map['firstname']} ${map['lastname']}',
                                 style: Theme.of(context).textTheme.body1.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
                               ),
                               Container(

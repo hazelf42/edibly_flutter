@@ -19,7 +19,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
   RestaurantPreviewWidget({
     @required this.firebaseUser,
     @required this.restaurant,
-  }) : super(key: Key(restaurant.key));
+  }) : super(key: Key(restaurant.key.toString()));
 
   List<Data> dynamicTagArrayToTagList(dynamic dynamicTagArray) {
     List<Data> tagList = [];
@@ -103,7 +103,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
 
   Widget _bookmarkButton({@required SearchBloc searchBloc}) {
     return StreamBuilder<Event>(
-      stream: searchBloc.getRestaurantBookmarkValue(firebaseUser.uid, restaurant.key),
+      stream: searchBloc.getRestaurantBookmarkValue(firebaseUser.uid, restaurant.key.toString()),
       builder: (context, bookmarkValueSnapshot) {
         bool bookmarked = bookmarkValueSnapshot?.data?.snapshot?.value == 1;
         return IconButton(
@@ -112,7 +112,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
             color: bookmarked ? AppColors.primarySwatch.shade600 : Theme.of(context).disabledColor,
           ),
           onPressed: () {
-            searchBloc.setRestaurantBookmarkValue(firebaseUser.uid, restaurant.key, !bookmarked);
+            searchBloc.setRestaurantBookmarkValue(firebaseUser.uid, restaurant.key.toString(), !bookmarked);
           },
         );
       },
@@ -131,7 +131,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
       child: Container(
         width: 70.0,
         height: 70.0,
-        padding: (restaurant.value['tags'].length > 0) ? EdgeInsets.only(left: 10, top: 10) : null,
+        margin: (restaurant.value['tags'].length > 0) ? EdgeInsets.only(top: 10) : null,
         color: Colors.white,
         child: CachedNetworkImage(
           imageUrl: restaurant.value['photo'] ?? '',
@@ -161,7 +161,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => RestaurantScreen(
                   firebaseUserId: firebaseUser.uid,
-                  restaurantKey: restaurant.key,
+                  restaurantKey: restaurant.key.toString(),
                 ),
           ),
         );

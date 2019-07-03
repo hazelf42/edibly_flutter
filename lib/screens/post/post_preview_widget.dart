@@ -59,19 +59,19 @@ class PostPreviewWidget extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
           child: Row(
             children: <Widget>[
-              CircleAvatar(
-                radius: 24.0,
-               backgroundImage: authorValue  == null ? null : NetworkImage(authorValue['photo']),
-                child: authorValue == null
-                    ? SizedBox(
-                        width: 46.0,
-                        height: 46.0,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                        ),
-                      )
-                    : null,
-              ),
+              // CircleAvatar(
+              //   radius: 24.0,
+              //  backgroundImage: authorValue  == null ? null : NetworkImage(authorValue['photo']),
+              //   child: authorValue == null
+              //       ? SizedBox(
+              //           width: 46.0,
+              //           height: 46.0,
+              //           child: CircularProgressIndicator(
+              //             strokeWidth: 2.0,
+              //           ),
+              //         )
+              //       : null,
+              // ),
               Container(
                 width: 16.0,
               ),
@@ -306,7 +306,8 @@ class PostPreviewWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  post.value['restaurantName'] ?? '',
+
+                  post.value['restaurantName'] ?? '', 
                   style: Theme.of(context).textTheme.title,
                 ),
                 _rating(

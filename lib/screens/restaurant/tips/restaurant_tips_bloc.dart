@@ -75,7 +75,7 @@ class RestaurantTipsBloc {
       } else if (allTips.length > 0) {
         var allTipsSublist = allTips.sublist(oldTipsLength, allTips.length);
         allTipsSublist.forEach((t) => tips.add(Data(t['rtid'], t)));
-        tips.add(null);
+        //tips.add(null);
       } else {
         return;
       }
