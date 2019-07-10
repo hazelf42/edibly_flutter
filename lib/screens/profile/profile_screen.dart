@@ -1,10 +1,10 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 
-import 'package:edibly/screens/edit_profile/edit_profile.dart';
 import 'package:edibly/screens/common/full_screen_image.dart';
 import 'package:edibly/screens/post/post_preview_widget.dart';
 import 'package:edibly/screens/profile/profile_bloc.dart';
@@ -20,7 +20,7 @@ class ProfileScreen extends StatelessWidget {
   ProfileScreen({@required this.uid});
 
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return FutureBuilder<Response>(
+    return FutureBuilder<http.Response>(
       future: mainBloc.getUser(uid),
       builder: (context, response) {
         Map<dynamic, dynamic> authorValue = (response.hasData) ?  json.decode(response?.data?.body) : null;
@@ -132,12 +132,14 @@ class ProfileScreen extends StatelessWidget {
                                           localizations: localizations,
                                         ),
                                          (firebaseUserSnapshot == null || uid == null) ? FlatButton(onPressed: () {}, color: Colors.grey, child: Text("")) : ((firebaseUserSnapshot.data.uid == uid) ? 
-                      BoldFlatButton (text: "Edit Profile", textColor: Colors.deepOrangeAccent,onPressed: (){
-                         Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditProfile(firebaseUserSnapshot.data),
-                    ));}) : BoldFlatButton(text: "(Un)Follow", textColor: Colors.deepOrangeAccent,onPressed: (){ProfileBloc(uid: uid).followUser(currentUid: firebaseUserSnapshot.data.uid, profileUid: uid);})), 
+                      BoldFlatButton (text: "Change Photo", textColor: Colors.deepOrangeAccent,onPressed: () async {
+                         
+                    var newPhotoUrl = await getImage();
+                     newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
+                    await http.put("http://edibly.vassi.li/api/profiles/${firebaseUserSnapshot.data.uid}", body:  json.encode( {
+                      'photo' : ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
+                    })).then((http.Response response) {print(response.body);});
+                  }) : BoldFlatButton(text: "(Un)Follow", textColor: Colors.deepOrangeAccent,onPressed: (){ProfileBloc(uid: uid).followUser(currentUid: firebaseUserSnapshot.data.uid, profileUid: uid);})), 
                                         postsSnapshot.data.isEmpty
                                             ? Column(
                                                 children: <Widget>[
@@ -212,5 +214,22 @@ class ProfileScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+  Future<String> getImage() async {
+
+    var photo = await ImagePicker.pickImage(source: ImageSource.gallery);
+    Future<String> string;
+
+    if (photo != null) {
+      var request = new http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+      request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
+      await request.send().then((response) {
+        if (response.statusCode == 200) { string =  response.stream.bytesToString();}
+        else {
+          SnackBar(content: Text("An error occurred."));
+        }
+      });
+    }
+    return string;
   }
 }

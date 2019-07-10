@@ -22,17 +22,17 @@ class FeedScreen extends StatelessWidget {
                     : Colors.deepOrange,
                 tabs: [
                   Tab(child: (Stack(alignment: Alignment.centerLeft, children: <Widget>[Icon(Icons.near_me, color: Colors.deepOrange,), Text("        Nearby", style: TextStyle(color: Colors.deepOrange)) ],))),
-                  Tab(child: (Stack(fit: StackFit.loose, alignment: Alignment.centerLeft, children: <Widget>[Icon(Icons.person_pin), Text("        Following", style: TextStyle(color: Colors.deepOrange)) ],))),
+                  Tab(child: (Stack(fit: StackFit.loose, alignment: Alignment.centerLeft, children: <Widget>[Icon(Icons.person_pin,  color:  Colors.deepOrange), Text("        Following", style: TextStyle(color: Colors.deepOrange)) ],))),
                 ],
               ),
             ),
-            body:  feedScreenBody(context,)));
+            body:  TabBarView(children: [feedScreenBody(context, 'nearby'), feedScreenBody(context, 'following')])));
   }
 }
 
-Widget feedScreenBody(BuildContext context) {
+Widget feedScreenBody(BuildContext context, String feedType) {
   return DisposableProvider<FeedBloc>(
-    packageBuilder: (context) => FeedBloc(feedType: "following"),
+    packageBuilder: (context) => FeedBloc(feedType: feedType),
     child: Builder(
       builder: (context) {
         final MainBloc mainBloc = Provider.of<MainBloc>(context);
@@ -51,7 +51,7 @@ Widget feedScreenBody(BuildContext context) {
                   if (firebaseUserSnapshot?.data == null ||
                       postsSnapshot?.data == null ||
                       postsSnapshot.data.isEmpty) {
-                    feedBloc.getPosts('following');
+                    feedBloc.getPosts(feedType);
                     return CircularProgressIndicator();
                   }
                   return RefreshIndicator(
@@ -63,7 +63,7 @@ Widget feedScreenBody(BuildContext context) {
                       itemCount: postsSnapshot.data.length,
                       itemBuilder: (context, position) {
                         if (postsSnapshot.data.elementAt(position) == null) {
-                          feedBloc.getPosts('nearby');
+                          feedBloc.getPosts(feedType);
                           return Container(
                             padding: const EdgeInsets.symmetric(
                               vertical: 12.0,

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -146,24 +147,30 @@ class NewPostBloc {
     });
   }
 
+
+  Future<String> getImageUrl({
+     @required File photo,
+  }) async {
+    /// upload photo
+    Future<String> photoUrl;
+    if (photo != null) {
+      var request =  http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+        request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
+       await request.send().then((response) {
+        if (response.statusCode == 200) { photoUrl =  response.stream.bytesToString();}
+        else {
+          SnackBar(content: Text("An error occurred."));
+        }
+      });
+    }
+    return photoUrl;
+  }
   Future<bool> submit({
     @required String restaurantName,
     @required List<String> tags,
     @required double rating,
     @required String review,
-    @required File photo,
-  }) async {
-    /// upload photo
-    String photoUrl;
-    if (photo != null) {
-      var request =  http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
-        request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
-       await request.send().then((response) {
-        if (response.statusCode == 200) {print(response);}
-        else {
-          print(response);
-        }
-      });
+    String photoUrl}) async { 
 
       /*
       String imageUuid = Uuid().v1();
@@ -176,7 +183,6 @@ class NewPostBloc {
           ?.onComplete;
       photoUrl = await storageTaskSnapshot?.ref?.getDownloadURL();
       */
-    }
 
     // /// put photo info into database)
 
@@ -196,7 +202,8 @@ class NewPostBloc {
       'text': review,
       'stars': rating,
       'postType': 0,
-      'tags': tags
+      'tags': tags,
+      'photo': photoUrl ?? null
     };
     // var photoValue = {
     //   'uid': firebaseUserId,

@@ -79,9 +79,13 @@ class FeedBloc {
         response = await http.get('http://edibly.vassi.li/api/posts');
 
         final map = json.decode(response.body);
-        map.forEach(
-            (p) => postsMap[p['rrid'].toString() ?? p['rtid'].toString()] = p);
-      } else {
+        map.forEach((post) {
+            posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
+          });
+          
+          _posts.add(posts);
+      
+            } else if (feedType == 'following') {
         final currentUser = (await MainBloc().getCurrentFirebaseUser());
         await http
             .get('http://edibly.vassi.li/api/profiles/${currentUser.uid}/feed')
@@ -89,6 +93,7 @@ class FeedBloc {
           json.decode(postResponse.body).forEach((post) {
             posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
           });
+          
           _posts.add(posts);
         });
         //.then((response) {

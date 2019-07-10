@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'dart:convert';
 import 'package:edibly/screens/new_post/new_post_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
@@ -135,22 +135,56 @@ class NewPostDishesScreen extends StatelessWidget {
     );
   }
 
-  _submit({
-    @required BuildContext context,
-    @required NewPostBloc newPostBloc,
-    @required AppLocalizations localizations,
-  }) {
+  _submit(
+      {@required BuildContext context,
+      @required NewPostBloc newPostBloc,
+      @required AppLocalizations localizations,}) async {
     newPostBloc.setDishes(null);
-    newPostBloc.submit(restaurantName: restaurantName, tags: tags, rating: rating, review: review, photo: photo).then((succeeded) {
-      if (succeeded) {
-        Navigator.of(context).pop();
-        Navigator.of(context).pop();
-        Navigator.of(context).pop(true);
-      } else {
-        Scaffold.of(context).showSnackBar(SnackBar(content: Text(localizations.networkRequestFailed)));
-        newPostBloc.resetLastDishes();
-      }
-    });
+
+    String imageUrl;
+    if (photo != null) {
+      await newPostBloc.getImageUrl(photo: photo).then((fileName) {
+        imageUrl = "http://edibly.vassi.li/static/uploads/" +
+            json.decode(fileName)['filename'];
+        newPostBloc
+            .submit(
+                restaurantName: restaurantName,
+                tags: tags,
+                rating: rating,
+                review: review,
+                photoUrl: imageUrl)
+            .then((succeeded) {
+          if (succeeded) {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+            Navigator.of(context).pop(true);
+          } else {
+            Scaffold.of(context).showSnackBar(
+                SnackBar(content: Text(localizations.networkRequestFailed)));
+            newPostBloc.resetLastDishes();
+          }
+        });
+      });
+    } else {
+      newPostBloc
+          .submit(
+              restaurantName: restaurantName,
+              tags: tags,
+              rating: rating,
+              review: review,
+              photoUrl: imageUrl)
+          .then((succeeded) {
+        if (succeeded) {
+          Navigator.of(context).pop();
+          Navigator.of(context).pop();
+          Navigator.of(context).pop(true);
+        } else {
+          Scaffold.of(context).showSnackBar(
+              SnackBar(content: Text(localizations.networkRequestFailed)));
+          newPostBloc.resetLastDishes();
+        }
+      });
+    }
   }
 
   @override
@@ -158,20 +192,23 @@ class NewPostDishesScreen extends StatelessWidget {
     final AppLocalizations localizations = AppLocalizations.of(context);
     return DisposableProvider<NewPostBloc>(
       packageBuilder: (context) => NewPostBloc(
-            firebaseUserId: firebaseUserId,
-            restaurantKey: restaurantKey,
-          ),
+        firebaseUserId: firebaseUserId,
+        restaurantKey: restaurantKey,
+      ),
       child: Builder(
         builder: (context) {
           final NewPostBloc newPostBloc = Provider.of<NewPostBloc>(context);
           return Container(
-            color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? null
+                : Colors.grey.shade300,
             alignment: Alignment.center,
             child: StreamBuilder<List<Data>>(
               stream: newPostBloc.dishes,
               builder: (context, dishesSnapshot) {
                 if (dishesSnapshot?.data == null) {
-                  if (dishesSnapshot.connectionState == ConnectionState.waiting) {
+                  if (dishesSnapshot.connectionState ==
+                      ConnectionState.waiting) {
                     newPostBloc.getDishes();
                   }
                   return _loadingView();
@@ -191,10 +228,13 @@ class NewPostDishesScreen extends StatelessWidget {
                                   border: Border.all(color: Colors.white),
                                   borderRadius: BorderRadius.circular(6.0),
                                 ),
-                                margin: const EdgeInsets.symmetric(horizontal: 20.0),
-                                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 20.0),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 12.0),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: <Widget>[
                                     SingleLineText(
                                       localizations.reviewDishesQuestionText,
@@ -218,7 +258,10 @@ class NewPostDishesScreen extends StatelessWidget {
                               Divider(height: 1.0),
                               TabBar(
                                 indicatorWeight: 3.0,
-                                indicatorColor: Theme.of(context).brightness == Brightness.dark ? null : Colors.white,
+                                indicatorColor: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? null
+                                    : Colors.white,
                                 tabs: [
                                   Tab(text: localizations.appetizers),
                                   Tab(text: localizations.entrees),
@@ -241,27 +284,46 @@ class NewPostDishesScreen extends StatelessWidget {
                                 category: 'a',
                                 newPostBloc: newPostBloc,
                                 localizations: localizations,
-                                dishes: dishesSnapshot.data.where((d) => d.value['category'].toString().toLowerCase() == 'a').toList(),
+                                dishes: dishesSnapshot.data
+                                    .where((d) =>
+                                        d.value['category']
+                                            .toString()
+                                            .toLowerCase() ==
+                                        'a')
+                                    .toList(),
                               ),
                               _tabView(
                                 context: context,
                                 category: 'e',
                                 newPostBloc: newPostBloc,
                                 localizations: localizations,
-                                dishes: dishesSnapshot.data.where((d) => d.value['category'].toString().toLowerCase() == 'e').toList(),
+                                dishes: dishesSnapshot.data
+                                    .where((d) =>
+                                        d.value['category']
+                                            .toString()
+                                            .toLowerCase() ==
+                                        'e')
+                                    .toList(),
                               ),
                               _tabView(
                                 context: context,
                                 category: 'd',
                                 newPostBloc: newPostBloc,
                                 localizations: localizations,
-                                dishes: dishesSnapshot.data.where((d) => d.value['category'].toString().toLowerCase() == 'd').toList(),
+                                dishes: dishesSnapshot.data
+                                    .where((d) =>
+                                        d.value['category']
+                                            .toString()
+                                            .toLowerCase() ==
+                                        'd')
+                                    .toList(),
                               ),
                             ],
                           ),
                         ),
                         Container(
-                          margin: const EdgeInsets.fromLTRB(12.0, 16.0, 12.0, 16.0),
+                          margin:
+                              const EdgeInsets.fromLTRB(12.0, 16.0, 12.0, 16.0),
                           child: RaisedButton(
                             color: AppColors.primarySwatch.shade400,
                             onPressed: () {
@@ -304,8 +366,14 @@ class DishWidget extends StatelessWidget {
         return StreamBuilder<List<Data>>(
           stream: newPostBloc.dislikedDishes,
           builder: (context, dislikedDishesSnapshot) {
-            bool liked = likedDishesSnapshot?.data != null && likedDishesSnapshot.data.where((d) => d.key == dish.key).isNotEmpty;
-            bool disliked = dislikedDishesSnapshot?.data != null && dislikedDishesSnapshot.data.where((d) => d.key == dish.key).isNotEmpty;
+            bool liked = likedDishesSnapshot?.data != null &&
+                likedDishesSnapshot.data
+                    .where((d) => d.key == dish.key)
+                    .isNotEmpty;
+            bool disliked = dislikedDishesSnapshot?.data != null &&
+                dislikedDishesSnapshot.data
+                    .where((d) => d.key == dish.key)
+                    .isNotEmpty;
             return GestureDetector(
               onTap: () {
                 newPostBloc.resetDish(dish);
