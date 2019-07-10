@@ -24,7 +24,9 @@ class HomeScreen extends StatelessWidget {
       case 1:
         return DiscoverScreen(firebaseUser: firebaseUser);
       case 2:
-        return SearchScreen(firebaseUser: firebaseUser,);
+        return SearchScreen(
+          firebaseUser: firebaseUser,
+        );
       default: // case 2
         return BookmarksScreen(firebaseUser: firebaseUser);
     }
@@ -34,21 +36,36 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final MainBloc mainBloc = Provider.of<MainBloc>(context);
     final AppLocalizations localizations = AppLocalizations.of(context);
-    final bool darkModeEnabled = Theme.of(context).brightness == Brightness.dark;
+    final bool darkModeEnabled =
+        Theme.of(context).brightness == Brightness.dark;
     return StreamBuilder<int>(
       stream: mainBloc.bottomNavigationBarCurrentIndex,
       initialData: MainBloc.bottomNavigationBarCurrentIndexDefaultValue,
       builder: (context, snapshot) {
         return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              localizations.appName,
-            ),
-          ),
           drawer: DrawerScreen(firebaseUser),
-          body: _body(snapshot?.data),
+          body: NestedScrollView(
+              headerSliverBuilder:
+                  (BuildContext context, bool innerBoxIsScrolled) {
+                return <Widget>[
+                  PreferredSize(
+                   preferredSize: Size.fromHeight(10.0), child:// here the desired height
+                  SliverAppBar(
+                    expandedHeight: 10.0,
+                    floating: true,
+                    flexibleSpace: FlexibleSpaceBar(
+                        centerTitle: true,
+                        title: Text("Edibly",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.0,
+                            )),
+                  )))];
+              },
+              body: _body(snapshot?.data)),
           bottomNavigationBar: BottomNavigationBar(
-            fixedColor: darkModeEnabled ? null : AppColors.primarySwatch.shade700,
+            fixedColor:
+                darkModeEnabled ? null : AppColors.primarySwatch.shade700,
             currentIndex: snapshot.data,
             unselectedItemColor: Colors.grey,
             items: [
@@ -61,10 +78,9 @@ class HomeScreen extends StatelessWidget {
                 title: SingleLineText(localizations.discover),
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.search),
-                //TODO: Localization
-                title: SingleLineText("Search")
-                ),
+                  icon: Icon(Icons.search),
+                  //TODO: Localization
+                  title: SingleLineText("Search")),
               BottomNavigationBarItem(
                 icon: Icon(Icons.bookmark),
                 title: SingleLineText(localizations.bookmarks),

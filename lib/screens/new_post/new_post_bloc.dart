@@ -156,12 +156,12 @@ class NewPostBloc {
     /// upload photo
     String photoUrl;
     if (photo != null) {
-      var request = new http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/upload"));
-      request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
-      request.send().then((response) {
-        if (response.statusCode == 200) { print("Uploaded!"); }
+      var request =  http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+        request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
+       await request.send().then((response) {
+        if (response.statusCode == 200) {print(response);}
         else {
-          print(response.statusCode);
+          print(response);
         }
       });
 
@@ -198,11 +198,11 @@ class NewPostBloc {
       'postType': 0,
       'tags': tags
     };
-    var photoValue = {
-      'uid': firebaseUserId,
-      'rid': restaurantKey,
-      'photo': photoUrl
-    };
+    // var photoValue = {
+    //   'uid': firebaseUserId,
+    //   'rid': restaurantKey,
+    //   'photo': photoUrl
+    // };
 
     /// start writing to database
     ///

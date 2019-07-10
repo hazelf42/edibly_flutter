@@ -101,7 +101,7 @@
 
         /// add nearby restaurants
         List<Data> nearbyRestaurants =
-            //TODO: - Sort by rating whenever vassili gets ratings...... ugh
+            //TODO: - Sort by rating if u can figure it out i guess
             restaurantsWithExtraData
                 .where((r) =>
                     r.value['averagerating'] == null ||
@@ -152,7 +152,6 @@
             return; 
           };
           final id = dataWithoutRating.value['rid'];
-          final response =
               await (http.get('http://edibly.vassi.li/api/restaurants/$id')).then((http.Response response){
                 final restaurant = json.decode(response.body);
           Data dataWithRating =

@@ -41,29 +41,55 @@ class ProfileBloc {
     _currentPage = 0;
   }
 
-  void followUser() async {
-    final currentUser = await MainBloc().getCurrentFirebaseUser();
-    final currentUid = currentUser.uid;
+  Future<bool> followUser({
+    //This function also unfollows profiles if the user is already following them because im a lazy goon who doesnt know whats good for me
+    @required String currentUid,
+    @required String profileUid,
+  }) async {
     if (currentUid == uid) {
       print("You can't follow yourself");
-      return;
+      return true;
     }
-    if (currentUid != null) {
-      final body = {'uid': currentUid, 'follow': uid};
-      //TODO: - why dont this work
-      http.post("http://edibly.vassi.li/api/follow",
-          body: json.encode(body),
-          headers: {
-            HttpHeaders.contentTypeHeader: 'application/json',
-          }).then((http.Response response) {
-        final int statusCode = response.statusCode;
 
-        if (statusCode < 200 || statusCode > 400) {
-          throw new Exception(
-              "Error while sending data" + statusCode.toString());
+    bool _isFollowing = false;
+    await http
+        .get("http://edibly.vassi.li/api/profiles/$currentUid/following")
+        .then((response) {
+      (json.decode(response.body)).forEach((profile) {
+        if (profile['uid'] == profileUid) {
+          bool _isFollowing = true;
         }
       });
-    }
+    }).then((response) {
+      if (_isFollowing) {
+        final body = {'uid': currentUid, 'unfollow': uid};
+        //TODO: learn to code 🤡🤡🤡🤡🤡🤡🤡🤡
+        http
+            .post("http://edibly.vassi.li/api/unfollow",
+                body: json.encode(body))
+            .then((http.Response response) {
+          final int statusCode = response.statusCode;
+          if (statusCode < 200 || statusCode > 400) {
+            throw new Exception(
+                "Error while sending data" + statusCode.toString());
+          }
+        });
+      } else {
+        final body = {'uid': currentUid, 'follow': uid};
+        //TODO: learn to code 🤡🤡🤡🤡🤡🤡🤡🤡
+        http
+            .post("http://edibly.vassi.li/api/follow", body: json.encode(body))
+            .then((http.Response response) {
+          final int statusCode = response.statusCode;
+          if (statusCode < 200 || statusCode > 400) {
+            throw new Exception(
+                "Error while sending data" + statusCode.toString());
+          }
+        });
+      }
+    });
+    if (currentUid != null) {}
+    return true;
   }
 
   void getPosts() async {

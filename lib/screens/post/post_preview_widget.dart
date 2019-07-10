@@ -49,11 +49,7 @@ class PostPreviewWidget extends StatelessWidget {
     }
   }
 
-  Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return FutureBuilder<Response>(
-      future: mainBloc.getUser(post.value['uid'].toString()),
-      builder: (context, response) {
-        Map<dynamic, dynamic> authorValue = (response.hasData) ?  json.decode(response?.data?.body) : null;
+  Widget _author({@required Map authorValue, @required AppLocalizations localizations, @required BuildContext context}) {
         return Container(
           padding: const EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
           child: Row(
@@ -80,7 +76,7 @@ class PostPreviewWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     authorValue == null
-                        ? Container()
+                        ? Container(height: 0,)
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
@@ -132,13 +128,12 @@ class PostPreviewWidget extends StatelessWidget {
             ],
           ),
         );
-      },
-    );
-  }
+      }
 
   Widget _photo({@required MainBloc mainBloc, @required String photoURL}) {
     if (photoURL == null || photoURL.isEmpty) {
-      return Container();
+      return Container(height: 0,);
+
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -164,7 +159,7 @@ class PostPreviewWidget extends StatelessWidget {
 
   Widget _rating({@required BuildContext context}) {
     if (post.value['stars'] == null) {
-      return Container();
+      return Container(height: 0);
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,9 +193,8 @@ class PostPreviewWidget extends StatelessWidget {
   }
 
   Widget _description() {
-    //TODO: - Change this when Vassili changes the database
-    if (post.value['text'] == null || post.value['text'].toString().isEmpty) {
-      return Container();
+    if (post.value['text'] == "" || post.value['text'].toString().isEmpty || post.value['text'] == null) {
+      return Container(height: 0,); 
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -214,8 +208,8 @@ class PostPreviewWidget extends StatelessWidget {
   }
 
   Widget _tags() {
-    if (post.value['tags'] == null || post.value['tags'].toString().isEmpty) {
-      return Container();
+    if ( post.value['tags'] == null || post.value['tags'] == [] || post.value['tags'].isEmpty) {
+      return Container(height: 0);
     }
     List<String> tags = dynamicTagArrayToTagList(post.value['tags']);
     return Container(
@@ -234,20 +228,15 @@ class PostPreviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _likeButton({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return StreamBuilder<Event>(
-      stream: mainBloc.isPostLikedByUser(
-        postKey: post.key?.toString(),
-        uid: uid,
-      ),
-      builder: (context, snapshot) {
-        if (snapshot?.data?.snapshot?.value == 1) {
+ Widget _likeButton({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
+    bool isLiked = post.value['likes'].contains(post.value['iuid']); 
+        if (isLiked) {
           return BoldFlatIconButton(
             onPressed: () {
               mainBloc.unlikePostByUser(
                 postKey: post?.key.toString(),
                 postType: post.value['type'],
-                uid: uid,
+                uid: post.value['iuid'],
               );
             },
             icon: Icon(
@@ -257,20 +246,19 @@ class PostPreviewWidget extends StatelessWidget {
             text: localizations.liked.toUpperCase(),
             textColor: AppColors.primarySwatch.shade900,
           );
-        }
+        } 
         return BoldFlatButton(
           onPressed: () {
             mainBloc.likePostByUser(
               postKey: post?.key.toString(),
               postType: post.value['type'],
-              uid: uid,
+                uid: post.value['iuid'],
             );
           },
           text: localizations.like.toUpperCase(),
           textColor: AppColors.primarySwatch.shade900,
         );
-      },
-    );
+        
   }
 
   @override
@@ -294,8 +282,9 @@ class PostPreviewWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           _author(
-            mainBloc: mainBloc,
+            authorValue: post.value['profile'],
             localizations: localizations,
+            context: context
           ),
           _photo(
             mainBloc: mainBloc,
@@ -307,8 +296,7 @@ class PostPreviewWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-
-                  post.value['restaurantName'] ?? '', 
+                  post.value['restaurant']['name'] ?? '', 
                   style: Theme.of(context).textTheme.title,
                 ),
                 _rating(

@@ -5,6 +5,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
 import 'package:flutter/foundation.dart';
+import 'package:edibly/main_bloc.dart';
 
 class FeedBloc {
   String feedType;
@@ -71,58 +72,42 @@ class FeedBloc {
       /// network request
       /// TODO: - Localization ?
       http.Response response;
+      var postsMap = Map<String, dynamic>();
+
       if (feedType == 'nearby') {
         //TODO: - Actually make it posts from nearby lol
-         response = await http.get('http://edibly.vassi.li/api/posts');
+        response = await http.get('http://edibly.vassi.li/api/posts');
+
+        final map = json.decode(response.body);
+        map.forEach(
+            (p) => postsMap[p['rrid'].toString() ?? p['rtid'].toString()] = p);
       } else {
-         response = await http.get('http://edibly.vassi.li/api/posts');
+        final currentUser = (await MainBloc().getCurrentFirebaseUser());
+        await http
+            .get('http://edibly.vassi.li/api/profiles/${currentUser.uid}/feed')
+            .then((postResponse) {
+          json.decode(postResponse.body).forEach((post) {
+            posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
+          });
+          _posts.add(posts);
+        });
+        //.then((response) {
+        //     print(postsMap); 
+        //   postsMap.forEach((id, post) async {
+        //     final url =
+        //         'http://edibly.vassi.li/api/restaurants/' +
+        //             post['rid'].toString();
+        //     final nameResponse = await http.get(url);
+        //     final name = json.decode(nameResponse.body)['name'];
+        //     post['restaurantName'] = name;
+        //     posts.add(Data(id, post));
+        // _postsInCurrentPage += 10;
+        // posts.remove(null);
+        // _posts.add(posts);
+        //   });
+        //   });
+
       }
-      final map = json.decode(response.body);
-      final postsMap = Map<dynamic, dynamic>();
-      map.forEach((p) => postsMap[p['rrid'].toString()] = p);
-      var index = 0;
-      for (var post in map) {
-        final nameResponse = await http.get(
-            'http://edibly.vassi.li/api/restaurants/' + post['rid'].toString());
-        final name = json.decode(nameResponse.body)['name'];
-        post['restaurantName'] = name;
-        posts.add(Data(index, post));
-      }
-
-      _postsInCurrentPage += 10;
-      posts.remove(null);
-      _posts.add(posts);
-
-      // Query query = _firebaseDatabase.reference().child('feedPosts').orderByKey().limitToLast(POSTS_PER_PAGE);
-      // onChildAddedListener = query.onChildAdded.listen((event) {
-      //   /// increment number of posts in current page
-      //   _postsInCurrentPage++;
-
-      //   /// remove any null values, null values are shown as circular loaders
-      //   posts.remove(null);
-      //   print(posts);
-
-      //   /// insert newly acquired post to the start of new page
-      //   posts.insert(oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
-
-      //   /// if this was the last post in requested page, then show a circular loader at the end of page
-      //   if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
-
-      //   /// publish an update to the stream
-      //   _posts.add(posts);
-      // });
-      // query.onValue.listen((_) {
-      //   onChildAddedListener?.cancel();
-      // });
-      // query.onChildRemoved.listen((event) {
-      //   posts.removeWhere((post) => post != null && post.key == (event?.snapshot?.key ?? ''));
-
-      //   /// publish an update to the stream
-      //   _posts.add(posts);
-      //   print("Posts!");
-
-      //   print(_posts);
-      // });
     }
 
     /// if this is not the first page

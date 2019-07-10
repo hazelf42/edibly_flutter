@@ -118,18 +118,11 @@ class DrawerBloc {
     }
   }
 
-  /// Other functions
-  Stream<Event> getUser({@required String uid}) {
-    //Returns stuff like email, password until we have a better way of storing
-
-    return _firebaseDatabase.reference().child('userProfiles/$uid').onValue;
-  }
-
   Future<http.Response> getVassilibaseUser(String uid) async {
     //Returns all other info: Name, diet, image, etc.
 
     final url = "http://edibly.vassi.li/api/profiles/$uid";
-    final response = await http.get(url);
+    final response = await http.get(url).then((http.Response response ) {print(response);});
     return response;
   }
 
@@ -148,7 +141,7 @@ class DrawerBloc {
       var request = new http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
       request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
       request.send().then((response) {
-        if (response.statusCode == 200) { print("Uploaded!"); }
+        if (response.statusCode == 200) { print(response.toString()); }
         else {
           print(response.statusCode);
         }

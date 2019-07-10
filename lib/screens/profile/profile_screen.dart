@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 
+import 'package:edibly/screens/edit_profile/edit_profile.dart';
 import 'package:edibly/screens/common/full_screen_image.dart';
 import 'package:edibly/screens/post/post_preview_widget.dart';
 import 'package:edibly/screens/profile/profile_bloc.dart';
@@ -73,9 +74,6 @@ class ProfileScreen extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        uid != null ?
-                        BoldFlatButton(text: "Follow", textColor: Colors.deepOrangeAccent,onPressed: (){ProfileBloc(uid: uid).followUser();},) :
-                        Container()
                       ],
                     ),
             ],
@@ -101,7 +99,7 @@ class ProfileScreen extends StatelessWidget {
             final MainBloc mainBloc = Provider.of<MainBloc>(context);
             final ProfileBloc feedBloc = Provider.of<ProfileBloc>(context);
             return FutureBuilder<FirebaseUser>(
-              future: mainBloc. getCurrentFirebaseUser(),
+              future: mainBloc.getCurrentFirebaseUser(),
               builder: (context, firebaseUserSnapshot) {
                 return Container(
                   color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
@@ -114,75 +112,90 @@ class ProfileScreen extends StatelessWidget {
                         return CircularProgressIndicator();
                       }
                       return RefreshIndicator(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 5.0,
-                            horizontal: 6.0,
-                          ),
-                          itemCount: postsSnapshot.data.length + 1,
-                          itemBuilder: (context, position) {
-                            if (position == 0) {
-                              return Column(
-                                children: <Widget>[
-                                  _author(
-                                    mainBloc: mainBloc,
-                                    localizations: localizations,
-                                  ),
-                                  postsSnapshot.data.isEmpty
-                                      ? Column(
-                                          children: <Widget>[
-                                            Divider(
-                                              height: 10.0,
-                                            ),
-                                            Container(
-                                              height: 12.0,
-                                            ),
-                                            Icon(
-                                              Icons.warning,
-                                              color: Theme.of(context).hintColor,
-                                              size: 48.0,
-                                            ),
-                                            Container(
-                                              height: 12.0,
-                                            ),
-                                            Text(
-                                              localizations.noPostsByUserText,
-                                              style: TextStyle(
-                                                fontSize: 18.0,
-                                                color: Theme.of(context).hintColor,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      : Container(),
-                                ],
-                              );
-                            }
-                            if (postsSnapshot.data.elementAt(position - 1) == null) {
-                              feedBloc.getPosts();
-                              return Container(
+                        child:  
+                        Column(
+                          children: <Widget>[
+                            Expanded(
+                                                          child: ListView.builder(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 12.0,
-                                  horizontal: 16.0,
+                                  vertical: 5.0,
+                                  horizontal: 6.0,
                                 ),
-                                alignment: Alignment.center,
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-                            return Container(
-                              margin: const EdgeInsets.symmetric(
-                                vertical: 5.0,
-                                horizontal: 4.0,
+                                shrinkWrap: true,
+                                itemCount: postsSnapshot.data.length + 1,
+                                itemBuilder: (context, position) {
+                                  if (position == 0) {
+                                    return Column(
+                                      children: <Widget>[
+                                        _author(
+                                          mainBloc: mainBloc,
+                                          localizations: localizations,
+                                        ),
+                                         (firebaseUserSnapshot == null || uid == null) ? FlatButton(onPressed: () {}, color: Colors.grey, child: Text("")) : ((firebaseUserSnapshot.data.uid == uid) ? 
+                      BoldFlatButton (text: "Edit Profile", textColor: Colors.deepOrangeAccent,onPressed: (){
+                         Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditProfile(firebaseUserSnapshot.data),
+                    ));}) : BoldFlatButton(text: "(Un)Follow", textColor: Colors.deepOrangeAccent,onPressed: (){ProfileBloc(uid: uid).followUser(currentUid: firebaseUserSnapshot.data.uid, profileUid: uid);})), 
+                                        postsSnapshot.data.isEmpty
+                                            ? Column(
+                                                children: <Widget>[
+                                                  Divider(
+                                                    height: 10.0,
+                                                  ),
+                                                  Container(
+                                                    height: 12.0,
+                                                  ),
+                                                  Icon(
+                                                    Icons.warning,
+                                                    color: Theme.of(context).hintColor,
+                                                    size: 48.0,
+                                                  ),
+                                                  Container(
+                                                    height: 12.0,
+                                                  ),
+                                                  Text(
+                                                    localizations.noPostsByUserText,
+                                                    style: TextStyle(
+                                                      fontSize: 18.0,
+                                                      color: Theme.of(context).hintColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              )
+                                            : Container(),
+                                      ],
+                                    );
+                                  }
+                                  if (postsSnapshot.data.elementAt(position - 1) == null) {
+                                    feedBloc.getPosts();
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12.0,
+                                        horizontal: 16.0,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  }
+                                  return Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 5.0,
+                                      horizontal: 4.0,
+                                    ),
+                                    child: Card(
+                                      margin: EdgeInsets.zero,
+                                      child: PostPreviewWidget(
+                                        uid: firebaseUserSnapshot?.data?.uid,
+                                        post: postsSnapshot.data.elementAt(position - 1),
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                              child: Card(
-                                margin: EdgeInsets.zero,
-                                child: PostPreviewWidget(
-                                  uid: firebaseUserSnapshot?.data?.uid,
-                                  post: postsSnapshot.data.elementAt(position - 1),
-                                ),
-                              ),
-                            );
-                          },
+                            ),
+                          ],
                         ),
                         onRefresh: () {
                           feedBloc.clearPosts();

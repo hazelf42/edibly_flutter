@@ -11,6 +11,15 @@ import 'package:edibly/bloc_helper/validators.dart';
 import 'package:edibly/values/pref_keys.dart';
 import 'package:edibly/models/data.dart';
 
+
+
+
+/* 
+Vassilibase stuff I'm waiting for
+Comments
+Likes to be converted from iuid to uuid
+500 error when uploading photos?
+*/
 enum Diet {
   VEGETARIAN,
   VEGAN,
@@ -95,7 +104,7 @@ class MainBloc extends Object with Validators {
   }
 
   Future<http.Response> getUser(String uid) async {
-    final url = "http://edibly.vassi.li/api/profiles/$uid";
+    final url = "edibly.vassi.li/api/profiles/$uid";
     final response = await http.get(url);
     return response;
   }
@@ -136,7 +145,7 @@ class MainBloc extends Object with Validators {
       @required String uid,
       @required int postType}) async {
     var type = "";
-    //Tried to make this a switch but aaaaa
+    //TODO : - I'm dumb and bad at coding
     if (postType == 0) {
       type = "review";
     } else if (postType == 1) {
@@ -162,11 +171,9 @@ class MainBloc extends Object with Validators {
       @required String uid,
       @required int postType}) async {
     var type = "";
-    //Tried to make this a switch but aaaaa
+    //TODO :- I'm dumb and bad at coding
     if (postType == 0) {
       type = "review";
-    } else if (postType == 1) {
-      type = "photo";
     } else if (postType == 2) {
       type = "tip";
     } else {
@@ -184,16 +191,11 @@ class MainBloc extends Object with Validators {
     });
   }
 
-  Stream<Event> isPostLikedByUser(
-      {@required String postKey, @required String uid}) {
-    return null;
-    // return _firebaseDatabase
-    //     .reference()
-    //     .child('likes')
-    //     .child(postKey)
-    //     .child(uid)
-    //     .onValue;
-  }
+  // Stream<Event> isPostLikedByUser(
+    
+  // }
+
+  
 
   /// Dispose function
   void dispose() {

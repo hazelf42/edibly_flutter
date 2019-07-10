@@ -98,7 +98,10 @@ class PostScreen extends StatelessWidget {
                               }
                               return Divider();
                             },
-                            itemCount: (postsSnapshot.data == null ? 0 : postsSnapshot.data.length) + 1,
+                            itemCount: (postsSnapshot.data == null
+                                    ? 0
+                                    : postsSnapshot.data.length) +
+                                1,
                             itemBuilder: (context, position) {
                               if (position == 0) {
                                 return PostWidget(
@@ -106,7 +109,8 @@ class PostScreen extends StatelessWidget {
                                   post: post,
                                 );
                               }
-                              if (postsSnapshot.data.elementAt(position - 1) == null) {
+                              if (postsSnapshot.data.elementAt(position - 1) ==
+                                  null) {
                                 postBloc.getComments();
                                 return Container(
                                   padding: const EdgeInsets.symmetric(
@@ -123,7 +127,8 @@ class PostScreen extends StatelessWidget {
                                   horizontal: 16.0,
                                 ),
                                 child: PostCommentWidget(
-                                  comment: postsSnapshot.data.elementAt(position - 1),
+                                  comment: postsSnapshot.data
+                                      .elementAt(position - 1),
                                 ),
                               );
                             },
@@ -158,8 +163,9 @@ class PostCommentWidget extends StatelessWidget {
     @required this.comment,
   });
 
-  Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-      return FutureBuilder<Response>(
+  Widget _author(
+      {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
+    return FutureBuilder<Response>(
       future: mainBloc.getUser(comment.value['uid'].toString()),
       builder: (context, response) {
         final authorValue = json.decode(response.data.body);
@@ -167,7 +173,10 @@ class PostCommentWidget extends StatelessWidget {
           children: <Widget>[
             CircleAvatar(
               radius: 18.0,
-              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
+              backgroundImage: authorValue == null
+                  ? null
+                  : NetworkImage(
+                      authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
               child: authorValue == null
                   ? SizedBox(
                       width: 36.0,
@@ -274,7 +283,10 @@ class PostWidget extends StatelessWidget {
     return tagList;
   }
 
-  void _delete({@required BuildContext context, @required MainBloc mainBloc, @required AppLocalizations localizations}) {
+  void _delete(
+      {@required BuildContext context,
+      @required MainBloc mainBloc,
+      @required AppLocalizations localizations}) {
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -306,7 +318,10 @@ class PostWidget extends StatelessWidget {
     );
   }
 
-  Widget _deleteButton({@required BuildContext context, @required MainBloc mainBloc, @required AppLocalizations localizations}) {
+  Widget _deleteButton(
+      {@required BuildContext context,
+      @required MainBloc mainBloc,
+      @required AppLocalizations localizations}) {
     if (uid != post.value['uid']) {
       return Container();
     } else {
@@ -327,12 +342,13 @@ class PostWidget extends StatelessWidget {
     }
   }
 
-  Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    
-     return FutureBuilder<Response>(
+  Widget _author(
+      {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
+    return FutureBuilder<Response>(
       future: mainBloc.getUser(post.value['uid'].toString()),
       builder: (context, response) {
-        Map<dynamic, dynamic> authorValue =  response.hasData ? json.decode(response.data.body) : null;
+        Map<dynamic, dynamic> authorValue =
+            response.hasData ? json.decode(response.data.body) : null;
         return GestureDetector(
           onTap: () {
             Navigator.push(
@@ -349,7 +365,9 @@ class PostWidget extends StatelessWidget {
               children: <Widget>[
                 CircleAvatar(
                   radius: 24.0,
-                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photo'] ?? ''),
+                  backgroundImage: authorValue == null
+                      ? null
+                      : NetworkImage(authorValue['photo'] ?? ''),
                   child: authorValue == null
                       ? SizedBox(
                           width: 46.0,
@@ -386,8 +404,8 @@ class PostWidget extends StatelessWidget {
                                         ),
                                       ),
                                       SingleLineText(
-                                       "Hello",
-                                       // ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                                        "Hello",
+                                        // ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
                                         style: TextStyle(
                                           color: Theme.of(context).hintColor,
                                           fontSize: 14,
@@ -423,15 +441,25 @@ class PostWidget extends StatelessWidget {
     );
   }
 
-  Widget _restaurant({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return FutureBuilder<Response>(future: mainBloc.getRestaurant(post.value['rid'].toString()),
-    builder: (context, response) {
-        final restaurantMap = response.hasData ? json.decode(response.data.body) : null;
+  Widget _restaurant(
+      {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
+    return FutureBuilder<Response>(
+      future: mainBloc.getRestaurant(post.value['rid'].toString()),
+      builder: (context, response) {
+        final restaurantMap =
+            response.hasData ? json.decode(response.data.body) : null;
         Map<dynamic, dynamic> restaurantValue = restaurantMap;
         print(restaurantValue);
         if (restaurantValue == null ||
-            (restaurantValue['address'] ?? restaurantValue['address1'] ?? restaurantValue['address2']) == null ||
-            (restaurantValue['address'] ?? restaurantValue['address1'] ?? restaurantValue['address2']).toString().isEmpty) {
+            (restaurantValue['address'] ??
+                    restaurantValue['address1'] ??
+                    restaurantValue['address2']) ==
+                null ||
+            (restaurantValue['address'] ??
+                    restaurantValue['address1'] ??
+                    restaurantValue['address2'])
+                .toString()
+                .isEmpty) {
           return Container();
         }
         return Container(
@@ -443,10 +471,14 @@ class PostWidget extends StatelessWidget {
             ),
           ),
         );
-      },);
+      },
+    );
   }
 
-  Widget _photo({@required BuildContext context, @required MainBloc mainBloc, @required String photoURL}) {
+  Widget _photo(
+      {@required BuildContext context,
+      @required MainBloc mainBloc,
+      @required String photoURL}) {
     if (photoURL == null || photoURL.isEmpty) {
       return Container();
     }
@@ -458,7 +490,8 @@ class PostWidget extends StatelessWidget {
             if (photoURL == null || photoURL.isEmpty) return;
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => FullScreenImageScreen(photoURL)),
+              MaterialPageRoute(
+                  builder: (context) => FullScreenImageScreen(photoURL)),
             );
           },
           behavior: HitTestBehavior.translucent,
@@ -560,42 +593,36 @@ class PostWidget extends StatelessWidget {
     );
   }
 
-  Widget _likeButton({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return StreamBuilder<Event>(
-      stream: mainBloc.isPostLikedByUser(
-        postKey: post.key?.toString(),
-        uid: uid,
-      ),
-      builder: (context, snapshot) {
-        if (snapshot?.data?.snapshot?.value == 1) {
-          return BoldFlatIconButton(
-            onPressed: () {
-              mainBloc.unlikePostByUser(
-                postKey: post?.key.toString(),
-                postType: post.value['type'],
-                uid: uid,
-              );
-            },
-            icon: Icon(
-              Icons.favorite,
-              color: Colors.red.shade600,
-            ),
-            text: localizations.liked.toUpperCase(),
-            textColor: AppColors.primarySwatch.shade900,
+  Widget _likeButton(
+      {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
+    bool isLiked = post.value['likes'].contains(uid);
+    if (isLiked) {
+      return BoldFlatIconButton(
+        onPressed: () {
+          mainBloc.unlikePostByUser(
+            postKey: post?.key.toString(),
+            postType: post.value['type'],
+            uid: uid,
           );
-        }
-        return BoldFlatButton(
-          onPressed: () {
-            mainBloc.likePostByUser(
-              postKey: post?.key.toString(),
-              postType: post.value['type'],
-              uid: uid,
-            );
-          },
-          text: localizations.like.toUpperCase(),
-          textColor: AppColors.primarySwatch.shade900,
+        },
+        icon: Icon(
+          Icons.favorite,
+          color: Colors.red.shade600,
+        ),
+        text: localizations.liked.toUpperCase(),
+        textColor: AppColors.primarySwatch.shade900,
+      );
+    }
+    return BoldFlatButton(
+      onPressed: () {
+        mainBloc.likePostByUser(
+          postKey: post?.key.toString(),
+          postType: post.value['type'],
+          uid: uid,
         );
       },
+      text: localizations.like.toUpperCase(),
+      textColor: AppColors.primarySwatch.shade900,
     );
   }
 
