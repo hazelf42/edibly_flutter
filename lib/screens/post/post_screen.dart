@@ -1,4 +1,4 @@
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:smooth_star_rating/smooth_star_rating.dart';
@@ -57,7 +57,7 @@ class PostScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: SingleLineText(post.value['restaurantName'] ?? ''),
+        title: SingleLineText(post.value['restaurant']['name'] ?? ''),
       ),
       body: DisposableProvider<PostBloc>(
         packageBuilder: (context) => PostBloc(post: post),
@@ -65,16 +65,8 @@ class PostScreen extends StatelessWidget {
           builder: (context) {
             final PostBloc postBloc = Provider.of<PostBloc>(context);
             final AppLocalizations localizations = AppLocalizations.of(context);
-            return Container(
-              alignment: Alignment.center,
-              child: StreamBuilder<List<Data>>(
-                stream: postBloc.comments,
-                builder: (context, postsSnapshot) {
-                  if (postsSnapshot?.data == null) {
-                    postBloc.getComments();
-                    return CircularProgressIndicator();
-                  }
-                  return RefreshIndicator(
+            return Container( child:
+                   RefreshIndicator(
                     child: Column(
                       children: <Widget>[
                         Expanded(
@@ -98,10 +90,7 @@ class PostScreen extends StatelessWidget {
                               }
                               return Divider();
                             },
-                            itemCount: (postsSnapshot.data == null
-                                    ? 0
-                                    : postsSnapshot.data.length) +
-                                1,
+                            itemCount: (post.value['numcomments'] + 1),
                             itemBuilder: (context, position) {
                               if (position == 0) {
                                 return PostWidget(
@@ -109,25 +98,14 @@ class PostScreen extends StatelessWidget {
                                   post: post,
                                 );
                               }
-                              if (postsSnapshot.data.elementAt(position - 1) ==
-                                  null) {
-                                postBloc.getComments();
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12.0,
-                                    horizontal: 16.0,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
+                            
                               return Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 4.0,
                                   horizontal: 16.0,
                                 ),
                                 child: PostCommentWidget(
-                                  comment: postsSnapshot.data
+                                  comment: post.value['comments']
                                       .elementAt(position - 1),
                                 ),
                               );
@@ -142,12 +120,9 @@ class PostScreen extends StatelessWidget {
                     ),
                     onRefresh: () {
                       postBloc.clearComments();
-                      postBloc.getComments();
                       return Future.delayed(Duration(seconds: 1));
                     },
-                  );
-                },
-              ),
+                  )
             );
           },
         ),
@@ -157,26 +132,23 @@ class PostScreen extends StatelessWidget {
 }
 
 class PostCommentWidget extends StatelessWidget {
-  final Data comment;
+  final Map comment;
 
   PostCommentWidget({
     @required this.comment,
   });
 
   Widget _author(
-      {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return FutureBuilder<Response>(
-      future: mainBloc.getUser(comment.value['uid'].toString()),
-      builder: (context, response) {
-        final authorValue = json.decode(response.data.body);
+      {@required MainBloc mainBloc, @required AppLocalizations localizations, @required BuildContext context}) {
+        final authorValue = comment['profile'];
         return Row(
           children: <Widget>[
             CircleAvatar(
               radius: 18.0,
-              backgroundImage: authorValue == null
+              backgroundImage: (authorValue == null || authorValue['photo'] == null || authorValue['photo'] == "None") 
                   ? null
                   : NetworkImage(
-                      authorValue['photoUrl'] ?? authorValue['photoURL'] ?? ''),
+                      authorValue['photo']),
               child: authorValue == null
                   ? SizedBox(
                       width: 36.0,
@@ -212,14 +184,14 @@ class PostCommentWidget extends StatelessWidget {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  SingleLineText(
-                                    ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
-                                    style: TextStyle(
-                                      color: Theme.of(context).hintColor,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                               //   SingleLineText(
+                             //       ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                                   // style: TextStyle(
+                                 //     color: Theme.of(context).hintColor,
+                                     // fontSize: 14,
+                                     // fontWeight: FontWeight.w600,
+                                    //),
+                                  //),
                                 ],
                               ),
                             ),
@@ -227,7 +199,7 @@ class PostCommentWidget extends StatelessWidget {
                               height: 4.0,
                             ),
                             SingleLineText(
-                              '${localizations.wroteComment} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(comment.value['timeStamp'].toString())).toInt() * 1000))}',
+                              '${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(comment['timestamp'].toString())).toInt() * 1000))}',
                               style: TextStyle(
                                 color: Theme.of(context).hintColor,
                                 fontSize: 12,
@@ -240,9 +212,8 @@ class PostCommentWidget extends StatelessWidget {
             ),
           ],
         );
-      },
-    );
-  }
+      }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -254,11 +225,12 @@ class PostCommentWidget extends StatelessWidget {
         _author(
           mainBloc: mainBloc,
           localizations: localizations,
+          context: context
         ),
         Container(
           height: 8.0,
         ),
-        Text(comment.value['commentText']),
+        Text(comment['comment']),
       ],
     );
   }
@@ -344,17 +316,17 @@ class PostWidget extends StatelessWidget {
 
   Widget _author(
       {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return FutureBuilder<Response>(
-      future: mainBloc.getUser(post.value['uid'].toString()),
+    return FutureBuilder<http.Response>(
+      future: http.get("http://edibly.vassi.li/api/profiles/${post.value['profile']['uid'].toString()}"),
       builder: (context, response) {
-        Map<dynamic, dynamic> authorValue =
-            response.hasData ? json.decode(response.data.body) : null;
+        Map<dynamic, dynamic> authorValue = post.value['profile'];
         return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ProfileScreen(uid: post.value['uid']),
+                builder: (context) =>
+                    ProfileScreen(uid: post.value['profile']['uid']),
               ),
             );
           },
@@ -443,35 +415,28 @@ class PostWidget extends StatelessWidget {
 
   Widget _restaurant(
       {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    return FutureBuilder<Response>(
-      future: mainBloc.getRestaurant(post.value['rid'].toString()),
-      builder: (context, response) {
-        final restaurantMap =
-            response.hasData ? json.decode(response.data.body) : null;
-        Map<dynamic, dynamic> restaurantValue = restaurantMap;
-        print(restaurantValue);
-        if (restaurantValue == null ||
-            (restaurantValue['address'] ??
-                    restaurantValue['address1'] ??
-                    restaurantValue['address2']) ==
-                null ||
-            (restaurantValue['address'] ??
-                    restaurantValue['address1'] ??
-                    restaurantValue['address2'])
-                .toString()
-                .isEmpty) {
-          return Container();
-        }
-        return Container(
-          padding: const EdgeInsets.fromLTRB(0.0, 8.0, 0.0, 0.0),
-          child: Text(
-            '${localizations.address}: ${(restaurantValue['address'] ?? restaurantValue['address1'] ?? restaurantValue['address2'])}',
-            style: TextStyle(
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        );
-      },
+    Map<dynamic, dynamic> restaurantValue = post.value['restaurant'];
+    print(restaurantValue);
+    if (restaurantValue == null ||
+        (restaurantValue['address'] ??
+                restaurantValue['address1'] ??
+                restaurantValue['address2']) ==
+            null ||
+        (restaurantValue['address'] ??
+                restaurantValue['address1'] ??
+                restaurantValue['address2'])
+            .toString()
+            .isEmpty) {
+      return Container();
+    }
+    return Container(
+      padding: const EdgeInsets.fromLTRB(0.0, 8.0, 0.0, 0.0),
+      child: Text(
+        '${localizations.address}: ${(restaurantValue['address'] ?? restaurantValue['address1'] ?? restaurantValue['address2'])}',
+        style: TextStyle(
+          fontStyle: FontStyle.italic,
+        ),
+      ),
     );
   }
 
@@ -479,7 +444,7 @@ class PostWidget extends StatelessWidget {
       {@required BuildContext context,
       @required MainBloc mainBloc,
       @required String photoURL}) {
-    if (photoURL == null || photoURL.isEmpty) {
+    if (photoURL == null || photoURL.isEmpty || photoURL == "None") {
       return Container();
     }
     return Column(
@@ -573,8 +538,8 @@ class PostWidget extends StatelessWidget {
   }
 
   Widget _tags() {
-    if (post.value['tags'] == null || post.value['tags'].toString().isEmpty) {
-      return Container();
+    if ( post.value['tags'] == null || post.value['tags'] == [] || post.value['tags'].isEmpty) {
+      return Container(height: 0);
     }
     List<String> tags = dynamicTagArrayToTagList(post.value['tags']);
     return Container(
@@ -653,9 +618,9 @@ class PostWidget extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => RestaurantScreen(
-                            firebaseUserId: uid,
-                            restaurantKey: post.value['rid'].toString(),
-                          ),
+                        firebaseUserId: uid,
+                        restaurantKey: post.value['rid'].toString(),
+                      ),
                     ),
                   );
                 },
@@ -664,8 +629,7 @@ class PostWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Text(
-                      //TODO: - getRestaurant here
-                      post.value['restaurantName'] ?? '',
+                        post.value['restaurant']['name'] ?? '',
                       style: Theme.of(context).textTheme.title,
                     ),
                     _restaurant(

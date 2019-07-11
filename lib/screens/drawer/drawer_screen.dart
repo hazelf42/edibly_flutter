@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info/package_info.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 
 import 'package:edibly/screens/profile/profile_screen.dart';
 import 'package:edibly/screens/drawer/drawer_bloc.dart';
@@ -22,72 +22,75 @@ class DrawerScreen extends StatelessWidget {
 
   DrawerScreen(this._firebaseUser);
 
-  Widget _userInfo(MainBloc mainBloc, DrawerBloc drawerBloc) {
-    return FutureBuilder<http.Response>(
-      future: drawerBloc.getVassilibaseUser(_firebaseUser.uid),
-      builder: (context, snapshot) {
-        Map<dynamic, dynamic> map = snapshot.hasData ? json.decode(snapshot.data.body) : null;
-        if (map != null) {
-          mainBloc.setDiet(null, map['veglevel'].toString().toLowerCase() == '2'.toLowerCase() ? Diet.VEGAN : Diet.VEGETARIAN);
-          mainBloc.setGlutenFree(null, (map['glutenfree'] == 0) ? true : false );
-        }
-        return Container(
-          padding: EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
-          child: Row(
-            children: <Widget>[
-              CircleAvatar(
-                radius: 24.0,
-                backgroundImage: map == null ? null : NetworkImage(map['photo'] ?? ''),
-                child: map == null
-                    ? SizedBox(
-                        width: 46.0,
-                        height: 46.0,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                        ),
-                      )
-                    : null,
-              ),
-              Container(
-                width: 24.0,
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    map == null
-                        ? Container()
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              SingleLineText(
-                                '${map['firstname']} ${map['lastname']}',
-                                style: Theme.of(context).textTheme.body1.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
-                              ),
-                              Container(
-                                height: 4.0,
-                              ),
-                            ],
-                          ),
-                    SingleLineText(
-                      _firebaseUser.email,
-                      style: Theme.of(context).textTheme.body1.copyWith(fontSize: 13),
+  Widget _userInfo(MainBloc mainBloc, BuildContext context,
+      DrawerBloc drawerBloc, Map profile) {
+    if (profile != null) {
+      mainBloc.setDiet(
+          null,
+          profile['veglevel'].toString().toLowerCase() == '2'.toLowerCase()
+              ? Diet.VEGAN
+              : Diet.VEGETARIAN);
+      mainBloc.setGlutenFree(null, (profile['glutenfree'] == 0) ? 1 : 0);
+    }
+    return Container(
+      padding: EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
+      child: Row(
+        children: <Widget>[
+          CircleAvatar(
+            radius: 24.0,
+            backgroundImage:
+                profile == null ? null : NetworkImage(profile['photo'] ?? ''),
+            child: profile == null
+                ? SizedBox(
+                    width: 46.0,
+                    height: 46.0,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.0,
                     ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 24.0,
-              ),
-            ],
+                  )
+                : null,
           ),
-        );
-      },
+          Container(
+            width: 24.0,
+          ),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                profile == null
+                    ? Container()
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SingleLineText(
+                            '${profile['firstname']} ${profile['lastname']}',
+                            style: Theme.of(context).textTheme.body1.copyWith(
+                                fontSize: 20, fontWeight: FontWeight.w600),
+                          ),
+                          Container(
+                            height: 4.0,
+                          ),
+                        ],
+                      ),
+                SingleLineText(
+                  _firebaseUser.email,
+                  style:
+                      Theme.of(context).textTheme.body1.copyWith(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 24.0,
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _oldPasswordField(DrawerBloc drawerBloc, AppLocalizations localizations) {
+  Widget _oldPasswordField(
+      DrawerBloc drawerBloc, AppLocalizations localizations) {
     return StreamBuilder<String>(
       stream: drawerBloc.oldPassword,
       builder: (context, oldPasswordSnapshot) {
@@ -101,13 +104,20 @@ class DrawerScreen extends StatelessWidget {
                 labelText: localizations.oldPassword,
                 prefixIcon: Icon(
                   Icons.lock,
-                  color: oldPasswordSnapshot.hasError ? Theme.of(context).errorColor : null,
+                  color: oldPasswordSnapshot.hasError
+                      ? Theme.of(context).errorColor
+                      : null,
                 ),
-                errorText:
-                    oldPasswordSnapshot.hasError && oldPasswordSnapshot.error == AppError.EMPTY ? localizations.errorEmptyPassword : null,
+                errorText: oldPasswordSnapshot.hasError &&
+                        oldPasswordSnapshot.error == AppError.EMPTY
+                    ? localizations.errorEmptyPassword
+                    : null,
               ),
               onChanged: drawerBloc.setOldPassword,
-              enabled: updatePasswordStateSnapshot.data == UpdatePasswordState.TRYING ? false : true,
+              enabled:
+                  updatePasswordStateSnapshot.data == UpdatePasswordState.TRYING
+                      ? false
+                      : true,
               obscureText: true,
             );
           },
@@ -116,7 +126,8 @@ class DrawerScreen extends StatelessWidget {
     );
   }
 
-  Widget _newPasswordField(DrawerBloc drawerBloc, AppLocalizations localizations) {
+  Widget _newPasswordField(
+      DrawerBloc drawerBloc, AppLocalizations localizations) {
     return StreamBuilder<String>(
       stream: drawerBloc.newPassword,
       builder: (context, newPasswordSnapshot) {
@@ -130,13 +141,20 @@ class DrawerScreen extends StatelessWidget {
                 labelText: localizations.newPassword,
                 prefixIcon: Icon(
                   Icons.lock,
-                  color: newPasswordSnapshot.hasError ? Theme.of(context).errorColor : null,
+                  color: newPasswordSnapshot.hasError
+                      ? Theme.of(context).errorColor
+                      : null,
                 ),
-                errorText:
-                    newPasswordSnapshot.hasError && newPasswordSnapshot.error == AppError.EMPTY ? localizations.errorEmptyPassword : null,
+                errorText: newPasswordSnapshot.hasError &&
+                        newPasswordSnapshot.error == AppError.EMPTY
+                    ? localizations.errorEmptyPassword
+                    : null,
               ),
               onChanged: drawerBloc.setNewPassword,
-              enabled: updatePasswordStateSnapshot.data == UpdatePasswordState.TRYING ? false : true,
+              enabled:
+                  updatePasswordStateSnapshot.data == UpdatePasswordState.TRYING
+                      ? false
+                      : true,
               obscureText: true,
             );
           },
@@ -180,7 +198,8 @@ class DrawerScreen extends StatelessWidget {
     );
   }
 
-  void _logOut(BuildContext context, DrawerBloc drawerBloc, AppLocalizations localizations) {
+  void _logOut(BuildContext context, DrawerBloc drawerBloc,
+      AppLocalizations localizations) {
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -267,7 +286,8 @@ class DrawerScreen extends StatelessWidget {
     });
   }
 
-  void _showUpdatePasswordDialog(BuildContext context, DrawerBloc drawerBloc, AppLocalizations localizations) {
+  void _showUpdatePasswordDialog(BuildContext context, DrawerBloc drawerBloc,
+      AppLocalizations localizations) {
     String updatePasswordStateToString(UpdatePasswordState resetPasswordState) {
       switch (resetPasswordState) {
         case UpdatePasswordState.EMPTY_PASSWORD:
@@ -336,7 +356,8 @@ class DrawerScreen extends StatelessWidget {
             builder: (context) {
               return AlertDialog(
                 content: Text(localizations.updatePasswordSuccessText),
-                contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
+                contentPadding:
+                    const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
                 actions: <Widget>[
                   FlatButton(
                     child: Text(localizations.ok.toUpperCase()),
@@ -360,96 +381,116 @@ class DrawerScreen extends StatelessWidget {
       packageBuilder: (context) => DrawerBloc(),
       child: Builder(
         builder: (context) {
-          final bool darkModeEnabled = Theme.of(context).brightness == Brightness.dark;
+          final bool darkModeEnabled =
+              Theme.of(context).brightness == Brightness.dark;
           final MainBloc mainBloc = Provider.of<MainBloc>(context);
           final DrawerBloc drawerBloc = Provider.of<DrawerBloc>(context);
           final AppLocalizations localizations = AppLocalizations.of(context);
           return Drawer(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                Container(height: MediaQuery.of(context).padding.top + 8.0),
-                _userInfo(mainBloc, drawerBloc),
-                MenuItem(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfileScreen(
-                              uid: _firebaseUser.uid,
-                            ),
-                      ),
-                    );
-                  },
-                  iconData: Icons.account_circle,
-                  string: localizations.myProfile,
-                ),
-                MenuItem(
-                  onTap: () => _showUpdatePasswordDialog(context, drawerBloc, localizations),
-                  iconData: Icons.lock,
-                  string: localizations.resetPassword,
-                ),
-                MenuItem(
-                  onTap: () => _logOut(context, drawerBloc, localizations),
-                  iconData: Icons.exit_to_app,
-                  string: localizations.logOut,
-                ),
-                Divider(),
-                MenuItem(
-                  onTap: () => _showFeedback(),
-                  iconData: Icons.feedback,
-                  string: localizations.feedback,
-                ),
-                MenuItem(
-                  onTap: () => _showDisclaimer(context, localizations),
-                  iconData: Icons.warning,
-                  string: localizations.disclaimer,
-                ),
-                MenuItem(
-                  onTap: () => _showAbout(context, localizations),
-                  iconData: Icons.info,
-                  string: localizations.about,
-                ),
-                Divider(),
-                StreamBuilder<Diet>(
-                  stream: mainBloc.diet,
-                  initialData: MainBloc.dietDefaultValue,
+              child: FutureBuilder<Response>(
+                  future: get(
+                      'http://edibly.vassi.li/api/profiles/${_firebaseUser.uid}'),
                   builder: (context, snapshot) {
-                    return MenuSelector(
-                      option1Text: localizations.vegetarian,
-                      option2Text: localizations.vegan,
-                      selectedOption: snapshot.data == Diet.VEGETARIAN ? MenuSelectorOption.option1 : MenuSelectorOption.option2,
-                      onSelect: (option) {
-                        mainBloc.setDiet(_firebaseUser.uid, option == MenuSelectorOption.option1 ? Diet.VEGETARIAN : Diet.VEGAN);
-                      },
-                    );
-                  },
-                ),
-                StreamBuilder<bool>(
-                  stream: mainBloc.glutenFree,
-                  initialData: MainBloc.glutenFreeDefaultValue,
-                  builder: (context, snapshot) {
-                    return MenuSwitchItem(
-                      iconData: Icons.check_circle,
-                      string: AppLocalizations.of(context).glutenFree,
-                      onTap: () {
-                        mainBloc.toggleGlutenFree(_firebaseUser.uid);
-                      },
-                      value: snapshot.data,
-                    );
-                  },
-                ),
-                MenuSwitchItem(
-                  iconData: Icons.invert_colors,
-                  string: AppLocalizations.of(context).darkMode,
-                  onTap: () {
-                    mainBloc.setDarkModeEnabled(!darkModeEnabled);
-                  },
-                  value: darkModeEnabled,
-                ),
-              ],
-            ),
-          );
+                    if (snapshot.hasData) {
+                      var profile = json.decode(snapshot.data.body);
+                      return ListView(
+                        padding: EdgeInsets.zero,
+                        children: <Widget>[
+                          Container(
+                              height: MediaQuery.of(context).padding.top + 8.0),
+                          _userInfo(mainBloc, context, drawerBloc, profile),
+                          MenuItem(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfileScreen(
+                                    uid: _firebaseUser.uid,
+                                  ),
+                                ),
+                              );
+                            },
+                            iconData: Icons.account_circle,
+                            string: localizations.myProfile,
+                          ),
+                          MenuItem(
+                            onTap: () => _showUpdatePasswordDialog(
+                                context, drawerBloc, localizations),
+                            iconData: Icons.lock,
+                            string: localizations.resetPassword,
+                          ),
+                          MenuItem(
+                            onTap: () =>
+                                _logOut(context, drawerBloc, localizations),
+                            iconData: Icons.exit_to_app,
+                            string: localizations.logOut,
+                          ),
+                          Divider(),
+                          MenuItem(
+                            onTap: () => _showFeedback(),
+                            iconData: Icons.feedback,
+                            string: localizations.feedback,
+                          ),
+                          MenuItem(
+                            onTap: () =>
+                                _showDisclaimer(context, localizations),
+                            iconData: Icons.warning,
+                            string: localizations.disclaimer,
+                          ),
+                          MenuItem(
+                            onTap: () => _showAbout(context, localizations),
+                            iconData: Icons.info,
+                            string: localizations.about,
+                          ),
+                          Divider(),
+                          MenuSelector(
+                            option1Text: localizations.vegetarian,
+                            option2Text: localizations.vegan,
+                            selectedOption: profile['veglevel'] == 1
+                                ? MenuSelectorOption.option1
+                                : MenuSelectorOption.option2,
+                            onSelect: (option) async {
+                              await mainBloc.setDiet(
+                                  _firebaseUser.uid,
+                                  option == MenuSelectorOption.option2
+                                      ? Diet.VEGAN
+                                      : Diet.VEGETARIAN);
+                              profile['veglevel'] =
+                                  (option == MenuSelectorOption.option1)
+                                      ? 1
+                                      : 2;
+                            },
+                          ),
+                          MenuSwitchItem(
+                            iconData: Icons.check_circle,
+                            string: AppLocalizations. of(context).glutenFree,
+                            onTap: () async {
+                              await mainBloc
+                                  .toggleGlutenFree(_firebaseUser.uid);
+                            },
+                            value: (profile['glutenfree'] == 1) ? true : false,
+                          ),
+                          MenuSwitchItem(
+                            iconData: Icons.invert_colors,
+                            string: AppLocalizations.of(context).darkMode,
+                            onTap: () {
+                              mainBloc.setDarkModeEnabled(!darkModeEnabled);
+                            },
+                            value: darkModeEnabled,
+                          ),
+                        ],
+                      );
+                    } else {
+                      return Container(
+                          child: SizedBox(
+                        width: 46.0,
+                        height: 46.0,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                        ),
+                      ));
+                    }
+                  }));
         },
       ),
     );
@@ -469,7 +510,8 @@ class MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool darkModeEnabled = Theme.of(context).brightness == Brightness.dark;
+    final bool darkModeEnabled =
+        Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(
         vertical: 4.0,
@@ -507,13 +549,13 @@ class MenuItem extends StatelessWidget {
   }
 }
 
-class MenuSwitchItem extends StatelessWidget {
+class MenuSwitchItem extends StatefulWidget {
   final GestureTapCallback onTap;
   final IconData iconData;
   final String string;
-  final bool value;
+  bool value;
 
-  const MenuSwitchItem({
+  MenuSwitchItem({
     @required this.onTap,
     @required this.iconData,
     @required this.string,
@@ -521,15 +563,40 @@ class MenuSwitchItem extends StatelessWidget {
   });
 
   @override
+  _MenuSwitchItem createState() => _MenuSwitchItem(
+      onTap: onTap, iconData: iconData, string: string, value: value);
+}
+
+class _MenuSwitchItem extends State<MenuSwitchItem> {
+  final GestureTapCallback onTap;
+  final IconData iconData;
+  final String string;
+  bool value;
+
+  _MenuSwitchItem({
+    @required this.onTap,
+    @required this.iconData,
+    @required this.string,
+    @required this.value,
+  });
+
   Widget build(BuildContext context) {
-    final bool darkModeEnabled = Theme.of(context).brightness == Brightness.dark;
+    final bool darkModeEnabled =
+        Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(
         vertical: 4.0,
         horizontal: 8.0,
       ),
       child: InkWell(
-        onTap: onTap,
+        onTap: () async {
+          await onTap();
+          setState(
+            () {
+              value = !value;
+            },
+          );
+        },
         borderRadius: BorderRadius.circular(4.0),
         splashFactory: InkRipple.splashFactory,
         child: Container(
@@ -556,9 +623,15 @@ class MenuSwitchItem extends StatelessWidget {
               ),
               Switch(
                 value: value,
-                onChanged: null,
-                inactiveThumbColor: value ? Theme.of(context).toggleableActiveColor : Colors.grey.shade50,
-                inactiveTrackColor: value ? Theme.of(context).toggleableActiveColor.withOpacity(0.5) : Colors.black26,
+                onChanged: null, //(bool newValue) {
+
+                // },
+                inactiveThumbColor: value
+                    ? Theme.of(context).toggleableActiveColor
+                    : Colors.grey.shade50,
+                inactiveTrackColor: value
+                    ? Theme.of(context).toggleableActiveColor.withOpacity(0.5)
+                    : Colors.black26,
               ),
             ],
           ),
@@ -573,10 +646,10 @@ enum MenuSelectorOption {
   option2,
 }
 
-class MenuSelector extends StatelessWidget {
+class MenuSelector extends StatefulWidget {
   final String option1Text;
   final String option2Text;
-  final MenuSelectorOption selectedOption;
+  MenuSelectorOption selectedOption;
   final Function(MenuSelectorOption) onSelect;
 
   MenuSelector({
@@ -587,8 +660,30 @@ class MenuSelector extends StatelessWidget {
   });
 
   @override
+  _MenuSelector createState() => _MenuSelector(
+      option1Text: option1Text,
+      option2Text: option2Text,
+      selectedOption: selectedOption,
+      onSelect: onSelect);
+}
+
+class _MenuSelector extends State<MenuSelector> {
+  final String option1Text;
+  final String option2Text;
+  MenuSelectorOption selectedOption;
+  final Function(MenuSelectorOption) onSelect;
+
+  _MenuSelector({
+    @required this.option1Text,
+    @required this.option2Text,
+    @required this.selectedOption,
+    @required this.onSelect,
+  });
+
+  @override
   Widget build(BuildContext context) {
-    final bool darkModeEnabled = Theme.of(context).brightness == Brightness.dark;
+    final bool darkModeEnabled =
+        Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(
         vertical: 4.0,
@@ -610,6 +705,9 @@ class MenuSelector extends StatelessWidget {
                 onPressed: () {
                   if (selectedOption != MenuSelectorOption.option1) {
                     onSelect(MenuSelectorOption.option1);
+                    setState(() {
+                      selectedOption = MenuSelectorOption.option1;
+                    });
                   }
                 },
                 shape: RoundedRectangleBorder(
@@ -620,7 +718,9 @@ class MenuSelector extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 textColor: selectedOption == MenuSelectorOption.option1
-                    ? (darkModeEnabled ? AppColors.primarySwatch.shade300 : AppColors.primarySwatch.shade900)
+                    ? (darkModeEnabled
+                        ? AppColors.primarySwatch.shade300
+                        : AppColors.primarySwatch.shade900)
                     : null,
                 color: selectedOption == MenuSelectorOption.option1
                     ? (darkModeEnabled
@@ -639,6 +739,9 @@ class MenuSelector extends StatelessWidget {
                 onPressed: () {
                   if (selectedOption != MenuSelectorOption.option2) {
                     onSelect(MenuSelectorOption.option2);
+                    setState(() {
+                      selectedOption = MenuSelectorOption.option2;
+                    });
                   }
                 },
                 shape: RoundedRectangleBorder(
@@ -649,7 +752,9 @@ class MenuSelector extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 textColor: selectedOption == MenuSelectorOption.option2
-                    ? (darkModeEnabled ? AppColors.primarySwatch.shade300 : AppColors.primarySwatch.shade900)
+                    ? (darkModeEnabled
+                        ? AppColors.primarySwatch.shade300
+                        : AppColors.primarySwatch.shade900)
                     : null,
                 color: selectedOption == MenuSelectorOption.option2
                     ? (darkModeEnabled

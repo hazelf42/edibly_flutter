@@ -152,7 +152,7 @@ class TipWidget extends StatelessWidget {
     final AppLocalizations localizations = AppLocalizations.of(context);
     
     return FutureBuilder<Response>(
-      future: mainBloc.getUser(tip.value['uid'].toString()),
+      future: get("http://edibly.vassi.li/api/profiles/${tip.value['uid'].toString()}"),
       builder: (context, response) {
         var authorValue = response.hasData ? json.decode(response.data.body) : null;
         return Row(

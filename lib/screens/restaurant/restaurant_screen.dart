@@ -236,7 +236,7 @@ class RestaurantScreen extends StatelessWidget {
                               onPressed: !pickedPhotoSnapshot.hasData
                                   ? null
                                   : () {
-                                      restaurantBloc.uploadPhoto(
+                                      restaurantBloc.submitPhoto(
                                           restaurantName: restaurantName);
                                     },
                             )
@@ -649,7 +649,9 @@ class RestaurantScreen extends StatelessWidget {
     }
     dynamic featuredTip = restaurant.value['featured_tip'];
     return FutureBuilder<Response>(
-      future: mainBloc.getUser(featuredTip['uid'].toString()),
+      future: get("http://edibly.vassi.li/api/profiles/${featuredTip['uid'].toString()}"),
+
+      //TODO: - change to post from tip
       builder: (context, response) {
         Map<dynamic, dynamic> authorValue = (response.hasData) ?  json.decode(response?.data?.body) : null;
         return Card(

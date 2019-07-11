@@ -2,12 +2,11 @@ import 'dart:io';
 import 'dart:convert';
 
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'package:edibly/models/data.dart';
 
@@ -83,7 +82,7 @@ class RestaurantBloc {
     final tipsResponse = await http.get(
         'http://edibly.vassi.li/api/restaurants/' + restaurantKey + '/tips');
     final tipsMap = json.decode(tipsResponse.body);
-    print(tipsMap); 
+    print(tipsMap);
     tipsMap.forEach((t) => t['featured'] == 1 ? featuredTip.add(t) : null);
     if (featuredTip.length == 0 && tipsMap.length != 0) {
       featuredTip.add(tipsMap[0]);
@@ -132,7 +131,8 @@ class RestaurantBloc {
         'rid': restaurantKey
       };
 
-      http.post("http://edibly.vassi.li/api/tips/add",
+      http
+          .post("http://edibly.vassi.li/api/tips/add",
               body: json.encode(tipBody))
           .then((http.Response response) {
         final int statusCode = response.statusCode;
@@ -141,8 +141,9 @@ class RestaurantBloc {
         if (statusCode < 200 || statusCode > 400 || tipBody == null) {
           _addTipState.addError(AddTipState.FAILED);
 
-          throw new Exception("Error while fetching data" + statusCode.toString());
-        } 
+          throw new Exception(
+              "Error while fetching data" + statusCode.toString());
+        }
       });
     } else if (tipIsEmpty) {
       _addTipState.addError(AddTipState.EMPTY_TIP);
@@ -189,89 +190,57 @@ class RestaurantBloc {
     // });
   }
 
-  void uploadPhoto({@required String restaurantName}) {
-    //PROBABLY DEPRECATED
-    File pickedPhoto = _pickedPhoto.value;
-    if (pickedPhoto == null) return;
-
+  Future<bool> submitPhoto({@required String restaurantName}) async {
     PickedPhotoUploadState pickedPhotoUploadState =
         _pickedPhotoUploadState.value;
-    if (pickedPhotoUploadState == PickedPhotoUploadState.TRYING) return;
+    if (pickedPhotoUploadState == PickedPhotoUploadState.TRYING) return false;
     _pickedPhotoUploadState.add(PickedPhotoUploadState.TRYING);
 
-    String imageUuid = Uuid().v1();
-    StorageReference storageReference = FirebaseStorage.instance.ref();
-    storageReference
-        .child('restaurants')
-        .child(restaurantKey)
-        .child('$imageUuid.jpg')
-        .putFile(pickedPhoto)
-        .onComplete
-        .then((storageTaskSnapshot) async {
-      String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
+        await getImageUrl(photo: _pickedPhoto.value).then((fileName) {
+       var imageUrl = "http://edibly.vassi.li/static/uploads/" +
+            json.decode(fileName)['filename'];
+      var reviewBody = {
+        'uid': firebaseUserId,
+        'rid': restaurantKey,
+        'postType': 0,
+        'photo': imageUrl
+      };
 
-      //VASSILIBASE CONVERSION
-      //Posting to /api/pictures which is then added to api/posts
-      if (downloadUrl == null || downloadUrl.isEmpty) {
-        _pickedPhotoUploadState.addError(PickedPhotoUploadState.FAILED);
-        return;
-      } else {
-        var body = {
-          "photo": downloadUrl.toString(),
-          "uid": firebaseUserId.toString(),
-          "rid": double.parse(restaurantKey),
-        };
-        http
-            .post("http://edibly.vassi.li/api/pictures/add",
-                body: json.encode(body))
-            .then((http.Response response) {
-          final int statusCode = response.statusCode;
+      http
+          .post("http://edibly.vassi.li/api/reviews/add",
+              body: json.encode(reviewBody))
+          .then((http.Response response) {
+        final int statusCode = response.statusCode;
 
-          if (statusCode < 200 || statusCode > 400 || body == null) {
-            throw new Exception(
-                "Error while fetching data" + statusCode.toString());
-          }
-        });
-
-        // await _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).push().set({
-        //   'imageUrl': downloadUrl,
-        //   'userId': firebaseUserId,
-        //   'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
-        //   'isATest': false,
-        // });
-        // DatabaseReference feedPostReference = _firebaseDatabase.reference().child('feedPosts').push();
-        // await feedPostReference.set({
-        //   'description': null,
-        //   'tagArray': null,
-        //   'otherTags': null,
-        //   'restaurantName': restaurantName,
-        //   'restaurantKey': restaurantKey,
-        //   'numRating': null,
-        //   'imageUrl': downloadUrl,
-        //   'postType': 1,
-        //   'comments': null,
-        //   'reviewingUserId': firebaseUserId,
-        //   'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
-        //   'isATest': false,
-        // });
-        // await _firebaseDatabase.reference().child('postsByUser').child(firebaseUserId).child(feedPostReference.key).set({
-        //   'description': null,
-        //   'tagArray': null,
-        //   'otherTags': null,
-        //   'restaurantName': restaurantName,
-        //   'restaurantKey': restaurantKey,
-        //   'numRating': null,
-        //   'imageUrl': downloadUrl,
-        //   'postType': 1,
-        //   'comments': null,
-        //   'reviewingUserId': firebaseUserId,
-        //   'timeStamp': DateTime.now().microsecondsSinceEpoch / 1000000,
-        //   'isATest': false,
-        // });
+        if (statusCode < 200 || statusCode > 400 || reviewBody == null) {
+          _pickedPhotoUploadState.add(PickedPhotoUploadState.FAILED);
+        }
         _pickedPhotoUploadState.add(PickedPhotoUploadState.SUCCESSFUL);
-      }
-      ;
+      });
+      return true;
     });
+  }
+
+  Future<String> getImageUrl({
+    @required File photo,
+  }) async {
+    /// upload photo
+    Future<String> photoUrl;
+    if (photo != null) {
+      var request = http.MultipartRequest(
+          "POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+      request.files.add(http.MultipartFile.fromBytes(
+          'file', await photo.readAsBytes(),
+          contentType: MediaType('image', 'jpeg')));
+      await request.send().then((response) {
+        if (response.statusCode == 200) {
+          photoUrl = response.stream.bytesToString();
+        } else {
+          SnackBar(content: Text("An error occurred."));
+        }
+      });
+    }
+    return photoUrl;
   }
 
   Future<Stream<Event>> getRestaurantBookmarkValue(
@@ -295,17 +264,6 @@ class RestaurantBloc {
       photos = photos.sublist(0, 3);
     }
     _lastThreePhotos.add(photos);
-
-    // _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).orderByKey().limitToLast(3).onValue.listen((event) {
-    //   List<Data> photos = [];
-    //   if (event?.snapshot?.value != null) {
-    //     Map<dynamic, dynamic> photosMap = event.snapshot.value;
-    //     photosMap.forEach((key, value) {
-    //       photos.add(Data(key, value));
-    //     });
-    //   }
-    //  _lastThreePhotos.add(photos);
-    //});
   }
 
   void getRating() async {

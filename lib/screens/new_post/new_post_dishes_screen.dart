@@ -286,7 +286,7 @@ class NewPostDishesScreen extends StatelessWidget {
                                 localizations: localizations,
                                 dishes: dishesSnapshot.data
                                     .where((d) =>
-                                        d.value['category']
+                                        d.value['categories']
                                             .toString()
                                             .toLowerCase() ==
                                         'a')
@@ -299,10 +299,16 @@ class NewPostDishesScreen extends StatelessWidget {
                                 localizations: localizations,
                                 dishes: dishesSnapshot.data
                                     .where((d) =>
-                                        d.value['category']
+                                        d.value['categories']
                                             .toString()
-                                            .toLowerCase() ==
-                                        'e')
+                                            .toLowerCase() !=
+                                        'd' && d.value['categories']
+                                            .toString()
+                                            .toLowerCase() !=
+                                        'a' && d.value['categories']
+                                            .toString()
+                                            .toLowerCase() !=
+                                        's' )
                                     .toList(),
                               ),
                               _tabView(
@@ -312,10 +318,13 @@ class NewPostDishesScreen extends StatelessWidget {
                                 localizations: localizations,
                                 dishes: dishesSnapshot.data
                                     .where((d) =>
-                                        d.value['category']
+                                        d.value['categories']
                                             .toString()
                                             .toLowerCase() ==
-                                        'd')
+                                        'd' || d.value['categories']
+                                            .toString()
+                                            .toLowerCase() ==
+                                        's')
                                     .toList(),
                               ),
                             ],
@@ -392,7 +401,7 @@ class DishWidget extends StatelessWidget {
                     }
                     return false;
                   },
-                  key: Key(dish.key),
+                  key: Key(dish.value['did'].toString()),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       vertical: 12.0,

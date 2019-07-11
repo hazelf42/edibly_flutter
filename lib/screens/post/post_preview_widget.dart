@@ -54,19 +54,19 @@ class PostPreviewWidget extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
           child: Row(
             children: <Widget>[
-              // CircleAvatar(
-              //   radius: 24.0,
-              //  backgroundImage: authorValue  == null ? null : NetworkImage(authorValue['photo']),
-              //   child: authorValue == null
-              //       ? SizedBox(
-              //           width: 46.0,
-              //           height: 46.0,
-              //           child: CircularProgressIndicator(
-              //             strokeWidth: 2.0,
-              //           ),
-              //         )
-              //       : null,
-              // ),
+              CircleAvatar(
+                radius: 24.0,
+               backgroundImage: authorValue  == null ? null : NetworkImage(authorValue['photo']),
+                child: authorValue == null
+                    ? SizedBox(
+                        width: 46.0,
+                        height: 46.0,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                        ),
+                      )
+                    : null,
+              ),
               Container(
                 width: 16.0,
               ),
@@ -131,7 +131,7 @@ class PostPreviewWidget extends StatelessWidget {
       }
 
   Widget _photo({@required MainBloc mainBloc, @required String photoURL}) {
-    if (photoURL == null || photoURL.isEmpty) {
+    if (photoURL == null || photoURL.isEmpty || photoURL == "None") {
       return Container(height: 0,);
 
     }
@@ -229,14 +229,21 @@ class PostPreviewWidget extends StatelessWidget {
   }
 
  Widget _likeButton({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    bool isLiked = post.value['likes'].contains(post.value['iuid']); 
+    
+    bool isLiked = false;
+    for (var profile in post.value['likes']) {
+       if (profile['uid'] == uid) { 
+        isLiked = true;
+        break;
+       }
+    } 
         if (isLiked) {
           return BoldFlatIconButton(
             onPressed: () {
               mainBloc.unlikePostByUser(
                 postKey: post?.key.toString(),
                 postType: post.value['type'],
-                uid: post.value['iuid'],
+                uid: uid,
               );
             },
             icon: Icon(
@@ -252,7 +259,7 @@ class PostPreviewWidget extends StatelessWidget {
             mainBloc.likePostByUser(
               postKey: post?.key.toString(),
               postType: post.value['type'],
-                uid: post.value['iuid'],
+                uid: uid,
             );
           },
           text: localizations.like.toUpperCase(),

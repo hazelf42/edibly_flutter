@@ -340,24 +340,15 @@ class NewPostBloc {
 
   /// Other
   void getDishes() async {
-    _firebaseDatabase
-        .reference()
-        .child('dishes')
-        .child(restaurantKey)
-        .onValue
-        .listen((event) async {
-      Map<dynamic, dynamic> dishesMap = event?.snapshot?.value;
-      if (dishesMap == null || dishesMap.isEmpty) {
-        _dishes.add([]);
-        return;
-      }
-      List<Data> dishesWithoutRating = [];
-      dishesMap
-          .forEach((key, value) => dishesWithoutRating.add(Data(key, value)));
+    final url =
+        ('http://edibly.vassi.li/api/restaurants/' + restaurantKey + '/dishes');
+    final response = await http.get(url);
+    final dishesMap = json.decode(response.body).reversed;
 
-      /// publish an update to the stream
-      _dishes.add(dishesWithoutRating);
-    });
+    //TODO: - Dish reviews
+    List<Data> dishesWithRating = [];
+    dishesMap.forEach((d) => dishesWithRating.add(Data(d['did'], d)));
+    _dishes.add(dishesWithRating);
   }
 
   /// Dispose function

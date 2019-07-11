@@ -11,9 +11,6 @@ import 'package:edibly/bloc_helper/validators.dart';
 import 'package:edibly/values/pref_keys.dart';
 import 'package:edibly/models/data.dart';
 
-
-
-
 /* 
 Vassilibase stuff I'm waiting for
 Comments
@@ -36,15 +33,15 @@ class MainBloc extends Object with Validators {
 
   /// Default values
   static const int bottomNavigationBarCurrentIndexDefaultValue = 0;
-  static const bool darkModeEnabledDefaultValue = true;
-  static const bool glutenFreeDefaultValue = false;
+  static const bool darkModeEnabledDefaultValue = false;
+  static const int glutenFreeDefaultValue = 0;
   static const Diet dietDefaultValue = Diet.VEGAN;
 
   /// Subjects
   final _bottomNavigationBarCurrentIndex =
       BehaviorSubject<int>.seeded(bottomNavigationBarCurrentIndexDefaultValue);
   final _darkModeEnabled = BehaviorSubject<bool>();
-  final _glutenFree = BehaviorSubject<bool>.seeded(glutenFreeDefaultValue);
+  final _glutenFree = BehaviorSubject<int>.seeded(0);
   final _diet = BehaviorSubject<Diet>.seeded(dietDefaultValue);
 
   /// Stream getters
@@ -53,7 +50,7 @@ class MainBloc extends Object with Validators {
 
   Stream<bool> get darkModeEnabled => _darkModeEnabled.stream;
 
-  Stream<bool> get glutenFree => _glutenFree.stream;
+  Stream<int> get glutenFree => _glutenFree.stream;
 
   Stream<Diet> get diet => _diet.stream;
 
@@ -68,51 +65,60 @@ class MainBloc extends Object with Validators {
     preferences.setBool(PrefKeys.darkModeEnabled, darkModeEnabled);
   }
 
-  void toggleGlutenFree(String uid) {
-    _glutenFree.add(!_glutenFree.value);
-    _setCurrentUserInfoWithoutCallback(uid, {
-      'isGlutenFree': _glutenFree.value,
-    });
+  Future<bool> toggleGlutenFree(String uid) async {
+    _glutenFree.add((_glutenFree.value == 0) ? 1 : 0);
+    
+    if (uid != null) {
+      var value =
+          json.encode({"glutenfree": "${_glutenFree.value == 0 ? 1 : 0}"});
+      await http
+          .put("http://edibly.vassi.li/api/profiles/${(uid)}",
+              body: value)
+          .then((http.Response response) {
+        print(response.statusCode);
+        return true;
+      });
+    }
   }
 
-  void setGlutenFree(String uid, bool glutenFree) {
+  void setGlutenFree(String uid, int glutenFree) {
     _glutenFree.add(glutenFree);
     if (uid != null) {
       _setCurrentUserInfoWithoutCallback(uid, {
-        'isGlutenFree': glutenFree,
+        'glutenFree': glutenFree,
       });
     }
   }
 
-  void setDiet(String uid, Diet diet) {
+  Future<bool> setDiet(String uid, Diet diet) async {
     _diet.add(diet);
+
     if (uid != null) {
-      _setCurrentUserInfoWithoutCallback(uid, {
-        'dietName': diet == Diet.VEGAN ? 'vegan' : 'vegetarian',
+      var value =
+          json.encode({"veglevel": "${diet == Diet.VEGAN ? '2' : '1'}"});
+      await http
+          .put("http://edibly.vassi.li/api/profiles/${(uid)}",
+              body: value)
+          .then((http.Response response) {
+        print(response.statusCode);
       });
     }
+
+    return true;
   }
 
-  void _setCurrentUserInfoWithoutCallback(String uid, dynamic value) {
-    _firebaseDatabase.reference().child('userProfiles/$uid').update(value);
+  void _setCurrentUserInfoWithoutCallback(String uid, dynamic value) async {
+    await http
+        .put("edibly.vassi.li/api/profiles/$uid", body: json.encode(value))
+        .then((http.Response response) {
+      print(response.statusCode);
+    });
   }
 
   /// Other functions
   Future<FirebaseUser> getCurrentFirebaseUser() async {
     final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
     return await _firebaseAuth.currentUser();
-  }
-
-  Future<http.Response> getUser(String uid) async {
-    final url = "edibly.vassi.li/api/profiles/$uid";
-    final response = await http.get(url);
-    return response;
-  }
-
-  Future<http.Response> getRestaurant(String key) async {
-    final url = "http://edibly.vassi.li/api/restaurants/$key";
-    final response = await http.get(url);
-    return response;
   }
 
   void deletePost({
@@ -135,7 +141,7 @@ class MainBloc extends Object with Validators {
         url = "http://edibly.vassi.li/api/tips/$id";
         break;
     }
-    //TODO: - why dont this work;;;;;;;;;;;
+    //TODO: - VASSILI: Implement deleting (or "deleting") posts
     http.delete(url);
   }
 
@@ -148,8 +154,6 @@ class MainBloc extends Object with Validators {
     //TODO : - I'm dumb and bad at coding
     if (postType == 0) {
       type = "review";
-    } else if (postType == 1) {
-      type = "photo";
     } else if (postType == 2) {
       type = "tip";
     } else {
@@ -167,7 +171,8 @@ class MainBloc extends Object with Validators {
     });
   }
 
-  void unlikePostByUser(  {@required String postKey,
+  void unlikePostByUser(
+      {@required String postKey,
       @required String uid,
       @required int postType}) async {
     var type = "";
@@ -192,10 +197,8 @@ class MainBloc extends Object with Validators {
   }
 
   // Stream<Event> isPostLikedByUser(
-    
-  // }
 
-  
+  // }
 
   /// Dispose function
   void dispose() {

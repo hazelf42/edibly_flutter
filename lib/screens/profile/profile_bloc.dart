@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
-import 'package:edibly/main_bloc.dart';
 import 'package:edibly/models/data.dart';
 
 class ProfileBloc {
@@ -63,7 +61,6 @@ class ProfileBloc {
     }).then((response) {
       if (_isFollowing) {
         final body = {'uid': currentUid, 'unfollow': uid};
-        //TODO: learn to code 🤡🤡🤡🤡🤡🤡🤡🤡
         http
             .post("http://edibly.vassi.li/api/unfollow",
                 body: json.encode(body))
@@ -76,7 +73,6 @@ class ProfileBloc {
         });
       } else {
         final body = {'uid': currentUid, 'follow': uid};
-        //TODO: learn to code 🤡🤡🤡🤡🤡🤡🤡🤡
         http
             .post("http://edibly.vassi.li/api/follow", body: json.encode(body))
             .then((http.Response response) {
@@ -121,36 +117,30 @@ class ProfileBloc {
       _postsInCurrentPage = 0;
 
       /// network request
-      Query query = _firebaseDatabase
-          .reference()
-          .child('postsByUser/$uid')
-          .orderByKey()
-          .limitToLast(POSTS_PER_PAGE);
-      onChildAddedListener = query.onChildAdded.listen((event) {
+      http.get("edibly.vassi.li/api/profiles/$uid/posts").then((response) {
         /// increment number of posts in current page
-        _postsInCurrentPage++;
+        var snapshot = json.decode(response.body);
 
         /// remove any null values, null values are shown as circular loaders
         posts.remove(null);
 
         /// insert newly acquired post to the start of new page
-        posts.insert(
-            oldPostsLength, Data(event?.snapshot?.key, event?.snapshot?.value));
-
+        snapshot.forEach((post) { 
+          posts.insert(oldPostsLength, Data(post['rrid'] ?? post['rtid'], post));
+        });
         /// if this was the last post in requested page, then show a circular loader at the end of page
-        if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1))
-          posts.add(null);
+        
 
         /// publish an update to the stream
-        _posts.add(posts);
-      });
-      query.onValue.listen((event) {
-        _posts.add(posts);
-        onChildAddedListener?.cancel();
-      });
-      query.onChildRemoved.listen((event) {
-        posts.removeWhere(
-            (post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+      //   _posts.add(posts);
+      // });
+      // query.onValue.listen((event) {
+      //   _posts.add(posts);
+      //   onChildAddedListener?.cancel();
+      // });
+      // query.onChildRemoved.listen((event) {
+      //   posts.removeWhere(
+      //       (post) => post != null && post.key == (event?.snapshot?.key ?? ''));
 
         /// publish an update to the stream
         _posts.add(posts);

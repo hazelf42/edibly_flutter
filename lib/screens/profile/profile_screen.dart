@@ -14,14 +14,23 @@ import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 import 'package:edibly/main_bloc.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final String uid;
 
   ProfileScreen({@required this.uid});
 
+  @override
+  _ProfileScreen createState() => _ProfileScreen(uid: uid);
+}
+class _ProfileScreen extends State<ProfileScreen> {
+
+   final String uid;    
+
+  _ProfileScreen({@required this.uid});
+
   Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
     return FutureBuilder<http.Response>(
-      future: mainBloc.getUser(uid),
+      future: http.get("http://edibly.vassi.li/api/profiles/$uid"),
       builder: (context, response) {
         Map<dynamic, dynamic> authorValue = (response.hasData) ?  json.decode(response?.data?.body) : null;
         return Container(
@@ -138,7 +147,9 @@ class ProfileScreen extends StatelessWidget {
                      newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
                     await http.put("http://edibly.vassi.li/api/profiles/${firebaseUserSnapshot.data.uid}", body:  json.encode( {
                       'photo' : ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
-                    })).then((http.Response response) {print(response.body);});
+                    })).then((http.Response response) {setState(() {
+                      
+                    });});
                   }) : BoldFlatButton(text: "(Un)Follow", textColor: Colors.deepOrangeAccent,onPressed: (){ProfileBloc(uid: uid).followUser(currentUid: firebaseUserSnapshot.data.uid, profileUid: uid);})), 
                                         postsSnapshot.data.isEmpty
                                             ? Column(
@@ -215,9 +226,10 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+  //TODO: - move to bloc
   Future<String> getImage() async {
 
-    var photo = await ImagePicker.pickImage(source: ImageSource.gallery);
+    var photo = await ImagePicker.pickImage(source: ImageSource.camera);
     Future<String> string;
 
     if (photo != null) {
