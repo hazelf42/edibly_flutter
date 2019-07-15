@@ -6,11 +6,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
+import 'package:edibly/values/app_localizations.dart';
 
 import 'package:edibly/models/data.dart';
 
 class PostBloc {
   Data post;
+  
+  AppLocalizations localizations;
 
   PostBloc({@required this.post}) {
     _firebaseDatabase.setPersistenceEnabled(true);
@@ -23,9 +26,6 @@ class PostBloc {
   /// Local  variables
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
   StreamSubscription onChildAddedListener;
-  bool _fetchStarted = false;
-  int _commentsInCurrentPage = 0;
-  int _currentPage = 0;
 
   /// Subjects
   final _comments = BehaviorSubject<List<Data>>();
@@ -36,9 +36,6 @@ class PostBloc {
   /// Other functions
   void clearComments() {
     _comments.add(null);
-    _fetchStarted = false;
-    _commentsInCurrentPage = 0;
-    _currentPage = 0;
   }
 
    void getComments() async {

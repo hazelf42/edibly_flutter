@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:edibly/values/app_localizations.dart';
 
 import 'package:edibly/bloc_helper/validators.dart';
 import 'package:edibly/bloc_helper/app_error.dart';
@@ -22,6 +23,7 @@ enum UpdatePasswordState {
 }
 
 class DrawerBloc {
+  AppLocalizations localizations;
   DrawerBloc() {
     _firebaseDatabase.setPersistenceEnabled(true);
     _firebaseDatabase.setPersistenceCacheSizeBytes(10000000);
@@ -132,7 +134,7 @@ class DrawerBloc {
     return _firebaseAuth.signOut();
   }
 
-  Future<bool> changeProfilePicture({
+  void changeProfilePicture({
     @required File photo,
   }) async {
     /// upload photo

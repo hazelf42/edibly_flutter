@@ -21,9 +21,8 @@ class RestaurantPreviewWidget extends StatelessWidget {
   List<Data> dynamicTagArrayToTagList(dynamic dynamicTagArray) {
     List<Data> tagList = [];
     if (dynamicTagArray != null) {
-      Map<dynamic, dynamic> map = dynamicTagArray;
-      map.forEach((key, value) {
-        tagList.add(Data(key, value));
+      dynamicTagArray.forEach((value) {
+        tagList.add(Data(value['num'], value));
       });
     }
     return tagList;
@@ -69,7 +68,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
     }
 
     List<Data> tags = dynamicTagArrayToTagList(value['tags']);
-    tags.sort((a, b) => b.value - a.value);
+    tags.sort((a, b) => b.value['num'] - a.value['num']);
     return Container(
       height: 20.0,
       margin: const EdgeInsets.only(top: 6.0),
@@ -81,7 +80,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
         itemCount: tags.length,
         itemBuilder: (context, position) {
           return CustomTag(
-            '${tags.elementAt(position).key} (${tags.elementAt(position).value})',
+            '${tags.elementAt(position).value['text']} (${tags.elementAt(position).key})',
             fontSize: 10.0,
             padding: const EdgeInsets.symmetric(
               vertical: 2.0,

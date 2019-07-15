@@ -6,10 +6,12 @@ import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
 import 'package:flutter/foundation.dart';
 import 'package:edibly/main_bloc.dart';
+import 'package:edibly/values/app_localizations.dart';
 
 class FeedBloc {
   String feedType;
-
+  AppLocalizations localizations;
+  
   FeedBloc({
     @required this.feedType,
   }) {
@@ -53,7 +55,7 @@ class FeedBloc {
       _currentPage++;
       _postsInCurrentPage = 0;
     }
-
+  
     /// started fetching a page
     onChildAddedListener?.cancel();
     _fetchStarted = true;
@@ -76,7 +78,7 @@ class FeedBloc {
 
       if (feedType == 'nearby') {
         //TODO: - Actually make it posts from nearby lol
-        response = await http.get('http://edibly.vassi.li/api/posts');
+        response = await http.get("http://edibly.vassi.li/api/posts");
 
         final map = json.decode(response.body);
         map.forEach((post) {
@@ -88,7 +90,7 @@ class FeedBloc {
             } else if (feedType == 'following') {
         final currentUser = (await MainBloc().getCurrentFirebaseUser());
         await http
-            .get('http://edibly.vassi.li/api/profiles/${currentUser.uid}/feed')
+            .get("http://edibly.vassi.li/api/profiles/${currentUser.uid}/feed")
             .then((postResponse) {
           json.decode(postResponse.body).forEach((post) {
             posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
@@ -100,7 +102,7 @@ class FeedBloc {
         //     print(postsMap); 
         //   postsMap.forEach((id, post) async {
         //     final url =
-        //         'http://edibly.vassi.li/api/restaurants/' +
+        //         "http://edibly.vassi.li/api/restaurants/' +
         //             post['rid'].toString();
         //     final nameResponse = await http.get(url);
         //     final name = json.decode(nameResponse.body)['name'];

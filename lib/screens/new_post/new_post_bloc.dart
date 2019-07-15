@@ -8,10 +8,12 @@ import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:edibly/models/data.dart';
+import 'package:edibly/values/app_localizations.dart';
 
 class NewPostBloc {
   String firebaseUserId;
   String restaurantKey;
+  AppLocalizations localizations;
 
   NewPostBloc({
     @required this.firebaseUserId,
@@ -298,41 +300,41 @@ class NewPostBloc {
     return true;
   }
 
-  Future<bool> _updateRestaurantRating({
-    @required List<String> tags,
-    @required double rating,
-  }) async {
-    DatabaseReference ratingReference = _firebaseDatabase
-        .reference()
-        .child('restaurantRatings')
-        .child(restaurantKey);
-    DataSnapshot ratingSnapshot = await ratingReference.once();
-    int totalReviews = _lookup(ratingSnapshot?.value, 'totalReviews') ?? 0;
-    dynamic oldAverageRatingDynamic =
-        _lookup(ratingSnapshot?.value, 'numRating') ?? -1;
-    double oldAverageRating = oldAverageRatingDynamic is int
-        ? oldAverageRatingDynamic.toDouble()
-        : oldAverageRatingDynamic as double;
-    double newAverageRating = oldAverageRating == -1
-        ? rating
-        : ((totalReviews * oldAverageRating + rating) / (totalReviews + 1));
-    dynamic tagValues = _lookup(ratingSnapshot?.value, 'tagDict') ?? {};
-    if (tagValues is List) tagValues = {};
-    tags.forEach((tag) {
-      if (tagValues[tag] != null) {
-        tagValues[tag] += 1;
-      } else {
-        tagValues[tag] = 1;
-      }
-    });
-    await ratingReference.set({
-      'tagDict': tagValues,
-      'numRating': newAverageRating,
-      'totalReviews': totalReviews + 1,
-      'otherTags': _lookup(ratingSnapshot?.value, 'otherTags')
-    });
-    return true;
-  }
+  // Future<bool> _updateRestaurantRating({
+  //   @required List<String> tags,
+  //   @required double rating,
+  // }) async {
+  //   DatabaseReference ratingReference = _firebaseDatabase
+  //       .reference()
+  //       .child('restaurantRatings')
+  //       .child(restaurantKey);
+  //   DataSnapshot ratingSnapshot = await ratingReference.once();
+  //   int totalReviews = _lookup(ratingSnapshot?.value, 'totalReviews') ?? 0;
+  //   dynamic oldAverageRatingDynamic =
+  //       _lookup(ratingSnapshot?.value, 'numRating') ?? -1;
+  //   double oldAverageRating = oldAverageRatingDynamic is int
+  //       ? oldAverageRatingDynamic.toDouble()
+  //       : oldAverageRatingDynamic as double;
+  //   double newAverageRating = oldAverageRating == -1
+  //       ? rating
+  //       : ((totalReviews * oldAverageRating + rating) / (totalReviews + 1));
+  //   dynamic tagValues = _lookup(ratingSnapshot?.value, 'tagDict') ?? {};
+  //   if (tagValues is List) tagValues = {};
+  //   tags.forEach((tag) {
+  //     if (tagValues[tag] != null) {
+  //       tagValues[tag] += 1;
+  //     } else {
+  //       tagValues[tag] = 1;
+  //     }
+  //   });
+  //   await ratingReference.set({
+  //     'tagDict': tagValues,
+  //     'numRating': newAverageRating,
+  //     'totalReviews': totalReviews + 1,
+  //     'otherTags': _lookup(ratingSnapshot?.value, 'otherTags')
+  //   });
+  //   return true;
+  // }
 
   dynamic _lookup(dynamic value, String key) {
     return value == null ? null : value[key];

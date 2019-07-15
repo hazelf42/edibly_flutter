@@ -1,20 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:http/http.dart';
-import 'package:smooth_star_rating/smooth_star_rating.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
-import 'package:timeago/timeago.dart' as TimeAgo;
-import 'dart:convert';
-
-import 'package:edibly/screens/post/post_screen.dart';
-import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/values/app_colors.dart';
 import 'package:edibly/custom/widgets.dart';
-import 'package:edibly/models/data.dart';
 import 'package:edibly/main_bloc.dart';
+import 'package:edibly/models/data.dart';
+import 'package:edibly/screens/post/post_screen.dart';
+import 'package:edibly/values/app_colors.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:smooth_star_rating/smooth_star_rating.dart';
+import 'package:timeago/timeago.dart' as TimeAgo;
 
-class PostPreviewWidget extends StatelessWidget {
+class PostPreviewWidget extends StatefulWidget {
   final String uid;
   final Data post;
 
@@ -23,6 +19,18 @@ class PostPreviewWidget extends StatelessWidget {
     @required this.post,
   });
 
+_PostPreviewWidget createState() => _PostPreviewWidget(uid: uid, post: post);  
+}
+
+
+class _PostPreviewWidget extends State<PostPreviewWidget> {
+  final String uid;
+  final Data post;
+
+  _PostPreviewWidget({
+    @required this.uid,
+    @required this.post,
+  });
   List<String> dynamicTagArrayToTagList(dynamic dynamicTagArray) {
     List<String> tagList = [];
     if (dynamicTagArray != null) {
@@ -245,6 +253,9 @@ class PostPreviewWidget extends StatelessWidget {
                 postType: post.value['type'],
                 uid: uid,
               );
+              setState(() {
+                
+              });
             },
             icon: Icon(
               Icons.favorite,
@@ -261,6 +272,10 @@ class PostPreviewWidget extends StatelessWidget {
               postType: post.value['type'],
                 uid: uid,
             );
+            
+              setState(() {
+                
+              }); 
           },
           text: localizations.like.toUpperCase(),
           textColor: AppColors.primarySwatch.shade900,

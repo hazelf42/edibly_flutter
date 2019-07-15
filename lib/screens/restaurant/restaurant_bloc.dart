@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:edibly/values/app_localizations.dart';
 
 import 'package:edibly/models/data.dart';
 
@@ -26,6 +27,8 @@ enum AddTipState {
 }
 
 class RestaurantBloc {
+  
+   AppLocalizations localizations;
   final String firebaseUserId;
   final String restaurantKey;
 
@@ -73,7 +76,7 @@ class RestaurantBloc {
   /// Other functions
   void getRestaurant() async {
     _restaurant.add(null);
-    final url = 'http://edibly.vassi.li/api/restaurants/' + restaurantKey;
+    final url = "http://edibly.vassi.li/api/restaurants/" + restaurantKey;
     final response = await http.get(url);
     final map = json.decode(response.body);
     Data restaurantData = Data(map['rid'], map);
@@ -91,7 +94,7 @@ class RestaurantBloc {
     }
     _restaurant.add(restaurantData);
 
-    //final tipsResponse = await http.get('http://edibly.vassi.li/api/restaurants/'+restaurantKey+'/tips');
+    //final tipsResponse = await http.get("http://edibly.vassi.li/api/restaurants/'+restaurantKey+'/tips');
     //final tipsMap = json.decode(tipsResponse.body);
     //   _firebaseDatabase.reference().child('restaurants').child(restaurantKey).onValue.listen((event) async {
     //   if (event?.snapshot?.value != null) {
@@ -246,7 +249,7 @@ class RestaurantBloc {
   Future<Stream<Event>> getRestaurantBookmarkValue(
       String uid, String restaurantKey) async {
     final url =
-        'http://edibly.vassi.li/api/profiles/' + uid + "/" + restaurantKey;
+        "http://edibly.vassi.li/api/profiles/" + uid + "/" + restaurantKey;
     final response = await http.get(url);
     return json.decode(response.body);
   }

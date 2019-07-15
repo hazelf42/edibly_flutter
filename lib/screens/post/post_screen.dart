@@ -1,22 +1,18 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import 'package:smooth_star_rating/smooth_star_rating.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:flutter/material.dart';
-import 'package:timeago/timeago.dart' as TimeAgo;
-
-import 'package:edibly/screens/restaurant/restaurant_screen.dart';
-import 'package:edibly/screens/common/full_screen_image.dart';
-import 'package:edibly/screens/profile/profile_screen.dart';
-import 'package:edibly/values/app_localizations.dart';
-import 'package:edibly/screens/post/post_bloc.dart';
 import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/values/app_colors.dart';
 import 'package:edibly/custom/widgets.dart';
-import 'package:edibly/models/data.dart';
 import 'package:edibly/main_bloc.dart';
+import 'package:edibly/models/data.dart';
+import 'package:edibly/screens/common/full_screen_image.dart';
+import 'package:edibly/screens/post/post_bloc.dart';
+import 'package:edibly/screens/profile/profile_screen.dart';
+import 'package:edibly/screens/restaurant/restaurant_screen.dart';
+import 'package:edibly/values/app_colors.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:photo_view/photo_view.dart';
+import 'package:smooth_star_rating/smooth_star_rating.dart';
+import 'package:timeago/timeago.dart' as TimeAgo;
 
 class PostScreen extends StatelessWidget {
   final TextEditingController commentController = TextEditingController();

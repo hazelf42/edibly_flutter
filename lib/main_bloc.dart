@@ -1,15 +1,15 @@
-import 'dart:io';
-
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
-import 'package:rxdart/rxdart.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+
 import 'package:edibly/bloc_helper/validators.dart';
-import 'package:edibly/values/pref_keys.dart';
 import 'package:edibly/models/data.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:edibly/values/pref_keys.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:rxdart/rxdart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /* 
 Vassilibase stuff I'm waiting for
@@ -30,6 +30,7 @@ class MainBloc extends Object with Validators {
 
   /// Variables
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
+  AppLocalizations localizations;
 
   /// Default values
   static const int bottomNavigationBarCurrentIndexDefaultValue = 0;
@@ -65,7 +66,7 @@ class MainBloc extends Object with Validators {
     preferences.setBool(PrefKeys.darkModeEnabled, darkModeEnabled);
   }
 
-  Future<bool> toggleGlutenFree(String uid) async {
+  Future<void> toggleGlutenFree(String uid) async {
     _glutenFree.add((_glutenFree.value == 0) ? 1 : 0);
     
     if (uid != null) {
@@ -109,7 +110,7 @@ class MainBloc extends Object with Validators {
 
   void _setCurrentUserInfoWithoutCallback(String uid, dynamic value) async {
     await http
-        .put("edibly.vassi.li/api/profiles/$uid", body: json.encode(value))
+        .put("http://edibly.vassi.li/api/profiles/$uid", body: json.encode(value))
         .then((http.Response response) {
       print(response.statusCode);
     });
@@ -150,9 +151,7 @@ class MainBloc extends Object with Validators {
       {@required String postKey,
       @required String uid,
       @required int postType}) async {
-    var type = "";
-    //TODO : - I'm dumb and bad at coding
-    if (postType == 0) {
+    var type = "";    if (postType == 0) {
       type = "review";
     } else if (postType == 2) {
       type = "tip";

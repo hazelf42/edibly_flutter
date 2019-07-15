@@ -5,11 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
+import 'package:edibly/values/app_localizations.dart';
 
 class RestaurantTipsBloc {
   final String restaurantKey;
+  AppLocalizations localizations;
 
   RestaurantTipsBloc({@required this.restaurantKey}) {
+    
+   AppLocalizations localizations;
     _firebaseDatabase.setPersistenceEnabled(true);
     _firebaseDatabase.setPersistenceCacheSizeBytes(10000000);
   }

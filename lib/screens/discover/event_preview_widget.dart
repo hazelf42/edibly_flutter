@@ -15,7 +15,7 @@ class EventPreviewWidget extends StatelessWidget {
   EventPreviewWidget({
     @required this.firebaseUser,
     @required this.event,
-  }) : super(key: Key(event.key));
+  }) : super(key: Key((event.key).toString()));
 
   List<Data> dynamicTagArrayToTagList(dynamic dynamicTagArray) {
     List<Data> tagList = [];
@@ -112,7 +112,7 @@ class EventPreviewWidget extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
                               SingleLineText(
-                                event.value['eventName'] ?? '',
+                                event.value['name'] ?? '',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15.0,
@@ -120,7 +120,7 @@ class EventPreviewWidget extends StatelessWidget {
                               ),
                               Container(height: 1.0),
                               SingleLineText(
-                                event.value['restaurantName'] ?? '',
+                                event.value['rname'] ?? '',
                                 style: TextStyle(
                                   fontWeight: FontWeight.normal,
                                   fontSize: 13.0,
@@ -128,9 +128,9 @@ class EventPreviewWidget extends StatelessWidget {
                               ),
                               Container(height: 2.0),
                               SingleLineText(
-                                '${DateFormat('hh:mm').format(DateTime.fromMillisecondsSinceEpoch(event.value['startTime'] * 1000))}'
+                                '${DateFormat('hh:mm').format(DateTime.fromMillisecondsSinceEpoch(event.value['start'] * 1000))}'
                                 ' - '
-                                '${DateFormat('hh:mm').format(DateTime.fromMillisecondsSinceEpoch(event.value['endTime'] * 1000))}',
+                                '${DateFormat('hh:mm').format(DateTime.fromMillisecondsSinceEpoch(event.value['start'] * 1000))}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.normal,
                                   fontSize: 13.0,

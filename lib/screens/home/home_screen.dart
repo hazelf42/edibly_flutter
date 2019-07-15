@@ -11,7 +11,7 @@ import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/values/app_colors.dart';
 import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/main_bloc.dart';
-
+import 'package:edibly/screens/profile/search_profile_screen.dart';
 class HomeScreen extends StatelessWidget {
   final FirebaseUser firebaseUser;
 
@@ -44,25 +44,30 @@ class HomeScreen extends StatelessWidget {
       builder: (context, snapshot) {
         return Scaffold(
           drawer: DrawerScreen(firebaseUser),
-          body: NestedScrollView(
-              headerSliverBuilder:
-                  (BuildContext context, bool innerBoxIsScrolled) {
-                return <Widget>[
-                  PreferredSize(
-                   preferredSize: Size.fromHeight(10.0), child:// here the desired height
-                  SliverAppBar(
-                    expandedHeight: 10.0,
-                    floating: true,
-                    flexibleSpace: FlexibleSpaceBar(
-                        centerTitle: true,
-                        title: Text("Edibly",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16.0,
-                            )),
-                  )))];
-              },
-              body: _body(snapshot?.data)),
+          appBar: AppBar(
+            actions: <Widget>[
+              (snapshot.data == 0)
+                  ? IconButton(
+                      icon: Icon(Icons.person_add),
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SearchProfileScreen(
+                                firebaseUser: firebaseUser,
+                              ),
+                            ));
+                      })
+                  : Container( height: 0, width: 0)
+            ],
+            centerTitle: true,
+            title: Text("Edibly",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.0,
+                )),
+          ),
+          body: _body(snapshot?.data),
           bottomNavigationBar: BottomNavigationBar(
             fixedColor:
                 darkModeEnabled ? null : AppColors.primarySwatch.shade700,

@@ -14,7 +14,7 @@ class FeedScreen extends StatelessWidget {
         initialIndex: 1,
         child: Scaffold(
             appBar:  PreferredSize(
-          preferredSize: Size.fromHeight(30.0), // here the desired height
+          preferredSize: Size.fromHeight(50.0), // here the desired height
           child:  TabBar(
                 indicatorWeight: 3.0,
                 indicatorColor: Theme.of(context).brightness == Brightness.dark

@@ -211,7 +211,6 @@ class RestaurantDishesScreen extends StatelessWidget {
                           filteredDishes.sort((a,b) {
                             return b.value['veganlevel'].compareTo(a.value['veganlevel']);
                           });
-                          filteredDishes.forEach((d) => print(d.value));
                         }
                 
                         return DefaultTabController(

@@ -18,7 +18,8 @@ import 'package:edibly/models/data.dart';
 
 class DiscoverScreen extends StatelessWidget {
   final FirebaseUser firebaseUser;
-
+  AppLocalizations localizations;
+  
   DiscoverScreen({@required this.firebaseUser});
 
   Widget _header(String header) {
@@ -35,6 +36,41 @@ class DiscoverScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _nearbyHeader(String header, BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(),
+      margin: EdgeInsets.zero,
+      child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
+          height: 50,
+          child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+            children: <Widget>[
+              SingleLineText(
+                header,
+                style: TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SearchScreen(
+                          firebaseUser: firebaseUser,
+                        ),
+                      ));
+                },
+                child: Text("See All"),
+              )
+            ],
+          )),
     );
   }
 
@@ -64,30 +100,35 @@ class DiscoverScreen extends StatelessWidget {
         return StreamBuilder<List<Data>>(
           stream: discoverBloc.restaurants,
           builder: (context, restaurantsSnapshot) {
-            if (!locationSnapshot.hasData || (!restaurantsSnapshot.hasData && !restaurantsSnapshot.hasError)) {
+            if (!locationSnapshot.hasData ||
+                (!restaurantsSnapshot.hasData &&
+                    !restaurantsSnapshot.hasError)) {
               return _loader(height: 200);
             }
             // ignore: sdk_version_set_literal
             Set<Marker> markers = {};
             if (restaurantsSnapshot.hasData) {
               restaurantsSnapshot.data.forEach((data) {
+                data.value['lon'] = data.value['lon'];
                 markers.add(Marker(
                   markerId: MarkerId(data.key),
                   position: LatLng(
                     double.parse(data.value['lat'].toString()),
-                    double.parse(data.value['lon'].toString()),
+                    double.parse((data.value['lon'] / 10).toString()),
                   ),
                   infoWindow: InfoWindow(
                     title: data.value['name'],
-                    snippet: data.value['address'] ?? data.value['address1'] ?? data.value['address2'],
+                    snippet: data.value['address'] ??
+                        data.value['address1'] ??
+                        data.value['address2'],
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => RestaurantScreen(
-                                firebaseUserId: firebaseUser.uid,
-                                restaurantKey: data.key,
-                              ),
+                            firebaseUserId: firebaseUser.uid,
+                            restaurantKey: data.key,
+                          ),
                         ),
                       );
                     },
@@ -108,13 +149,16 @@ class DiscoverScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SearchScreen(firebaseUser: firebaseUser),
+                      builder: (context) =>
+                          SearchScreen(firebaseUser: firebaseUser),
                     ),
                   );
                 },
                 gestureRecognizers: Set()
-                  ..add(Factory<PanGestureRecognizer>(() => PanGestureRecognizer()))
-                  ..add(Factory<VerticalDragGestureRecognizer>(() => VerticalDragGestureRecognizer())),
+                  ..add(Factory<PanGestureRecognizer>(
+                      () => PanGestureRecognizer()))
+                  ..add(Factory<VerticalDragGestureRecognizer>(
+                      () => VerticalDragGestureRecognizer())),
                 markers: markers,
               ),
             );
@@ -172,20 +216,28 @@ class DiscoverScreen extends StatelessWidget {
                 if (index == 0 ||
                     DateFormat('ddMMyyyy').format(
                           DateTime.fromMillisecondsSinceEpoch(
-                            eventsSnapshot.data.elementAt(index - 1).value['start'] * 1000,
+                            eventsSnapshot.data
+                                    .elementAt(index - 1)
+                                    .value['start'] *
+                                1000,
                           ),
                         ) !=
                         DateFormat('ddMMyyyy').format(
                           DateTime.fromMillisecondsSinceEpoch(
-                            eventsSnapshot.data.elementAt(index).value['start'] * 1000,
+                            eventsSnapshot.data
+                                    .elementAt(index)
+                                    .value['start'] *
+                                1000,
                           ),
                         )) {
                   return Container(
-                    margin: EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
+                    margin:
+                        EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
                     child: Card(
                       margin: EdgeInsets.zero,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12.0, horizontal: 12.0),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
@@ -194,7 +246,10 @@ class DiscoverScreen extends StatelessWidget {
                             SingleLineText(
                               DateFormat('MMM').format(
                                 DateTime.fromMillisecondsSinceEpoch(
-                                  eventsSnapshot.data.elementAt(index).value['start'] * 1000,
+                                  eventsSnapshot.data
+                                          .elementAt(index)
+                                          .value['start'] *
+                                      1000,
                                 ),
                               ),
                             ),
@@ -202,7 +257,10 @@ class DiscoverScreen extends StatelessWidget {
                             SingleLineText(
                               DateFormat('d').format(
                                 DateTime.fromMillisecondsSinceEpoch(
-                                  eventsSnapshot.data.elementAt(index).value['start'] * 1000,
+                                  eventsSnapshot.data
+                                          .elementAt(index)
+                                          .value['start'] *
+                                      1000,
                                 ),
                               ),
                               style: TextStyle(
@@ -213,7 +271,10 @@ class DiscoverScreen extends StatelessWidget {
                             SingleLineText(
                               DateFormat('EEEE').format(
                                 DateTime.fromMillisecondsSinceEpoch(
-                                  eventsSnapshot.data.elementAt(index).value['start'] * 1000,
+                                  eventsSnapshot.data
+                                          .elementAt(index)
+                                          .value['start'] *
+                                      1000,
                                 ),
                               ),
                               style: TextStyle(
@@ -253,14 +314,16 @@ class DiscoverScreen extends StatelessWidget {
     final AppLocalizations localizations = AppLocalizations.of(context);
     return DisposableProvider<DiscoverBloc>(
       packageBuilder: (context) => DiscoverBloc(
-            firebaseUser: firebaseUser,
-            localizations: localizations,
-          ),
+        firebaseUser: firebaseUser,
+        localizations: localizations,
+      ),
       child: Builder(
         builder: (context) {
           final DiscoverBloc discoverBloc = Provider.of<DiscoverBloc>(context);
           return Container(
-            color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? null
+                : Colors.grey.shade300,
             alignment: Alignment.center,
             child: RefreshIndicator(
               child: ListView(
@@ -274,7 +337,7 @@ class DiscoverScreen extends StatelessWidget {
                   Container(height: 12.0),
                   _events(stream: discoverBloc.events),
                   Container(height: 12.0),
-                  _header(localizations.nearby),
+                  _nearbyHeader(localizations.nearby, context),
                   Container(height: 12.0),
                   _map(discoverBloc: discoverBloc),
                   Container(height: 10.0),

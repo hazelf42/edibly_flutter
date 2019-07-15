@@ -463,7 +463,7 @@ class DrawerScreen extends StatelessWidget {
                           ),
                           MenuSwitchItem(
                             iconData: Icons.check_circle,
-                            string: AppLocalizations. of(context).glutenFree,
+                            string: AppLocalizations.of(context).glutenFree,
                             onTap: () async {
                               await mainBloc
                                   .toggleGlutenFree(_firebaseUser.uid);
@@ -482,13 +482,10 @@ class DrawerScreen extends StatelessWidget {
                       );
                     } else {
                       return Container(
-                          child: SizedBox(
-                        width: 46.0,
-                        height: 46.0,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                        ),
-                      ));
+                        alignment: Alignment.center,
+                        height: 100,
+                        child: CircularProgressIndicator(),
+                      );
                     }
                   }));
         },
@@ -553,7 +550,7 @@ class MenuSwitchItem extends StatefulWidget {
   final GestureTapCallback onTap;
   final IconData iconData;
   final String string;
-  bool value;
+  final bool value;
 
   MenuSwitchItem({
     @required this.onTap,

@@ -4,12 +4,14 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
+import 'package:edibly/values/app_localizations.dart';
 
 import 'package:edibly/models/data.dart';
 import 'package:edibly/main_bloc.dart';
 
 class RestaurantDishesBloc {
   final String restaurantKey;
+  AppLocalizations localizations;
 
   RestaurantDishesBloc({@required this.restaurantKey}) {
     _firebaseDatabase.setPersistenceEnabled(true);

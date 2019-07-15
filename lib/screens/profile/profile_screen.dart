@@ -22,17 +22,19 @@ class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreen createState() => _ProfileScreen(uid: uid);
 }
-class _ProfileScreen extends State<ProfileScreen> {
 
-   final String uid;    
+class _ProfileScreen extends State<ProfileScreen> {
+  final String uid;
 
   _ProfileScreen({@required this.uid});
 
-  Widget _author({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
+  Widget _author(
+      {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
     return FutureBuilder<http.Response>(
       future: http.get("http://edibly.vassi.li/api/profiles/$uid"),
       builder: (context, response) {
-        Map<dynamic, dynamic> authorValue = (response.hasData) ?  json.decode(response?.data?.body) : null;
+        Map<dynamic, dynamic> authorValue =
+            (response.hasData) ? json.decode(response?.data?.body) : null;
         return Container(
           padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
           child: Column(
@@ -40,17 +42,21 @@ class _ProfileScreen extends State<ProfileScreen> {
             children: <Widget>[
               GestureDetector(
                 onTap: () {
-                  String url = (authorValue == null ? null : (authorValue['photo']));
+                  String url =
+                      (authorValue == null ? null : (authorValue['photo']));
                   if (url == null || url.isEmpty) return;
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => FullScreenImageScreen(url)),
+                    MaterialPageRoute(
+                        builder: (context) => FullScreenImageScreen(url)),
                   );
                 },
                 behavior: HitTestBehavior.translucent,
                 child: CircleAvatar(
                   radius: 36.0,
-                  backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photo'] ?? ''),
+                  backgroundImage: authorValue == null
+                      ? null
+                      : NetworkImage(authorValue['photo'] ?? ''),
                   child: authorValue == null
                       ? SizedBox(
                           width: 70.0,
@@ -101,8 +107,8 @@ class _ProfileScreen extends State<ProfileScreen> {
       ),
       body: DisposableProvider<ProfileBloc>(
         packageBuilder: (context) => ProfileBloc(
-              uid: uid,
-            ),
+          uid: uid,
+        ),
         child: Builder(
           builder: (context) {
             final MainBloc mainBloc = Provider.of<MainBloc>(context);
@@ -111,21 +117,23 @@ class _ProfileScreen extends State<ProfileScreen> {
               future: mainBloc.getCurrentFirebaseUser(),
               builder: (context, firebaseUserSnapshot) {
                 return Container(
-                  color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? null
+                      : Colors.grey.shade300,
                   alignment: Alignment.center,
                   child: StreamBuilder<List<Data>>(
                     stream: feedBloc.posts,
                     builder: (context, postsSnapshot) {
-                      if (firebaseUserSnapshot?.data == null || postsSnapshot?.data == null) {
+                      if (firebaseUserSnapshot?.data == null ||
+                          postsSnapshot?.data == null) {
                         feedBloc.getPosts();
                         return CircularProgressIndicator();
                       }
                       return RefreshIndicator(
-                        child:  
-                        Column(
+                        child: Column(
                           children: <Widget>[
                             Expanded(
-                                                          child: ListView.builder(
+                              child: ListView.builder(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 5.0,
                                   horizontal: 6.0,
@@ -140,17 +148,73 @@ class _ProfileScreen extends State<ProfileScreen> {
                                           mainBloc: mainBloc,
                                           localizations: localizations,
                                         ),
-                                         (firebaseUserSnapshot == null || uid == null) ? FlatButton(onPressed: () {}, color: Colors.grey, child: Text("")) : ((firebaseUserSnapshot.data.uid == uid) ? 
-                      BoldFlatButton (text: "Change Photo", textColor: Colors.deepOrangeAccent,onPressed: () async {
-                         
-                    var newPhotoUrl = await getImage();
-                     newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
-                    await http.put("http://edibly.vassi.li/api/profiles/${firebaseUserSnapshot.data.uid}", body:  json.encode( {
-                      'photo' : ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
-                    })).then((http.Response response) {setState(() {
-                      
-                    });});
-                  }) : BoldFlatButton(text: "(Un)Follow", textColor: Colors.deepOrangeAccent,onPressed: (){ProfileBloc(uid: uid).followUser(currentUid: firebaseUserSnapshot.data.uid, profileUid: uid);})), 
+                                        (firebaseUserSnapshot == null ||
+                                                uid == null)
+                                            ? FlatButton(
+                                                onPressed: () {},
+                                                color: Colors.grey,
+                                                child: Text(""))
+                                            : ((firebaseUserSnapshot.data.uid ==
+                                                    uid)
+                                                ? BoldFlatButton(
+                                                    text: "Change Photo",
+                                                    textColor:
+                                                        Colors.deepOrangeAccent,
+                                                    onPressed: () async {
+                                                      var newPhotoUrl =
+                                                          await getImage();
+                                                      newPhotoUrl =
+                                                          (json.decode(
+                                                                  newPhotoUrl))[
+                                                              'filename'];
+                                                      await http
+                                                          .put(
+                                                              "http://edibly.vassi.li/api/profiles/${firebaseUserSnapshot.data.uid}",
+                                                              body:
+                                                                  json.encode({
+                                                                'photo':
+                                                                    ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
+                                                              }))
+                                                          .then((http.Response
+                                                              response) {
+                                                        setState(() {});
+                                                      });
+                                                    })
+                                                : FutureBuilder<bool>(
+                                                    future: ProfileBloc(
+                                                            uid: uid)
+                                                        .isFollowing(
+                                                            profileUid: uid,
+                                                            currentUid:
+                                                                firebaseUserSnapshot
+                                                                    .data.uid),
+                                                    builder: (context, future) {
+                                                      if (future.hasData) {
+                                                        return BoldFlatButton(
+                                                            text: future.data ? "Unfollow" : "Follow",
+                                                            textColor: Colors
+                                                                .deepOrangeAccent,
+                                                            onPressed:
+                                                                () async {
+                                                              await ProfileBloc(
+                                                                      uid: uid)
+                                                                  .followUser(
+                                                                      currentUid:
+                                                                          firebaseUserSnapshot
+                                                                              .data
+                                                                              .uid,
+                                                                      profileUid:
+                                                                          uid,
+                                                                      isFollowing:
+                                                                          future
+                                                                              .data
+                                                                      );
+                                                                      setState(() { 
+                                                                      });
+                                                            });
+                                                      }
+                                                      return CircularProgressIndicator();
+                                                    })),
                                         postsSnapshot.data.isEmpty
                                             ? Column(
                                                 children: <Widget>[
@@ -162,17 +226,20 @@ class _ProfileScreen extends State<ProfileScreen> {
                                                   ),
                                                   Icon(
                                                     Icons.warning,
-                                                    color: Theme.of(context).hintColor,
+                                                    color: Theme.of(context)
+                                                        .hintColor,
                                                     size: 48.0,
                                                   ),
                                                   Container(
                                                     height: 12.0,
                                                   ),
                                                   Text(
-                                                    localizations.noPostsByUserText,
+                                                    localizations
+                                                        .noPostsByUserText,
                                                     style: TextStyle(
                                                       fontSize: 18.0,
-                                                      color: Theme.of(context).hintColor,
+                                                      color: Theme.of(context)
+                                                          .hintColor,
                                                     ),
                                                   ),
                                                 ],
@@ -181,7 +248,9 @@ class _ProfileScreen extends State<ProfileScreen> {
                                       ],
                                     );
                                   }
-                                  if (postsSnapshot.data.elementAt(position - 1) == null) {
+                                  if (postsSnapshot.data
+                                          .elementAt(position - 1) ==
+                                      null) {
                                     feedBloc.getPosts();
                                     return Container(
                                       padding: const EdgeInsets.symmetric(
@@ -201,7 +270,8 @@ class _ProfileScreen extends State<ProfileScreen> {
                                       margin: EdgeInsets.zero,
                                       child: PostPreviewWidget(
                                         uid: firebaseUserSnapshot?.data?.uid,
-                                        post: postsSnapshot.data.elementAt(position - 1),
+                                        post: postsSnapshot.data
+                                            .elementAt(position - 1),
                                       ),
                                     ),
                                   );
@@ -226,18 +296,24 @@ class _ProfileScreen extends State<ProfileScreen> {
       ),
     );
   }
+
   //TODO: - move to bloc
   Future<String> getImage() async {
+    AppLocalizations localizations;
 
     var photo = await ImagePicker.pickImage(source: ImageSource.camera);
     Future<String> string;
 
     if (photo != null) {
-      var request = new http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
-      request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
+      var request = new http.MultipartRequest(
+          "POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+      request.files.add(http.MultipartFile.fromBytes(
+          'file', await photo.readAsBytes(),
+          contentType: MediaType('image', 'jpeg')));
       await request.send().then((response) {
-        if (response.statusCode == 200) { string =  response.stream.bytesToString();}
-        else {
+        if (response.statusCode == 200) {
+          string = response.stream.bytesToString();
+        } else {
           SnackBar(content: Text("An error occurred."));
         }
       });

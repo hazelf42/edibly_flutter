@@ -6,10 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
+import 'package:edibly/values/app_localizations.dart';
 
 class RestaurantReviewsBloc {
   final String restaurantKey;
   final String restaurantName;
+  AppLocalizations localizations;
 
   RestaurantReviewsBloc(
       {@required this.restaurantKey, @required this.restaurantName}) {
