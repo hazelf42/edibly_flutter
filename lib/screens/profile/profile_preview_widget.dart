@@ -63,24 +63,10 @@ class _ProfilePreviewWidget extends State<ProfilePreviewWidget> {
     String url = (profile.value['photo'] ?? '').toString();
     bool hasPhoto = url.isNotEmpty && url.toLowerCase() != 'none';
     if (!hasPhoto) return Container();
-    return CircleAvatar(
+    return CustomCircleAvatar(
       radius: 25,
-        child: CachedNetworkImage(
-          imageUrl: profile.value['photo'] ?? '',
-          width: 70.0,
-          height: 70.0,
-          fit: BoxFit.cover,
-          placeholder: (context, imageUrl) {
-            return Container(
-              width: 70.0,
-              height: 70.0,
-              alignment: Alignment.center,
-              child: CircularProgressIndicator(),
-            );
-          },
-        ),
+      imagePath: url,
       );
-  
   }
 
   @override

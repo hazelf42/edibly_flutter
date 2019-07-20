@@ -167,6 +167,8 @@ class DiscoverBloc {
             double.parse(dataWithRating.value['lat'].toString()),
             double.parse(dataWithRating.value['lon'].toString()),
           ));
+
+          //TODO: - reenable this once you are able to add events
           // if (DateTime.fromMillisecondsSinceEpoch(
           //         dataWithRating.value['end'] * 1000)
           //     .isAfter(DateTime.now()))

@@ -1,8 +1,11 @@
 import 'dart:math';
 import 'dart:io';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -143,30 +146,41 @@ class RegisterBloc extends Object with Validators {
       formIsValid = false;
     }
 
-    if (formIsValid) {
+    if (formIsValid)  {
       final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
       _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password).then((firebaseUser) async {
         /// upload photo
         String photoUrl;
+        
+
         if (photo != null) {
-          StorageTaskSnapshot storageTaskSnapshot = await FirebaseStorage.instance
-              ?.ref()
-              ?.child('users')
-              ?.child(firebaseUser.uid)
-              ?.child('profilePicture.jpg')
-              ?.putFile(photo)
-              ?.onComplete;
-          photoUrl = await storageTaskSnapshot?.ref?.getDownloadURL();
+          photoUrl = await getImageUrl(photo: photo);
+
         } else {
           photoUrl = _defaultPhotos.elementAt(Random().nextInt(_defaultPhotos.length));
         }
+
         _firebaseDatabase.reference().child('userProfiles').child(firebaseUser.uid).set({
           'firstName': firstName,
           'lastName': lastName,
           'photoUrl': photoUrl,
           'dietName': vegan ? 'Vegan' : 'Vegetarian',
           'isGlutenFree': glutenFree,
-        }).then((_) {
+        }).then((_) async
+        {
+          await http.post("http://edibly.vassi.li/api/profiles/add", body: json.encode({
+            'firstname' : firstName,
+            'lastname' : lastName,
+            'photo' : photoUrl,
+            'veglevel' : vegan ? 2 : 1,
+            'glutenfree' : glutenFree ? 1 : 0,
+            'uid' : firebaseUser.uid
+            }
+          ));
+        }
+        ).then(
+          
+          (_) {
           _registerState.add(RegisterState.SUCCESSFUL);
         }).catchError((error) {
           _registerState.addError(RegisterState.FAILED);
@@ -181,6 +195,24 @@ class RegisterBloc extends Object with Validators {
     } else {
       _registerState.add(RegisterState.IDLE);
     }
+  }
+
+Future<String> getImageUrl({
+     @required File photo,
+  }) async {
+    /// upload photo
+    Future<String> photoUrl;
+    if (photo != null) {
+      var request =  http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+        request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
+       await request.send().then((response) {
+        if (response.statusCode == 200) { photoUrl =  response.stream.bytesToString();}
+        else {
+          SnackBar(content: Text("An error occurred."));
+        }
+      });
+    }
+    return photoUrl;
   }
 
   void dispose() {

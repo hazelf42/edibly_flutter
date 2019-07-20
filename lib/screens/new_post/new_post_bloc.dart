@@ -154,7 +154,7 @@ class NewPostBloc {
      @required File photo,
   }) async {
     /// upload photo
-    Future<String> photoUrl;
+    Future<String> photoUrl; 
     if (photo != null) {
       var request =  http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
         request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));

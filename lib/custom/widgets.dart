@@ -1,8 +1,38 @@
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:edibly/values/app_colors.dart';
+class CustomCircleAvatar extends StatelessWidget {
 
+    final double radius;
+  final String imagePath;
+
+  const CustomCircleAvatar({
+    Key key, 
+    this.radius, 
+    this.imagePath
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      constraints: new BoxConstraints(
+        minHeight: radius,
+        maxHeight: radius,
+        minWidth: radius,
+        maxWidth: radius,
+      ),
+      child: new ClipOval(
+        child: new CachedNetworkImage(
+          fit: BoxFit.cover,
+          imageUrl: imagePath,
+        ),
+      ),
+    );
+  }
+
+}
 class SingleLineText extends StatelessWidget {
   final String data;
   final TextStyle style;

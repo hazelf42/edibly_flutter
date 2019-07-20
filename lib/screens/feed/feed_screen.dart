@@ -1,11 +1,11 @@
+import 'package:edibly/bloc_helper/provider.dart';
+import 'package:edibly/main_bloc.dart';
+import 'package:edibly/models/data.dart';
+import 'package:edibly/screens/feed/feed_bloc.dart';
+import 'package:edibly/screens/post/post_preview_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-import 'package:edibly/screens/post/post_preview_widget.dart';
-import 'package:edibly/screens/feed/feed_bloc.dart';
-import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/models/data.dart';
-import 'package:edibly/main_bloc.dart';
+import 'package:edibly/screens/profile/search_profile_screen.dart';
 
 class FeedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
@@ -13,20 +13,43 @@ class FeedScreen extends StatelessWidget {
         length: 2,
         initialIndex: 1,
         child: Scaffold(
-            appBar:  PreferredSize(
-          preferredSize: Size.fromHeight(50.0), // here the desired height
-          child:  TabBar(
+            appBar: PreferredSize(
+              preferredSize: Size.fromHeight(50.0), // here the desired height
+              child: TabBar(
                 indicatorWeight: 3.0,
                 indicatorColor: Theme.of(context).brightness == Brightness.dark
                     ? null
                     : Colors.deepOrange,
                 tabs: [
-                  Tab(child: (Stack(alignment: Alignment.centerLeft, children: <Widget>[Icon(Icons.near_me, color: Colors.deepOrange,), Text("        Nearby", style: TextStyle(color: Colors.deepOrange)) ],))),
-                  Tab(child: (Stack(fit: StackFit.loose, alignment: Alignment.centerLeft, children: <Widget>[Icon(Icons.person_pin,  color:  Colors.deepOrange), Text("        Following", style: TextStyle(color: Colors.deepOrange)) ],))),
+                  Tab(
+                      child: (Stack(
+                    alignment: Alignment.centerLeft,
+                    children: <Widget>[
+                      Icon(
+                        Icons.near_me,
+                        color: Colors.deepOrange,
+                      ),
+                      Text("        Nearby",
+                          style: TextStyle(color: Colors.deepOrange))
+                    ],
+                  ))),
+                  Tab(
+                      child: (Stack(
+                    fit: StackFit.loose,
+                    alignment: Alignment.centerLeft,
+                    children: <Widget>[
+                      Icon(Icons.person_pin, color: Colors.deepOrange),
+                      Text("        Following",
+                          style: TextStyle(color: Colors.deepOrange))
+                    ],
+                  ))),
                 ],
               ),
             ),
-            body:  TabBarView(children: [feedScreenBody(context, 'nearby'), feedScreenBody(context, 'following')])));
+            body: TabBarView(children: [
+              feedScreenBody(context, 'nearby'),
+              feedScreenBody(context, 'following')
+            ])));
   }
 }
 
@@ -49,10 +72,46 @@ Widget feedScreenBody(BuildContext context, String feedType) {
                 stream: feedBloc.posts,
                 builder: (context, postsSnapshot) {
                   if (firebaseUserSnapshot?.data == null ||
-                      postsSnapshot?.data == null ||
-                      postsSnapshot.data.isEmpty) {
+                      !postsSnapshot.hasData) {
                     feedBloc.getPosts(feedType);
                     return CircularProgressIndicator();
+                  }
+                  if (postsSnapshot.data.length == 0) {
+                    return Center(
+                        child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        RaisedButton(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Theme.of(context).cardColor
+                                    : Colors.white,
+                            child: Text("Find people to follow"),
+                            onPressed: (() {
+                              
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SearchProfileScreen(
+                                firebaseUser: firebaseUserSnapshot.data,
+                              ),
+                            ));
+                            })),
+                        Text("OR"),
+                        RaisedButton(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Theme.of(context).cardColor
+                                    : Colors.white,
+                            child: Text("See nearby"),
+                            onPressed: (() {
+                              feedBloc.clearPosts();
+                              feedBloc.getPosts('nearby'); 
+                              //TODO: - change this to also highlight the nearby tab - pref without making stateful :')
+                            })),
+                      ],
+                    ));
                   }
                   return RefreshIndicator(
                     child: ListView.builder(
@@ -90,7 +149,7 @@ Widget feedScreenBody(BuildContext context, String feedType) {
                     ),
                     onRefresh: () {
                       feedBloc.clearPosts();
-                      feedBloc.getPosts('nearby');
+                      feedBloc.getPosts(feedType);
                       return Future.delayed(Duration(seconds: 1));
                     },
                   );

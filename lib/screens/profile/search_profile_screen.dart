@@ -1,7 +1,4 @@
-import 'dart:async';
-
 import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 import 'profile_preview_widget.dart';
 import 'package:edibly/screens/profile/search_profile_bloc.dart';
@@ -20,6 +17,9 @@ class SearchProfileScreen extends StatelessWidget {
     final AppLocalizations localizations = AppLocalizations.of(context);
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Search Profiles"),
+      ),
         body: SafeArea(
             child: DisposableProvider<SearchProfileBloc>(
                 packageBuilder: (context) =>
@@ -43,7 +43,7 @@ class SearchProfileScreen extends StatelessWidget {
                                 : filteredRestaurantsSnapshot.data.length) +
                             1;
                         return ListView.separated(
-                          padding: const EdgeInsets.only(bottom: 10.0),
+                          padding: const EdgeInsets.only(bottom: 10.0, top: 10),
                           separatorBuilder: (context, position) {
                             return Container(height: 10.0);
                           },
