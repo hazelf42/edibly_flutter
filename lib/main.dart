@@ -10,11 +10,13 @@ import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/values/app_colors.dart';
 import 'package:edibly/values/pref_keys.dart';
 import 'package:edibly/main_bloc.dart';
-
+import 'screens/register/state_widget.dart';
 void main() async {
+
   SharedPreferences preferences = await SharedPreferences.getInstance();
   bool darkModeEnabled = preferences.getBool(PrefKeys.darkModeEnabled) ?? MainBloc.darkModeEnabledDefaultValue;
-  runApp(_AppWidget(darkModeEnabled));
+  StateWidget stateWidget = StateWidget(child: _AppWidget(darkModeEnabled));
+  runApp(stateWidget);
 }
 
 class _AppWidget extends StatelessWidget {

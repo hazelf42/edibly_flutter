@@ -1,13 +1,14 @@
 import 'dart:io';
 
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/material.dart';
-
-import 'package:edibly/screens/register/register_bloc.dart';
-import 'package:edibly/screens/home/home_screen.dart';
-import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';
+import 'package:edibly/screens/home/home_screen.dart';
+import 'package:edibly/screens/register/register_bloc.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'state_widget.dart';
 
 class RegisterScreen extends StatelessWidget {
   Widget glutenFreeField(RegisterBloc registerBloc, AppLocalizations localizations) {
@@ -136,6 +137,32 @@ class RegisterScreen extends StatelessWidget {
       },
     );
   }
+  Widget googleButton(RegisterBloc registerBloc, AppLocalizations localizations, BuildContext context) { return
+ 
+RaisedButton(
+    onPressed: () => StateWidget.of(context).signInWithGoogle(),
+    padding: EdgeInsets.only(top: 3.0, bottom: 3.0, left: 3.0),
+    color: const Color(0xFFFFFFFF),
+    child: new Row( 
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        new Image.asset(
+          'asset/google_button.jpg',
+          height: 40.0,
+        ),
+        new Container(
+            padding: EdgeInsets.only(left: 10.0, right: 10.0),
+            child: new Text( 
+              "Sign in with Google",
+              style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold),
+            )
+        ),
+      ],
+    ),
+);}
+
 
   Widget veganField(RegisterBloc registerBloc, AppLocalizations localizations) {
     return StreamBuilder<bool>(
@@ -288,6 +315,7 @@ class RegisterScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(20.0),
                       shrinkWrap: true,
                       children: <Widget>[
+                        googleButton(registerBloc, localizations, context),
                         photoField(registerBloc, localizations),
                         SizedBox(height: 16.0),
                         emailField(registerBloc, localizations),
