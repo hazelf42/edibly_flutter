@@ -9,7 +9,9 @@ Future<GoogleSignInAccount> getSignedInAccount(
     GoogleSignIn googleSignIn) async {
   GoogleSignInAccount account = googleSignIn.currentUser;
   if (account == null) {
-    account = await googleSignIn.signInSilently();
+    account = await googleSignIn.signInSilently().catchError((e) { 
+      print(e);
+    });
   }
   return account;
 }
