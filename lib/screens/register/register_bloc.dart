@@ -1,18 +1,16 @@
-import 'dart:math';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:edibly/bloc_helper/validators.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
-
-import 'package:edibly/values/app_localizations.dart';
-import 'package:edibly/bloc_helper/validators.dart';
 
 enum RegisterState {
   EMAIL_IN_USE,
@@ -46,6 +44,8 @@ class RegisterBloc extends Object with Validators {
   final _email = BehaviorSubject<String>();
   final _vegan = BehaviorSubject<bool>();
   final _photo = BehaviorSubject<File>();
+
+  var info = Map();
 
   /// Stream getters
 
@@ -103,7 +103,7 @@ class RegisterBloc extends Object with Validators {
     _photo.add(photo);
   }
 
-  void register() async {
+  Future<void> register() async {
     final photo = _photo.value;
     final vegan = _vegan.value ?? true;
     final email = _email.value;
@@ -137,56 +137,35 @@ class RegisterBloc extends Object with Validators {
     }
 
     /// invalid?
-    if (email != null && email.isNotEmpty && Validators.isEmailValid(email) != null) {
+    if (email != null &&
+        email.isNotEmpty &&
+        Validators.isEmailValid(email) != null) {
       _email.addError(localizations.errorInvalidEmail);
       formIsValid = false;
     }
-    if (password != null && password.isNotEmpty && Validators.isPasswordValid(password) != null) {
+    if (password != null &&
+        password.isNotEmpty &&
+        Validators.isPasswordValid(password) != null) {
       _password.addError(localizations.errorInvalidPassword);
       formIsValid = false;
     }
 
-    if (formIsValid)  {
+    if (formIsValid) {
       final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-      _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password).then((firebaseUser) async {
+      _firebaseAuth
+          .createUserWithEmailAndPassword(email: email, password: password)
+          .then((firebaseUser) async {
         /// upload photo
-        String photoUrl;
-        
-
-        if (photo != null) {
-          photoUrl = await getImageUrl(photo: photo);
-
-        } else {
-          photoUrl = _defaultPhotos.elementAt(Random().nextInt(_defaultPhotos.length));
-        }
-
-        _firebaseDatabase.reference().child('userProfiles').child(firebaseUser.uid).set({
-          'firstName': firstName,
-          'lastName': lastName,
-          'photoUrl': photoUrl,
-          'dietName': vegan ? 'Vegan' : 'Vegetarian',
-          'isGlutenFree': glutenFree,
-        }).then((_) async
-        {
-          await http.post("http://edibly.vassi.li/api/profiles/add", body: json.encode({
-            'firstname' : firstName,
-            'lastname' : lastName,
-            'photo' : photoUrl,
-            'veglevel' : vegan ? 2 : 1,
-            'glutenfree' : glutenFree ? 1 : 0,
-            'uid' : firebaseUser.uid
-            }
-          ));
-        }
-        ).then(
-          
-          (_) {
+        var userUpdateInfo = UserUpdateInfo();
+        userUpdateInfo.displayName = firstName + " " + lastName;
+        firebaseUser.updateProfile(userUpdateInfo).then((_) {
           _registerState.add(RegisterState.SUCCESSFUL);
         }).catchError((error) {
           _registerState.addError(RegisterState.FAILED);
         });
       }).catchError((error) {
-        if (error is PlatformException && error.code == 'ERROR_EMAIL_ALREADY_IN_USE') {
+        if (error is PlatformException &&
+            error.code == 'ERROR_EMAIL_ALREADY_IN_USE') {
           _registerState.addError(RegisterState.EMAIL_IN_USE);
         } else {
           _registerState.addError(RegisterState.FAILED);
@@ -197,22 +176,104 @@ class RegisterBloc extends Object with Validators {
     }
   }
 
-Future<String> getImageUrl({
-     @required File photo,
+  Future<String> getImageUrl({
+    @required File photo,
   }) async {
     /// upload photo
     Future<String> photoUrl;
     if (photo != null) {
-      var request =  http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
-        request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
-       await request.send().then((response) {
-        if (response.statusCode == 200) { photoUrl =  response.stream.bytesToString();}
-        else {
+      var request = http.MultipartRequest(
+          "POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+      request.files.add(http.MultipartFile.fromBytes(
+          'file', await photo.readAsBytes(),
+          contentType: MediaType('image', 'jpeg')));
+      await request.send().then((response) {
+        if (response.statusCode == 200) {
+          photoUrl = response.stream.bytesToString();
+        } else {
           SnackBar(content: Text("An error occurred."));
         }
       });
     }
     return photoUrl;
+  }
+
+  void handleGoogleSignIn(FirebaseUser user) async {
+    final vegan = _vegan.value ?? true;
+    final glutenFree = _glutenFree.value ?? false;
+    var nameList = user.displayName.split(" ");
+    var lastName = nameList.removeLast();
+
+//Necessary?
+    await http.post("http://edibly.vassi.li/api/profiles/add",
+        body: json.encode({
+          'firstname': firstName,
+          'lastname': lastName,
+          'photo': user.photoUrl,
+          'veglevel': vegan ? 2 : 1,
+          'glutenfree': glutenFree ? 1 : 0,
+          'uid': user.uid
+        }));
+  }
+
+  Future<bool> profileToVassilibase(FirebaseUser user) async {
+    final photo = _photo.value;
+    final vegan = _vegan.value ?? true;
+    final lastName = _lastName.value;
+    final firstName = _firstName.value;
+    final glutenFree = _glutenFree.value ?? false;
+
+    var userUpdateInfo = UserUpdateInfo();
+    if (photo != null) {
+      final imageUrl = await getImageUrl(photo: photo).then((imageUrl) {
+        userUpdateInfo.photoUrl = imageUrl;
+      }).then((_) {
+        user.updateProfile(userUpdateInfo).then((_) async {
+          await http
+              .post("http://edibly.vassi.li/api/profiles/add",
+                  body: json.encode({
+                    'firstname': user.displayName[0],
+                    'lastName': user.displayName[1],
+                    'photoUrl': user.photoUrl,
+                    'veglevel': vegan ? 2 : 1,
+                    'glutenfree': glutenFree ? 1 : 0,
+                    'uid': user.uid
+                  }))
+              .then((response) {
+            if (response.statusCode < 200 || response.statusCode > 400) {
+              print("Error $response");
+            }
+            return true;
+          });
+        });
+      });
+    } else {
+      await http
+          .post("http://edibly.vassi.li/api/profiles/add",
+              body: json.encode({
+                'firstname': user.displayName[0],
+                'lastName': user.displayName[1],
+                'photoUrl': "",
+                'veglevel': vegan ? 2 : 1,
+                'glutenfree': glutenFree ? 1 : 0,
+                'uid': user.uid
+              }))
+          .then((response) {
+        if (response.statusCode < 200 || response.statusCode > 400) {
+          print("Error $response");
+        }
+        return true;
+      });
+    }
+  }
+
+  Future<void> submit(FirebaseUser user) async {
+    if (user.providerId == 'google.com') {
+      handleGoogleSignIn(user);
+    } else if (user.providerId == "facebook.com") {
+    } else if (user.providerId == "firebase") {
+      await profileToVassilibase(user);
+    }
   }
 
   void dispose() {

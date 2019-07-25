@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -31,6 +32,8 @@ class DrawerScreen extends StatelessWidget {
               ? Diet.VEGAN
               : Diet.VEGETARIAN);
       mainBloc.setGlutenFree(null, (profile['glutenfree'] == 0) ? 1 : 0);
+    } else if (profile == null) {
+      profile = {"": ""};
     }
     return Container(
       padding: EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
@@ -216,13 +219,14 @@ class DrawerScreen extends StatelessWidget {
             ),
             FlatButton(
               child: Text(localizations.logOut.toUpperCase()),
-              onPressed: () {
-                drawerBloc.logOut();
+              onPressed: () => {
+                drawerBloc.logOut(),
+                Navigator.of(context).pop(),
                 Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (context) => LoginScreen(),
                     ),
-                    (Route<dynamic> route) => false);
+                    (Route<dynamic> route) => false)
               },
             ),
           ],
@@ -391,7 +395,7 @@ class DrawerScreen extends StatelessWidget {
                   future: get(
                       'http://edibly.vassi.li/api/profiles/${_firebaseUser.uid}'),
                   builder: (context, snapshot) {
-                    if (snapshot.hasData) {
+                    if (snapshot.hasData && snapshot.data.body != "null") {
                       var profile = json.decode(snapshot.data.body);
                       return ListView(
                         padding: EdgeInsets.zero,
@@ -480,13 +484,16 @@ class DrawerScreen extends StatelessWidget {
                           ),
                         ],
                       );
-                    } else {
-                      return Container(
-                        alignment: Alignment.center,
-                        height: 100,
-                        child: CircularProgressIndicator(),
-                      );
+                    } else if (snapshot.hasData &&
+                        snapshot.data.body == "null") {
+                      drawerBloc.logOut();
                     }
+
+                    return Container(
+                      alignment: Alignment.center,
+                      height: 100,
+                      child: CircularProgressIndicator(),
+                    );
                   }));
         },
       ),

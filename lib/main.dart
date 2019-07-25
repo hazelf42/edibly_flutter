@@ -26,6 +26,7 @@ class _AppWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
     return DisposableProvider<MainBloc>(
       packageBuilder: (context) => MainBloc(),
       child: Builder(

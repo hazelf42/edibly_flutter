@@ -1,15 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
+import 'package:google_sign_in/google_sign_in.dart';
 
 Future<GoogleSignInAccount> getSignedInAccount(
     GoogleSignIn googleSignIn) async {
   GoogleSignInAccount account = googleSignIn.currentUser;
   if (account == null) {
-    account = await googleSignIn.signInSilently().catchError((e) { 
+    account = await googleSignIn.signInSilently().catchError((e) {
       print(e);
     });
   }
@@ -17,24 +17,26 @@ Future<GoogleSignInAccount> getSignedInAccount(
 }
 
 Future<FirebaseUser> signIntoFirebase(
-  GoogleSignInAccount googleSignInAccount) async {
+    GoogleSignInAccount googleSignInAccount) async {
   FirebaseAuth _auth = FirebaseAuth.instance;
   GoogleSignInAuthentication googleAuth =
       await googleSignInAccount.authentication;
-      print(googleAuth.accessToken);
-    final AuthCredential credential = GoogleAuthProvider.getCredential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-  return await _auth.signInWithCredential(credential);
+  print(googleAuth.accessToken);
+  final AuthCredential credential = GoogleAuthProvider.getCredential(
+    accessToken: googleAuth.accessToken,
+    idToken: googleAuth.idToken,
+  );
+  return await _auth.signInWithCredential(credential).catchError((e) {
+    print(e);
+  });
 }
 
 class StateModel {
   bool isLoading;
   FirebaseUser user;
-  StateModel({  
+  StateModel({
     this.isLoading = false,
-    this.user, 
+    this.user,
   });
 }
 
@@ -62,7 +64,9 @@ class StateWidget extends StatefulWidget {
 class _StateWidgetState extends State<StateWidget> {
   StateModel state;
   GoogleSignInAccount googleAccount;
-  final GoogleSignIn googleSignIn = new GoogleSignIn();
+  final GoogleSignIn googleSignIn = GoogleSignIn(
+      signInOption: SignInOption.standard,
+      scopes: ['email', 'https://www.googleapis.com/auth/contacts.readonly']);
 
   @override
   void initState() {
@@ -86,20 +90,19 @@ class _StateWidgetState extends State<StateWidget> {
     }
   }
 
-  
   Future<Null> signInWithGoogle() async {
     if (googleAccount == null) {
-      // Start the sign-in process:
       googleAccount = await googleSignIn.signIn();
     }
-    FirebaseUser firebaseUser = await signIntoFirebase(googleAccount);
-    state.user = firebaseUser; // new
-    setState(() {
-      state.isLoading = false;
-      state.user = firebaseUser; 
+    await signIntoFirebase(googleAccount).then((firebaseUser) {
+      state.user = firebaseUser; // new
+      setState(() {
+        state.isLoading = false;
+        state.user = firebaseUser;
+      });
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return new _StateDataWidget(
