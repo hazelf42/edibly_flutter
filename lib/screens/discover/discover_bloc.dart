@@ -90,7 +90,7 @@ class DiscoverBloc {
               dataWithoutRating.value['averagerating'];
           dataWithRating.value['lat'] =
               (dataWithRating.value['lat'] / 10000000);
-          dataWithRating.value['lon'] = (dataWithRating.value['lon'] / 1000000);
+          dataWithRating.value['lon'] = (dataWithRating.value['lon'] / 10000000);
           dataWithRating.value['distance'] =
               _distanceFromMeToDestination(LatLng(
             double.parse((dataWithRating.value['lat']).toString()),

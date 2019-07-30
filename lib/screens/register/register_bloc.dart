@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 
 enum RegisterState {
   EMAIL_IN_USE,
@@ -198,6 +199,8 @@ class RegisterBloc extends Object with Validators {
     return photoUrl;
   }
 
+  
+
   void handleGoogleSignIn(FirebaseUser user) async {
     final vegan = _vegan.value ?? true;
     final glutenFree = _glutenFree.value ?? false;
@@ -216,11 +219,30 @@ class RegisterBloc extends Object with Validators {
         }));
   }
 
+   void handleFacebookSignIn(FirebaseUser user) async {
+        final vegan = _vegan.value ?? true;
+      final glutenFree = _glutenFree.value ?? false;
+      var nameList = user.displayName.split(" ");
+      var lastName = nameList.removeLast();
+
+//Necessary?
+    await http.post("http://edibly.vassi.li/api/profiles/add",
+        body: json.encode({
+          'firstname': firstName,
+          'lastname': lastName,
+          'photo': user.photoUrl,
+          'veglevel': vegan ? 2 : 1,
+          'glutenfree': glutenFree ? 1 : 0,
+          'uid': user.uid
+        }));
+   }
+
   Future<bool> profileToVassilibase(FirebaseUser user) async {
     final photo = _photo.value;
     final vegan = _vegan.value ?? true;
-    final lastName = _lastName.value;
-    final firstName = _firstName.value;
+    var nameList = user.displayName.split(" ");
+    final firstName = nameList.removeAt(0);
+    final lastName = nameList.join(" ");
     final glutenFree = _glutenFree.value ?? false;
 
     var userUpdateInfo = UserUpdateInfo();
@@ -232,8 +254,8 @@ class RegisterBloc extends Object with Validators {
           await http
               .post("http://edibly.vassi.li/api/profiles/add",
                   body: json.encode({
-                    'firstname': user.displayName[0],
-                    'lastName': user.displayName[1],
+                    'firstname': firstName,
+                    'lastName': lastName,
                     'photoUrl': user.photoUrl,
                     'veglevel': vegan ? 2 : 1,
                     'glutenfree': glutenFree ? 1 : 0,
@@ -271,6 +293,7 @@ class RegisterBloc extends Object with Validators {
     if (user.providerId == 'google.com') {
       handleGoogleSignIn(user);
     } else if (user.providerId == "facebook.com") {
+      handleFacebookSignIn(user);
     } else if (user.providerId == "firebase") {
       await profileToVassilibase(user);
     }

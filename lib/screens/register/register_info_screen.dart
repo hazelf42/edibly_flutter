@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/main_bloc.dart';
+import 'package:edibly/screens/home/home_screen.dart';
 import 'package:edibly/screens/register/register_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -76,8 +77,10 @@ class RegisterInfoScreen extends StatelessWidget {
                         await ImagePicker.pickImage(source: imageSource);
                     if (image != null) {
                       registerBloc.setPhoto(image);
-                      await user.data.updateProfile(UserUpdateInfo().photoUrl = await registerBloc.getImageUrl(photo: image));
-                    };
+                      await user.data.updateProfile(UserUpdateInfo().photoUrl =
+                          await registerBloc.getImageUrl(photo: image));
+                    }
+                    ;
                   },
                   itemBuilder: (BuildContext context) =>
                       <PopupMenuEntry<ImageSource>>[
@@ -93,16 +96,17 @@ class RegisterInfoScreen extends StatelessWidget {
                   child: CircleAvatar(
                     backgroundColor: Colors.orange.shade200,
                     radius: 36.0,
-                    backgroundImage: 
-                        snapshot.hasData  ? FileImage(snapshot.data) : (user.hasData ? profilePic(user.data) : null),
-                    child: !user.hasData || (snapshot.hasData || profilePic(user.data) != null)
-                        ?
-                        null
-                         : Icon(
-                             Icons.person,
+                    backgroundImage: snapshot.hasData
+                        ? FileImage(snapshot.data)
+                        : (user.hasData ? profilePic(user.data) : null),
+                    child: !user.hasData ||
+                            (snapshot.hasData || profilePic(user.data) != null)
+                        ? null
+                        : Icon(
+                            Icons.person,
                             size: 48.0,
-                             color: Colors.white,
-                           ),
+                            color: Colors.white,
+                          ),
                   ),
                 ),
               );
@@ -159,8 +163,14 @@ class RegisterInfoScreen extends StatelessWidget {
     return RaisedButton(
       color: Colors.orange.shade700,
       onPressed: (() async {
-        await MainBloc().getCurrentFirebaseUser().then((user)async {
+        FirebaseUser user;
+        await MainBloc().getCurrentFirebaseUser().then((user) async {
           await registerBloc.submit(user);
+          user = user;
+        }).then((_) {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) {
+            return HomeScreen(firebaseUser: user);
+          }));
         });
       }),
       child: SingleLineText(localizations.signUp),

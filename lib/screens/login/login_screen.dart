@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
-import 'package:edibly/screens/register/register_screen.dart';
+import 'package:edibly/screens/register/register_select_screen.dart';
 import 'package:edibly/screens/login/login_bloc.dart';
 import 'package:edibly/screens/home/home_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/app_error.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';
+import 'package:edibly/screens/register/register_bloc.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:edibly/screens/register/state_widget.dart';
+import 'package:edibly/screens/register/register_info_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   Widget emailField(LoginBloc loginBloc, AppLocalizations localizations) {
@@ -23,14 +27,20 @@ class LoginScreen extends StatelessWidget {
                 labelText: localizations.email,
                 prefixIcon: Icon(
                   Icons.person,
-                  color: emailSnapshot.hasError ? Theme.of(context).errorColor : null,
+                  color: emailSnapshot.hasError
+                      ? Theme.of(context).errorColor
+                      : null,
                 ),
-                errorText: emailSnapshot.hasError && emailSnapshot.error == AppError.EMPTY ? localizations.errorEmptyEmail : null,
+                errorText: emailSnapshot.hasError &&
+                        emailSnapshot.error == AppError.EMPTY
+                    ? localizations.errorEmptyEmail
+                    : null,
                 hintText: localizations.emailExampleText,
               ),
               keyboardType: TextInputType.emailAddress,
               onChanged: loginBloc.setEmail,
-              enabled: loginStateSnapshot.data == LoginState.TRYING ? false : true,
+              enabled:
+                  loginStateSnapshot.data == LoginState.TRYING ? false : true,
             );
           },
         );
@@ -52,19 +62,49 @@ class LoginScreen extends StatelessWidget {
                 labelText: localizations.password,
                 prefixIcon: Icon(
                   Icons.lock,
-                  color: passwordSnapshot.hasError ? Theme.of(context).errorColor : null,
+                  color: passwordSnapshot.hasError
+                      ? Theme.of(context).errorColor
+                      : null,
                 ),
-                errorText: passwordSnapshot.hasError && passwordSnapshot.error == AppError.EMPTY ? localizations.errorEmptyPassword : null,
+                errorText: passwordSnapshot.hasError &&
+                        passwordSnapshot.error == AppError.EMPTY
+                    ? localizations.errorEmptyPassword
+                    : null,
               ),
               obscureText: true,
               onChanged: loginBloc.setPassword,
-              enabled: loginStateSnapshot.data == LoginState.TRYING ? false : true,
+              enabled:
+                  loginStateSnapshot.data == LoginState.TRYING ? false : true,
             );
           },
         );
       },
     );
   }
+  Widget googleButton(RegisterBloc registerBloc,
+        AppLocalizations localizations, BuildContext context) {
+      return SignInButton(Buttons.Google,
+          mini: true,
+          text: "Continue with Google",
+          onPressed: () async =>
+              await StateWidget.of(context).signInWithGoogle().then((_) {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => RegisterInfoScreen()));
+              }));
+    }
+
+    Widget facebookButton(RegisterBloc registerBloc,
+        AppLocalizations localizations, BuildContext context) {
+      return SignInButton(Buttons.Facebook,
+          mini: true, text: "Continue with Facebook", onPressed: () async {
+        await StateWidget.of(context).signInWithFacebook().then((_) {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => RegisterInfoScreen()));
+        });
+      });
+    }
 
   Widget submitButton(LoginBloc loginBloc, AppLocalizations localizations) {
     String loginStateToString(LoginState loginState) {
@@ -124,7 +164,8 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget forgotPasswordButton(LoginBloc loginBloc, AppLocalizations localizations) {
+  Widget forgotPasswordButton(
+      LoginBloc loginBloc, AppLocalizations localizations) {
     return StreamBuilder<LoginState>(
       stream: loginBloc.loginState,
       builder: (context, snapshot) {
@@ -145,8 +186,10 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  void showForgotPasswordDialog(BuildContext context, LoginBloc loginBloc, AppLocalizations localizations) {
-    String forgotPasswordStateToString(ForgotPasswordState forgotPasswordState) {
+  void showForgotPasswordDialog(BuildContext context, LoginBloc loginBloc,
+      AppLocalizations localizations) {
+    String forgotPasswordStateToString(
+        ForgotPasswordState forgotPasswordState) {
       switch (forgotPasswordState) {
         case ForgotPasswordState.EMPTY_EMAIL:
           return localizations.errorEmptyEmail;
@@ -194,18 +237,24 @@ class LoginScreen extends StatelessWidget {
                         prefixIcon: Icon(
                           Icons.person,
                         ),
-                        errorText: snapshot.hasError ? forgotPasswordStateToString(snapshot.error) : null,
+                        errorText: snapshot.hasError
+                            ? forgotPasswordStateToString(snapshot.error)
+                            : null,
                         hintText: localizations.emailExampleText,
                       ),
                       keyboardType: TextInputType.emailAddress,
                       onChanged: (value) {
-                        loginBloc.setForgotPasswordState(ForgotPasswordState.IDLE);
+                        loginBloc
+                            .setForgotPasswordState(ForgotPasswordState.IDLE);
                       },
-                      enabled: snapshot.data == ForgotPasswordState.TRYING ? false : true,
+                      enabled: snapshot.data == ForgotPasswordState.TRYING
+                          ? false
+                          : true,
                     ),
                   ],
                 ),
-                contentPadding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 0.0),
+                contentPadding:
+                    const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 0.0),
                 actions: <Widget>[
                   FlatButton(
                     child: Text(localizations.cancel.toUpperCase()),
@@ -279,6 +328,11 @@ class LoginScreen extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 16.0),
+                        Row(children: <Widget>[
+                          googleButton(RegisterBloc(localizations: localizations), localizations, context),
+                          facebookButton(RegisterBloc(localizations: localizations), localizations, context),
+                        ],),
+                        SizedBox(height: 16.0),
                         emailField(loginBloc, localizations),
                         SizedBox(height: 16.0),
                         passwordField(loginBloc, localizations),
@@ -300,7 +354,8 @@ class LoginScreen extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => RegisterScreen(),
+                                    builder: (context) =>
+                                        RegisterSelectScreen(),
                                   ),
                                 );
                               },

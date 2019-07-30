@@ -1,22 +1,21 @@
-import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_linkify/flutter_linkify.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:package_info/package_info.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 
-import 'package:edibly/screens/profile/profile_screen.dart';
-import 'package:edibly/screens/drawer/drawer_bloc.dart';
-import 'package:edibly/screens/login/login_screen.dart';
-import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/app_error.dart';
 import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/values/app_colors.dart';
-import 'package:edibly/values/constants.dart';
 import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/main_bloc.dart';
+import 'package:edibly/screens/drawer/drawer_bloc.dart';
+import 'package:edibly/screens/login/login_screen.dart';
+import 'package:edibly/screens/profile/profile_screen.dart';
+import 'package:edibly/values/app_colors.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:edibly/values/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:http/http.dart';
+import 'package:package_info/package_info.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DrawerScreen extends StatelessWidget {
   final FirebaseUser _firebaseUser;
@@ -42,7 +41,7 @@ class DrawerScreen extends StatelessWidget {
           CircleAvatar(
             radius: 24.0,
             backgroundImage:
-                profile == null ? null : NetworkImage(profile['photo'] ?? ''),
+                profile == null ? null : NetworkImage(_firebaseUser.photoUrl ?? ''),
             child: profile == null
                 ? SizedBox(
                     width: 46.0,
@@ -484,7 +483,7 @@ class DrawerScreen extends StatelessWidget {
                           ),
                         ],
                       );
-                    } else if (snapshot.hasData &&
+                    } else if (snapshot.  hasData &&
                         snapshot.data.body == "null") {
                       drawerBloc.logOut();
                     }

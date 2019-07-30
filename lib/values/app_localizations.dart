@@ -20,6 +20,10 @@ class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
+  String get facebookAppId => "393647548028530";
+  
+  String get facebookLoginProtocolScheme => "fb393647548028530";
+
   String get appName => Intl.message('Edibly');
 
   String get home => Intl.message('Home');

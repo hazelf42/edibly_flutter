@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 Future<GoogleSignInAccount> getSignedInAccount(
     GoogleSignIn googleSignIn) async {
   GoogleSignInAccount account = googleSignIn.currentUser;
@@ -15,8 +15,17 @@ Future<GoogleSignInAccount> getSignedInAccount(
   }
   return account;
 }
+Future<FirebaseUser> signIntoFbFirebase(String accessToken) async {
+    FirebaseAuth _auth = FirebaseAuth.instance;
+    final credential =
+        FacebookAuthProvider.getCredential(accessToken: accessToken);
+    return await _auth.signInWithCredential(credential).catchError((e) {
+      print(e);
+    });
+  }
 
-Future<FirebaseUser> signIntoFirebase(
+  
+Future<FirebaseUser> signIntoGoogleFirebase(
     GoogleSignInAccount googleSignInAccount) async {
   FirebaseAuth _auth = FirebaseAuth.instance;
   GoogleSignInAuthentication googleAuth =
@@ -94,13 +103,35 @@ class _StateWidgetState extends State<StateWidget> {
     if (googleAccount == null) {
       googleAccount = await googleSignIn.signIn();
     }
-    await signIntoFirebase(googleAccount).then((firebaseUser) {
+    await signIntoGoogleFirebase(googleAccount).then((firebaseUser) {
       state.user = firebaseUser; // new
       setState(() {
         state.isLoading = false;
         state.user = firebaseUser;
-      });
+        });
     });
+  }
+
+   Future<Null> signInWithFacebook() async {
+    final facebookLogin = FacebookLogin();
+    final result = await facebookLogin.logInWithReadPermissions(['email']);
+    switch (result.status) {
+      case FacebookLoginStatus.loggedIn:
+        signIntoFbFirebase(result.accessToken.token).then((firebaseUser) { 
+          state.user = firebaseUser; // new
+          setState(() {
+        state.isLoading = false;
+        state.user = firebaseUser;
+        });
+        });
+        break;
+      case FacebookLoginStatus.cancelledByUser:
+        //_showCancelledMessage();
+        break;
+      case FacebookLoginStatus.error:
+        //_showErrorOnUI(result.errorMessage);
+        break;
+    }
   }
 
   @override
