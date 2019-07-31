@@ -1,18 +1,18 @@
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'dart:async';
-import 'package:edibly/screens/search/restaurant_preview_widget.dart';
-import 'package:edibly/screens/restaurant/restaurant_screen.dart';
-import 'package:edibly/screens/new_post/new_post_screen.dart';
-import 'package:edibly/screens/search/search_bloc.dart';
-import 'package:edibly/values/app_localizations.dart';
+
 import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/values/app_colors.dart';
 import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
+import 'package:edibly/screens/restaurant/restaurant_screen.dart';
+import 'package:edibly/screens/search/restaurant_preview_widget.dart';
+import 'package:edibly/screens/search/search_bloc.dart';
+import 'package:edibly/values/app_colors.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SearchScreen extends StatelessWidget {
   final FirebaseUser firebaseUser;
@@ -31,8 +31,8 @@ class SearchScreen extends StatelessWidget {
         markers.add(Marker(
           markerId: MarkerId(data.key),
           position: LatLng(
-            double.parse(data.value['lat'].toString()),
-            double.parse(data.value['lon'].toString()),
+            double.parse((data.value['lat']/10000000).toString()),
+            double.parse((data.value['lon']/10000000).toString()),
           ),
           infoWindow: InfoWindow(
             title: data.value['name'],

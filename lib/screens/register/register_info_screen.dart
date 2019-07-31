@@ -12,12 +12,16 @@ import 'package:image_picker/image_picker.dart';
 
 class RegisterInfoScreen extends StatelessWidget {
   @override
+  RegisterInfoScreen(this.firebaseUser);
+  FirebaseUser firebaseUser;
+
   Widget build(BuildContext context) {
     final AppLocalizations localizations = AppLocalizations.of(context);
+
     return DisposableProvider<RegisterBloc>(
       packageBuilder: (context) => RegisterBloc(
-        localizations: localizations,
-      ),
+            localizations: localizations,
+          ),
       child: Builder(
         builder: (context) {
           final RegisterBloc registerBloc = Provider.of<RegisterBloc>(context);
@@ -84,15 +88,15 @@ class RegisterInfoScreen extends StatelessWidget {
                   },
                   itemBuilder: (BuildContext context) =>
                       <PopupMenuEntry<ImageSource>>[
-                    PopupMenuItem<ImageSource>(
-                      value: ImageSource.gallery,
-                      child: Text(localizations.pickFromGallery),
-                    ),
-                    PopupMenuItem<ImageSource>(
-                      value: ImageSource.camera,
-                      child: Text(localizations.takePicture),
-                    ),
-                  ],
+                        PopupMenuItem<ImageSource>(
+                          value: ImageSource.gallery,
+                          child: Text(localizations.pickFromGallery),
+                        ),
+                        PopupMenuItem<ImageSource>(
+                          value: ImageSource.camera,
+                          child: Text(localizations.takePicture),
+                        ),
+                      ],
                   child: CircleAvatar(
                     backgroundColor: Colors.orange.shade200,
                     radius: 36.0,

@@ -1,41 +1,59 @@
 import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/custom/widgets.dart';
+import 'package:edibly/screens/home/home_screen.dart';
 import 'package:edibly/screens/register/register_bloc.dart';
 import 'package:edibly/screens/register/register_info_screen.dart';
 import 'package:edibly/screens/register/register_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_auth_buttons/flutter_auth_buttons.dart';
-import 'state_widget.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import '../../main_bloc.dart';
+import 'state_widget.dart';
 
 class RegisterSelectScreen extends StatelessWidget {
   Widget googleButton(RegisterBloc registerBloc, AppLocalizations localizations,
       BuildContext context) {
-        return SignInButton(
-          Buttons.Google,
-          text: "Continue with Google",
-          onPressed: () async =>
-            await StateWidget.of(context).signInWithGoogle().then((_) {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => RegisterInfoScreen()));
+    return SignInButton(Buttons.Google,
+        text: "Continue with Google",
+        onPressed: () async =>
+            await StateWidget.of(context).signInWithGoogle().then((_) async {
+              await MainBloc().getCurrentFirebaseUser().then((user) {
+                if (user.metadata.lastSignInTimestamp == null) {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => RegisterInfoScreen(user)));
+                } else {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              HomeScreen(firebaseUser: user)));
+                }
+              });
             }));
-        
   }
 
   Widget facebookButton(RegisterBloc registerBloc,
       AppLocalizations localizations, BuildContext context) {
-    return SignInButton(
-      Buttons.Facebook,
-      text: "Continue with Facebook",
-      onPressed: () async {
-      await StateWidget.of(context).signInWithFacebook().then((_) {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => RegisterInfoScreen()));
-      });
-    });
+    return SignInButton(Buttons.Facebook,
+        text: "Continue with Facebook",
+        onPressed: () async =>
+            await StateWidget.of(context).signInWithGoogle().then((_) async {
+              await MainBloc().getCurrentFirebaseUser().then((user) {
+                if (user.metadata.lastSignInTimestamp == null) {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => RegisterInfoScreen(user)));
+                } else {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              HomeScreen(firebaseUser: user)));
+                }
+              });
+            }));
   }
 
   Widget emailButton(RegisterBloc registerBloc, AppLocalizations localizations,
@@ -55,8 +73,8 @@ class RegisterSelectScreen extends StatelessWidget {
     final AppLocalizations localizations = AppLocalizations.of(context);
     return DisposableProvider<RegisterBloc>(
       packageBuilder: (context) => RegisterBloc(
-        localizations: localizations,
-      ),
+            localizations: localizations,
+          ),
       child: Builder(
         builder: (context) {
           final RegisterBloc registerBloc = Provider.of<RegisterBloc>(context);

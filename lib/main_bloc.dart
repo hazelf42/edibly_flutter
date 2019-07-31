@@ -147,7 +147,7 @@ class MainBloc extends Object with Validators {
   }
 
   /// Post like functions
-  void likePostByUser(
+  Future<void> likePostByUser(
       {@required String postKey,
       @required String uid,
       @required int postType}) async {
@@ -170,7 +170,7 @@ class MainBloc extends Object with Validators {
     });
   }
 
-  void unlikePostByUser(
+  Future<void> unlikePostByUser(
       {@required String postKey,
       @required String uid,
       @required int postType}) async {

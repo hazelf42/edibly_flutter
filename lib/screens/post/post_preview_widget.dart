@@ -19,9 +19,8 @@ class PostPreviewWidget extends StatefulWidget {
     @required this.post,
   });
 
-_PostPreviewWidget createState() => _PostPreviewWidget(uid: uid, post: post);  
+  _PostPreviewWidget createState() => _PostPreviewWidget(uid: uid, post: post);
 }
-
 
 class _PostPreviewWidget extends State<PostPreviewWidget> {
   final String uid;
@@ -57,91 +56,103 @@ class _PostPreviewWidget extends State<PostPreviewWidget> {
     }
   }
 
-  Widget _author({@required Map authorValue, @required AppLocalizations localizations, @required BuildContext context}) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
-          child: Row(
-            children: <Widget>[
-              CircleAvatar(
-                radius: 24.0,
-               backgroundImage: authorValue  == null ? null : NetworkImage(authorValue['photo']),
-                child: authorValue == null
-                    ? SizedBox(
-                        width: 46.0,
-                        height: 46.0,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                        ),
-                      )
-                    : null,
-              ),
-              Container(
-                width: 16.0,
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    authorValue == null
-                        ? Container(height: 0,)
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              SingleChildScrollView(
-                                physics: NeverScrollableScrollPhysics(),
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: <Widget>[
-                                    SingleLineText(
-                                      '${authorValue['firstname']} ${authorValue['lastname']}   ',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    SingleLineText(
-                                      
-                                    ((authorValue['veglevel'] == 1) ? '${localizations.vegetarian}' : '${localizations.vegan}') + " " + ((authorValue['glutenfree'] == 1) ? 'glutenfree' : ''),
-                                      style: TextStyle(
-                                        color: Theme.of(context).hintColor,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                height: 4.0,
-                              ),
-                              SingleLineText(
-                                '${_postTypeToText(
-                                  postType: post.value['type'],
-                                  localizations: localizations,
-                                )} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timestamp'].toString())).toInt() * 1000))}',
-                                style: TextStyle(
-                                  color: Theme.of(context).hintColor,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 24.0,
-              ),
-            ],
+  Widget _author(
+      {@required Map authorValue,
+      @required AppLocalizations localizations,
+      @required BuildContext context}) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16.0, 12.0, 0.0, 12.0),
+      child: Row(
+        children: <Widget>[
+          CircleAvatar(
+            radius: 24.0,
+            backgroundImage:
+                authorValue == null ? null : NetworkImage(authorValue['photo']),
+            child: authorValue == null
+                ? SizedBox(
+                    width: 46.0,
+                    height: 46.0,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.0,
+                    ),
+                  )
+                : null,
           ),
-        );
-      }
+          Container(
+            width: 16.0,
+          ),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                authorValue == null
+                    ? Container(
+                        height: 0,
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SingleChildScrollView(
+                            physics: NeverScrollableScrollPhysics(),
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: <Widget>[
+                                SingleLineText(
+                                  '${authorValue['firstname']} ${authorValue['lastname']}   ',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SingleLineText(
+                                  ((authorValue['veglevel'] == 1)
+                                          ? '${localizations.vegetarian}'
+                                          : '${localizations.vegan}') +
+                                      " " +
+                                      ((authorValue['glutenfree'] == 1)
+                                          ? 'glutenfree'
+                                          : ''),
+                                  style: TextStyle(
+                                    color: Theme.of(context).hintColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            height: 4.0,
+                          ),
+                          SingleLineText(
+                            '${_postTypeToText(
+                              postType: post.value['type'],
+                              localizations: localizations,
+                            )} ${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(post.value['timestamp'].toString())).toInt() * 1000))}',
+                            style: TextStyle(
+                              color: Theme.of(context).hintColor,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+              ],
+            ),
+          ),
+          Container(
+            width: 24.0,
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _photo({@required MainBloc mainBloc, @required String photoURL}) {
     if (photoURL == null || photoURL.isEmpty || photoURL == "None") {
-      return Container(height: 0,);
-
+      return Container(
+        height: 0,
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -201,8 +212,12 @@ class _PostPreviewWidget extends State<PostPreviewWidget> {
   }
 
   Widget _description() {
-    if (post.value['text'] == "" || post.value['text'].toString().isEmpty || post.value['text'] == null) {
-      return Container(height: 0,); 
+    if (post.value['text'] == "" ||
+        post.value['text'].toString().isEmpty ||
+        post.value['text'] == null) {
+      return Container(
+        height: 0,
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -216,7 +231,9 @@ class _PostPreviewWidget extends State<PostPreviewWidget> {
   }
 
   Widget _tags() {
-    if ( post.value['tags'] == null || post.value['tags'] == [] || post.value['tags'].isEmpty) {
+    if (post.value['tags'] == null ||
+        post.value['tags'] == [] ||
+        post.value['tags'].isEmpty) {
       return Container(height: 0);
     }
     List<String> tags = dynamicTagArrayToTagList(post.value['tags']);
@@ -236,51 +253,50 @@ class _PostPreviewWidget extends State<PostPreviewWidget> {
     );
   }
 
- Widget _likeButton({@required MainBloc mainBloc, @required AppLocalizations localizations}) {
-    
+  Widget _likeButton(
+      {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
     bool isLiked = false;
-    for (var profile in post.value['likes']) {
-       if (profile['uid'] == uid) { 
-        isLiked = true;
-        break;
-       }
-    } 
-        if (isLiked) {
-          return BoldFlatIconButton(
-            onPressed: () {
-              mainBloc.unlikePostByUser(
-                postKey: post?.key.toString(),
-                postType: post.value['type'],
-                uid: uid,
-              );
-              setState(() {
-                
-              });
-            },
-            icon: Icon(
-              Icons.favorite,
-              color: Colors.red.shade600,
-            ),
-            text: localizations.liked.toUpperCase(),
-            textColor: AppColors.primarySwatch.shade900,
-          );
-        } 
-        return BoldFlatButton(
-          onPressed: () {
-            mainBloc.likePostByUser(
-              postKey: post?.key.toString(),
-              postType: post.value['type'],
-                uid: uid,
-            );
-            
-              setState(() {
-                
-              }); 
-          },
-          text: localizations.like.toUpperCase(),
-          textColor: AppColors.primarySwatch.shade900,
-        );
-        
+    if (post.value['likes'].contains(uid)) isLiked = true;
+    if (isLiked != null && isLiked) {
+      return BoldFlatIconButton(
+        onPressed: () {
+          mainBloc
+              .unlikePostByUser(
+            postKey: post?.key.toString(),
+            postType: post.value['type'],
+            uid: uid,
+          )
+              .then((_) {
+            post.value['likes'].remove(uid);
+
+            setState(() {});
+          });
+        },
+        icon: Icon(
+          Icons.favorite,
+          color: Colors.red.shade600,
+        ),
+        text: localizations.liked.toUpperCase(),
+        textColor: AppColors.primarySwatch.shade900,
+      );
+    }
+    return BoldFlatButton(
+      onPressed: () async {
+        await mainBloc
+            .likePostByUser(
+          postKey: post?.key.toString(),
+          postType: post.value['type'],
+          uid: uid,
+        )
+            .then((_) {
+          post.value['likes'].add(uid);
+
+          setState(() {});
+        });
+      },
+      text: localizations.like.toUpperCase(),
+      textColor: AppColors.primarySwatch.shade900,
+    );
   }
 
   @override
@@ -304,10 +320,9 @@ class _PostPreviewWidget extends State<PostPreviewWidget> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           _author(
-            authorValue: post.value['profile'],
-            localizations: localizations,
-            context: context
-          ),
+              authorValue: post.value['profile'],
+              localizations: localizations,
+              context: context),
           _photo(
             mainBloc: mainBloc,
             photoURL: post.value['photo'],
@@ -318,7 +333,7 @@ class _PostPreviewWidget extends State<PostPreviewWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  post.value['restaurant']['name'] ?? '', 
+                  post.value['restaurant']['name'] ?? '',
                   style: Theme.of(context).textTheme.title,
                 ),
                 _rating(

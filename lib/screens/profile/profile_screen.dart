@@ -161,25 +161,9 @@ class _ProfileScreen extends State<ProfileScreen> {
                                                     textColor:
                                                         Colors.deepOrangeAccent,
                                                     onPressed: () async {
-                                                      var newPhotoUrl =
-                                                          await getImage();
-                                                      newPhotoUrl =
-                                                          (json.decode(
-                                                                  newPhotoUrl))[
-                                                              'filename'];
-                                                      await http
-                                                          .put(
-                                                              "http://edibly.vassi.li/api/profiles/${firebaseUserSnapshot.data.uid}",
-                                                              body:
-                                                                  json.encode({
-                                                                'photo':
-                                                                    ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
-                                                              }))
-                                                          .then((http.Response
-                                                              response) {
-                                                        setState(() {});
-                                                      });
-                                                    })
+                                                      await MainBloc().getCurrentFirebaseUser().then((firebaseUser) async { 
+                                                          await ProfileBloc(uid: uid).getImage(firebaseUser);
+                                                    });})
                                                 : FutureBuilder<bool>(
                                                     future: ProfileBloc(
                                                             uid: uid)
@@ -298,26 +282,5 @@ class _ProfileScreen extends State<ProfileScreen> {
   }
 
   //TODO: - move to bloc
-  Future<String> getImage() async {
-    AppLocalizations localizations;
-
-    var photo = await ImagePicker.pickImage(source: ImageSource.camera);
-    Future<String> string;
-
-    if (photo != null) {
-      var request = new http.MultipartRequest(
-          "POST", Uri.parse("http://edibly.vassi.li/api/upload"));
-      request.files.add(http.MultipartFile.fromBytes(
-          'file', await photo.readAsBytes(),
-          contentType: MediaType('image', 'jpeg')));
-      await request.send().then((response) {
-        if (response.statusCode == 200) {
-          string = response.stream.bytesToString();
-        } else {
-          SnackBar(content: Text("An error occurred."));
-        }
-      });
-    }
-    return string;
-  }
+  
 }

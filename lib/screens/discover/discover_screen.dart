@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:intl/intl.dart';
-
 import 'package:edibly/screens/discover/restaurant_preview_widget.dart';
 import 'package:edibly/screens/discover/event_preview_widget.dart';
 import 'package:edibly/screens/restaurant/restaurant_screen.dart';
@@ -18,7 +17,6 @@ import 'package:edibly/models/data.dart';
 
 class DiscoverScreen extends StatelessWidget {
   final FirebaseUser firebaseUser;
-  AppLocalizations localizations;
   
   DiscoverScreen({@required this.firebaseUser});
 

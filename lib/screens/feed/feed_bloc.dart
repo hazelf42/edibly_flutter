@@ -74,7 +74,6 @@ class FeedBloc {
       /// network request
       /// TODO: - Localization ?
       http.Response response;
-      var postsMap = Map<String, dynamic>();
 
       if (feedType == 'nearby') {
         //TODO: - Actually make it posts from nearby lol
@@ -84,37 +83,22 @@ class FeedBloc {
         map.forEach((post) {
             posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
           });
-          
-          _posts.add(posts);
       
             } else if (feedType == 'following') {
         final currentUser = (await MainBloc().getCurrentFirebaseUser());
         await http
             .get("http://edibly.vassi.li/api/profiles/${currentUser.uid}/feed")
             .then((postResponse) {
+              if (postResponse.body != "null"){
           json.decode(postResponse.body).forEach((post) {
             posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
           });
           
-          _posts.add(posts);
-        });
-        //.then((response) {
-        //     print(postsMap); 
-        //   postsMap.forEach((id, post) async {
-        //     final url =
-        //         "http://edibly.vassi.li/api/restaurants/' +
-        //             post['rid'].toString();
-        //     final nameResponse = await http.get(url);
-        //     final name = json.decode(nameResponse.body)['name'];
-        //     post['restaurantName'] = name;
-        //     posts.add(Data(id, post));
-        // _postsInCurrentPage += 10;
-        // posts.remove(null);
-        // _posts.add(posts);
-        //   });
-        //   });
+        }});
 
       }
+          _posts.add(posts);
+
     }
 
     /// if this is not the first page

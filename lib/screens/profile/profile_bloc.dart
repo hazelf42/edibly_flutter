@@ -1,13 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
-import 'profile_preview_widget.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:edibly/values/app_localizations.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import '../../main_bloc.dart';
+import 'dart:typed_data';
 
 class ProfileBloc {
   final String uid;
@@ -42,38 +47,37 @@ class ProfileBloc {
     _currentPage = 0;
   }
 
-  Future<bool> isFollowing({
-    @required profileUid, 
-    @required currentUid
-  }) async { 
+  Future<bool> isFollowing({@required profileUid, @required currentUid}) async {
     bool a;
     await http
-        .get("http://edibly.vassi.li/api/profiles/$currentUid/following"   )
+        .get("http://edibly.vassi.li/api/profiles/$currentUid/following")
         .then((response) {
       (json.decode(response.body)).forEach((profile) {
         if (profile['uid'] == profileUid) {
           a = true;
           return a;
-        }  
-      }); if (a != true) {
+        }
+      });
+      if (a != true) {
         a = false;
-      };
+      }
+      ;
     });
     return a;
   }
 
-  Future<bool> followUser({
-    //This function also unfollows profiles if the user is already following them because im a lazy goon who doesnt know whats good for me
-    @required String currentUid,
-    @required String profileUid,
-    @required bool isFollowing
-  }) async {
+  Future<bool> followUser(
+      {
+      //This function also unfollows profiles if the user is already following them because im a lazy goon who doesnt know whats good for me
+      @required String currentUid,
+      @required String profileUid,
+      @required bool isFollowing}) async {
     if (currentUid == uid) {
       print("You can't follow yourself");
       return true;
     }
 
-     {
+    {
       if (isFollowing) {
         final body = {'uid': currentUid, 'follow': uid};
         http
@@ -101,73 +105,119 @@ class ProfileBloc {
     }
   }
 
-  void getPosts() async {
- List<Data> posts = _posts.value;
-     if (posts == null) posts = [];
+  Future<String> getImage(FirebaseUser user) async {
+    var photo = await ImagePicker.pickImage(source: ImageSource.gallery);
+    Future<String> string;
 
-            await http
-            .get('http://edibly.vassi.li/api/profiles/${uid}/feed')
-            .then((postResponse) {
-          json.decode(postResponse.body).forEach((post) {
-            posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
+    if (photo != null) {
+      var request = http.MultipartRequest(
+          "POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+      request.files.add(http.MultipartFile.fromBytes(
+          'file', await photo.readAsBytes(),
+          contentType: MediaType('image', 'jpeg')));
+      await request.send().then((response) async {
+        if (response.statusCode == 200) {
+          response.stream.bytesToString().then((newPhotoUrl) async {
+            newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
+            UserUpdateInfo info;
+            info.photoUrl = newPhotoUrl;
+            user.updateProfile(info);
+            await http.put("http://edibly.vassi.li/api/profiles/${uid}",
+                body: json.encode({
+                  'photo':
+                      ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
+                }));
           });
-          
-          _posts.add(posts);});
-  //   /// if page is not fully loaded the return
-  //   // if (_fetchStarted && _postsInCurrentPage < POSTS_PER_PAGE) {
-  //   //   return;
-  //   // }
+        } else if (response.statusCode == 413) {
+          String path;
+          await FlutterImageCompress.compressAndGetFile(
+                  photo.absolute.path, path, quality: 88)
+              .then((file) {
+            response.stream.bytesToString().then((newPhotoUrl) async {
+              newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
+              UserUpdateInfo info;
+              info.photoUrl = newPhotoUrl;
+              user.updateProfile(info);
+              await http.put("http://edibly.vassi.li/api/profiles/${uid}",
+                  body: json.encode({
+                    'photo':
+                        ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
+                  }));
+            });
+          });
+        }
+      });
+    }
+    return string;
+  }
 
-  //   // /// if page is fully loaded then start loading next page
-  //   // else if (_postsInCurrentPage ==
-  //   //     POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
-  //   //   _currentPage++;
-  //   //   _postsInCurrentPage = 0;
-  //   // }
+  void getPosts() async {
+    List<Data> posts = _posts.value;
+    if (posts == null) posts = [];
 
-  //   // /// started fetching a page
-  //   // onChildAddedListener?.cancel();
-  //   // _fetchStarted = true;
+    await http
+        .get('http://edibly.vassi.li/api/profiles/${uid}/feed')
+        .then((postResponse) {
+      json.decode(postResponse.body).forEach((post) {
+        posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
+      });
 
-  //   /// make sure we have an array to put things in
-  //   List<Data> posts = _posts.value;
-  //   if (posts == null) posts = [];
-  //   int oldPostsLength = posts.where((post) => post != null).length;
+      _posts.add(posts);
+    });
+    //   /// if page is not fully loaded the return
+    //   // if (_fetchStarted && _postsInCurrentPage < POSTS_PER_PAGE) {
+    //   //   return;
+    //   // }
 
-  //   /// if this is still the first page
-  //   if (posts == null || posts.isEmpty) {
-  //     /// make sure variables reflects this being the first page
-  //     _currentPage = 0;
-  //     _postsInCurrentPage = 0;
-  //     print(uid);
-  //     /// network request
-  //     await http.get("edibly.vassi.li/api/profiles/$uid/posts").then((response) {
-  //       /// increment number of posts in current page
-  //       var snapshot = json.decode(response.body);
+    //   // /// if page is fully loaded then start loading next page
+    //   // else if (_postsInCurrentPage ==
+    //   //     POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
+    //   //   _currentPage++;
+    //   //   _postsInCurrentPage = 0;
+    //   // }
 
-  //       /// remove any null values, null values are shown as circular loaders
-  //       posts.remove(null);
+    //   // /// started fetching a page
+    //   // onChildAddedListener?.cancel();
+    //   // _fetchStarted = true;
 
-  //       /// insert newly acquired post to the start of new page
-  //       snapshot.forEach((post) { 
-  //         posts.insert(oldPostsLength, Data(post['rrid'] ?? post['rtid'], post));
-  //       });
-        /// if this was the last post in requested page, then show a circular loader at the end of page
-        
+    //   /// make sure we have an array to put things in
+    //   List<Data> posts = _posts.value;
+    //   if (posts == null) posts = [];
+    //   int oldPostsLength = posts.where((post) => post != null).length;
 
-        /// publish an update to the stream
-      //   _posts.add(posts);
-      // });
-      // query.onValue.listen((event) {
-      //   _posts.add(posts);
-      //   onChildAddedListener?.cancel();
-      // });
-      // query.onChildRemoved.listen((event) {
-      //   posts.removeWhere(
-      //       (post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+    //   /// if this is still the first page
+    //   if (posts == null || posts.isEmpty) {
+    //     /// make sure variables reflects this being the first page
+    //     _currentPage = 0;
+    //     _postsInCurrentPage = 0;
+    //     print(uid);
+    //     /// network request
+    //     await http.get("edibly.vassi.li/api/profiles/$uid/posts").then((response) {
+    //       /// increment number of posts in current page
+    //       var snapshot = json.decode(response.body);
 
-        // /// publish an update to the stream
-        // return posts;
+    //       /// remove any null values, null values are shown as circular loaders
+    //       posts.remove(null);
+
+    //       /// insert newly acquired post to the start of new page
+    //       snapshot.forEach((post) {
+    //         posts.insert(oldPostsLength, Data(post['rrid'] ?? post['rtid'], post));
+    //       });
+    /// if this was the last post in requested page, then show a circular loader at the end of page
+
+    /// publish an update to the stream
+    //   _posts.add(posts);
+    // });
+    // query.onValue.listen((event) {
+    //   _posts.add(posts);
+    //   onChildAddedListener?.cancel();
+    // });
+    // query.onChildRemoved.listen((event) {
+    //   posts.removeWhere(
+    //       (post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+
+    // /// publish an update to the stream
+    // return posts;
 
     /// if this is not the first page
     // else {

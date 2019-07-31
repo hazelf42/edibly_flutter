@@ -71,12 +71,11 @@ Widget feedScreenBody(BuildContext context, String feedType) {
               child: StreamBuilder<List<Data>>(
                 stream: feedBloc.posts,
                 builder: (context, postsSnapshot) {
-                  if (firebaseUserSnapshot?.data == null ||
-                      !postsSnapshot.hasData) {
+                  if (firebaseUserSnapshot?.data == null || !postsSnapshot.hasData) {
                     feedBloc.getPosts(feedType);
                     return CircularProgressIndicator();
                   }
-                  if (postsSnapshot.data.length == 0) {
+                  if ((postsSnapshot.hasData && postsSnapshot.data.length == 0)) {
                     return Center(
                         child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,

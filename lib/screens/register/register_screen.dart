@@ -158,7 +158,7 @@ class RegisterScreen extends StatelessWidget {
               {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => RegisterInfoScreen(),
+                  builder: (context) => RegisterInfoScreen(user),
                 ));
               }
             }

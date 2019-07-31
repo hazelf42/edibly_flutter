@@ -157,17 +157,17 @@ class SearchBloc {
   void getAllRestaurants() async {
     _allRestaurants.add(null);
     List<Data> restaurantsWithoutRating = [];
-    final location = await getCurrentLocation().then((location ) async {
+    await getCurrentLocation().then((location ) async {
     final response = await http.post('http://edibly.vassi.li/api/restaurants/nearby', body: json.encode({'lat' : location.latitude, 'lon' : location.longitude, 'radius' : 5000000000000000000}));
     final map = json.decode(response.body);
-    print(map);;
+    print(map);
     final restaurantsWithoutRatingMap = Map<dynamic, dynamic>();
     map.forEach((r) => restaurantsWithoutRatingMap[r['rid'].toString()] = r);
 
     restaurantsWithoutRatingMap.forEach((key, value) {
       value['distance'] = _distanceFromMeToDestination(LatLng(
-        double.parse(value['lat'].toString()),
-        double.parse((value['lon'] / 10).toString()),
+        double.parse((value['lat']/10000000).toString()),
+        double.parse((value['lon']/10000000).toString()),
       ));
             restaurantsWithoutRating.add(Data(key, value));
 
@@ -182,7 +182,6 @@ class SearchBloc {
   }
 
   void filterRestaurants(String keyword) async {
-    AppLocalizations localizations;
     if (keyword == null) keyword = _keyword;
     _keyword = keyword;
     _filteredRestaurants.add(null);

@@ -12,6 +12,8 @@ import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:edibly/screens/register/state_widget.dart';
 import 'package:edibly/screens/register/register_info_screen.dart';
 
+import '../../main_bloc.dart';
+
 class LoginScreen extends StatelessWidget {
   Widget emailField(LoginBloc loginBloc, AppLocalizations localizations) {
     return StreamBuilder<String>(
@@ -81,30 +83,54 @@ class LoginScreen extends StatelessWidget {
       },
     );
   }
-  Widget googleButton(RegisterBloc registerBloc,
-        AppLocalizations localizations, BuildContext context) {
-      return SignInButton(Buttons.Google,
-          mini: true,
-          text: "Continue with Google",
-          onPressed: () async =>
-              await StateWidget.of(context).signInWithGoogle().then((_) {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => RegisterInfoScreen()));
-              }));
-    }
 
-    Widget facebookButton(RegisterBloc registerBloc,
-        AppLocalizations localizations, BuildContext context) {
-      return SignInButton(Buttons.Facebook,
-          mini: true, text: "Continue with Facebook", onPressed: () async {
-        await StateWidget.of(context).signInWithFacebook().then((_) {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => RegisterInfoScreen()));
-        });
-      });
-    }
+  Widget googleButton(RegisterBloc registerBloc, AppLocalizations localizations,
+      BuildContext context) {
+    return SignInButton(Buttons.Google,
+        mini: true,
+        text: "Continue with Google",
+        onPressed: () async =>
+            await StateWidget.of(context).signInWithGoogle().then((_) async {
+              await MainBloc().getCurrentFirebaseUser().then((user) {
+                if (user.metadata.lastSignInTimestamp == null) {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => RegisterInfoScreen(user)));
+                } else {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              HomeScreen(firebaseUser: user)));
+                }
+              });
+            }));
+  }
+
+  Widget facebookButton(RegisterBloc registerBloc,
+      AppLocalizations localizations, BuildContext context) {
+    return SignInButton(Buttons.Facebook,
+        mini: true,
+        text: "Continue with Facebook",
+        onPressed: () async =>
+            await StateWidget.of(context).signInWithGoogle().then((_) async {
+              await MainBloc().getCurrentFirebaseUser().then((user) {
+                if (user.metadata.lastSignInTimestamp == null) {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => RegisterInfoScreen(user)));
+                } else {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              HomeScreen(firebaseUser: user)));
+                }
+              });
+            }));
+  }
 
   Widget submitButton(LoginBloc loginBloc, AppLocalizations localizations) {
     String loginStateToString(LoginState loginState) {
@@ -328,10 +354,18 @@ class LoginScreen extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 16.0),
-                        Row(children: <Widget>[
-                          googleButton(RegisterBloc(localizations: localizations), localizations, context),
-                          facebookButton(RegisterBloc(localizations: localizations), localizations, context),
-                        ],),
+                        Row(
+                          children: <Widget>[
+                            googleButton(
+                                RegisterBloc(localizations: localizations),
+                                localizations,
+                                context),
+                            facebookButton(
+                                RegisterBloc(localizations: localizations),
+                                localizations,
+                                context),
+                          ],
+                        ),
                         SizedBox(height: 16.0),
                         emailField(loginBloc, localizations),
                         SizedBox(height: 16.0),

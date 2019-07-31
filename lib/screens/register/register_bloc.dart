@@ -201,25 +201,26 @@ class RegisterBloc extends Object with Validators {
 
   
 
-  void handleGoogleSignIn(FirebaseUser user) async {
+  Future<bool> handleGoogleSignIn(FirebaseUser user) async {
     final vegan = _vegan.value ?? true;
     final glutenFree = _glutenFree.value ?? false;
     var nameList = user.displayName.split(" ");
     var lastName = nameList.removeLast();
-
+    Map body = {
+          'firstname' : nameList.join(" "),
+          'lastname' : lastName.toString(),
+          'photo' : user.photoUrl.toString(),
+          'veglevel' : vegan ? 2 : 1,
+          'glutenfree' : glutenFree ? 1 : 0,
+          'uid' : user.uid
+        };
 //Necessary?
     await http.post("http://edibly.vassi.li/api/profiles/add",
-        body: json.encode({
-          'firstname': firstName,
-          'lastname': lastName,
-          'photo': user.photoUrl,
-          'veglevel': vegan ? 2 : 1,
-          'glutenfree': glutenFree ? 1 : 0,
-          'uid': user.uid
-        }));
+
+        body: json.encode(body)).then((_) {return true; });
   }
 
-   void handleFacebookSignIn(FirebaseUser user) async {
+    Future<bool> handleFacebookSignIn(FirebaseUser user) async {
         final vegan = _vegan.value ?? true;
       final glutenFree = _glutenFree.value ?? false;
       var nameList = user.displayName.split(" ");
@@ -234,7 +235,7 @@ class RegisterBloc extends Object with Validators {
           'veglevel': vegan ? 2 : 1,
           'glutenfree': glutenFree ? 1 : 0,
           'uid': user.uid
-        }));
+        })).then((_) {return true; });
    }
 
   Future<bool> profileToVassilibase(FirebaseUser user) async {
@@ -290,11 +291,11 @@ class RegisterBloc extends Object with Validators {
   }
 
   Future<void> submit(FirebaseUser user) async {
-    if (user.providerId == 'google.com') {
+    if (user.providerData[0].providerId == 'google.com') {
       handleGoogleSignIn(user);
-    } else if (user.providerId == "facebook.com") {
+    } else if (user.providerData[0].providerId == "facebook.com") {
       handleFacebookSignIn(user);
-    } else if (user.providerId == "firebase") {
+    } else if (user.providerData[0].providerId == "firebase") {
       await profileToVassilibase(user);
     }
   }

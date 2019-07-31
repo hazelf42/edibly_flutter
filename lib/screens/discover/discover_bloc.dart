@@ -60,7 +60,7 @@ class DiscoverBloc {
     _restaurants.add(null);
 
     /// network request
-    final location = await getCurrentLocation().then((location) async {
+    await getCurrentLocation().then((location) async {
       final response =
           await http.post('http://edibly.vassi.li/api/restaurants/discover',
               body: json.encode({
