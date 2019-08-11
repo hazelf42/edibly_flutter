@@ -148,8 +148,6 @@ class TipWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final MainBloc mainBloc = Provider.of<MainBloc>(context);
-    final AppLocalizations localizations = AppLocalizations.of(context);
     
     return FutureBuilder<Response>(
       future: get("http://edibly.vassi.li/api/profiles/${tip.value['uid'].toString()}"),

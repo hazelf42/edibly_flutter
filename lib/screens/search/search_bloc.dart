@@ -157,7 +157,9 @@ class SearchBloc {
   void getAllRestaurants() async {
     _allRestaurants.add(null);
     List<Data> restaurantsWithoutRating = [];
-    await getCurrentLocation().then((location ) async {
+    await getCurrentLocation().then((location) async {
+      //TODO: - testing only
+      location = LatLng(53.522385, 113.622810);
     final response = await http.post('http://edibly.vassi.li/api/restaurants/nearby', body: json.encode({'lat' : location.latitude, 'lon' : location.longitude, 'radius' : 5000000000000000000}));
     final map = json.decode(response.body);
     print(map);

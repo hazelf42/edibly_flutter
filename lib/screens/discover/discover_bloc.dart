@@ -85,7 +85,6 @@ class DiscoverBloc {
           Data dataWithRating =
               Data(dataWithoutRating.key, dataWithoutRating.value);
 
-          //TODO - fix whatever the fuck happened w lat and lon
           dataWithRating.value['averagerating'] =
               dataWithoutRating.value['averagerating'];
           dataWithRating.value['lat'] =

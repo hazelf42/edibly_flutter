@@ -78,7 +78,7 @@ class FeedBloc {
       if (feedType == 'nearby') {
         //TODO: - Actually make it posts from nearby lol
         response = await http.get("http://edibly.vassi.li/api/posts");
-
+      
         final map = json.decode(response.body);
         map.forEach((post) {
             posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
@@ -93,7 +93,6 @@ class FeedBloc {
           json.decode(postResponse.body).forEach((post) {
             posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
           });
-          
         }});
 
       }

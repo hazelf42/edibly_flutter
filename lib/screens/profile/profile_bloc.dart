@@ -115,40 +115,45 @@ class ProfileBloc {
       request.files.add(http.MultipartFile.fromBytes(
           'file', await photo.readAsBytes(),
           contentType: MediaType('image', 'jpeg')));
-      await request.send().then((response) async {
+      return await request.send().then((response) async {
         if (response.statusCode == 200) {
-          response.stream.bytesToString().then((newPhotoUrl) async {
-            newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
-            UserUpdateInfo info;
-            info.photoUrl = newPhotoUrl;
-            user.updateProfile(info);
-            await http.put("http://edibly.vassi.li/api/profiles/${uid}",
-                body: json.encode({
-                  'photo':
-                      ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
-                }));
-          });
-        } else if (response.statusCode == 413) {
-          String path;
-          await FlutterImageCompress.compressAndGetFile(
-                  photo.absolute.path, path, quality: 88)
-              .then((file) {
-            response.stream.bytesToString().then((newPhotoUrl) async {
-              newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
-              UserUpdateInfo info;
-              info.photoUrl = newPhotoUrl;
-              user.updateProfile(info);
-              await http.put("http://edibly.vassi.li/api/profiles/${uid}",
-                  body: json.encode({
-                    'photo':
-                        ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
-                  }));
-            });
-          });
+          print("OK!");
+          var bytesToString = await (response.stream.bytesToString());
+          var newPhotoUrl = (json.decode(bytesToString))['filename'];
+          UserUpdateInfo info = UserUpdateInfo();
+          var url =  "http://edibly.vassi.li/static/uploads/$newPhotoUrl";
+          info.photoUrl = url;
+          await user.updateProfile(info);
+          await http.put("http://edibly.vassi.li/api/profiles/$uid",
+          body: json.encode({'photo' : url}));
+          return url;
+          
+          
+          //     }); else if (response.statusCode == 413) {
+            //     String path;
+            //     await FlutterImageCompress.compressAndGetFile(
+            //             photo.absolute.path, path, quality: 88)
+            //         .then((file) {
+            //       response.stream.bytesToString().then((newPhotoUrl) async {
+            //         newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
+            //         UserUpdateInfo info;
+            //         info.photoUrl = newPhotoUrl;
+            //         user.updateProfile(info);
+            //         await http.put("http://edibly.vassi.li/api/profiles/${uid}",
+            //             body: json.encode({
+            //               'photo':
+            //                   ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
+            //             }));
+            //       });
+            //     });
+            //   }
+            // });
+        } else {
+          print("uh oh");
         }
       });
     }
-    return string;
+    // return string;
   }
 
   void getPosts() async {

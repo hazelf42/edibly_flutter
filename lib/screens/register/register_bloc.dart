@@ -103,6 +103,10 @@ class RegisterBloc extends Object with Validators {
   void setPhoto(File photo) {
     _photo.add(photo);
   }
+  
+  void setRegisterState(RegisterState registerState){
+    _registerState.add(registerState);
+  }
 
   Future<void> register() async {
     final photo = _photo.value;
@@ -209,12 +213,11 @@ class RegisterBloc extends Object with Validators {
     Map body = {
           'firstname' : nameList.join(" "),
           'lastname' : lastName.toString(),
-          'photo' : user.photoUrl.toString(),
+          'photo': user.photoUrl,
           'veglevel' : vegan ? 2 : 1,
           'glutenfree' : glutenFree ? 1 : 0,
-          'uid' : user.uid
+          'uid': user.uid
         };
-//Necessary?
     await http.post("http://edibly.vassi.li/api/profiles/add",
 
         body: json.encode(body)).then((_) {return true; });
@@ -229,7 +232,7 @@ class RegisterBloc extends Object with Validators {
 //Necessary?
     await http.post("http://edibly.vassi.li/api/profiles/add",
         body: json.encode({
-          'firstname': firstName,
+          'firstname': nameList.join(" "),
           'lastname': lastName,
           'photo': user.photoUrl,
           'veglevel': vegan ? 2 : 1,
@@ -248,7 +251,7 @@ class RegisterBloc extends Object with Validators {
 
     var userUpdateInfo = UserUpdateInfo();
     if (photo != null) {
-      final imageUrl = await getImageUrl(photo: photo).then((imageUrl) {
+      await getImageUrl(photo: photo).then((imageUrl) {
         userUpdateInfo.photoUrl = imageUrl;
       }).then((_) {
         user.updateProfile(userUpdateInfo).then((_) async {
@@ -291,11 +294,11 @@ class RegisterBloc extends Object with Validators {
   }
 
   Future<void> submit(FirebaseUser user) async {
-    if (user.providerData[0].providerId == 'google.com') {
+    if (user.providerData.last.providerId == 'google.com') {
       handleGoogleSignIn(user);
-    } else if (user.providerData[0].providerId == "facebook.com") {
+    } else if (user.providerData.last.providerId == "facebook.com") {
       handleFacebookSignIn(user);
-    } else if (user.providerData[0].providerId == "firebase") {
+    } else if (user.providerData.last.providerId == "firebase") {
       await profileToVassilibase(user);
     }
   }

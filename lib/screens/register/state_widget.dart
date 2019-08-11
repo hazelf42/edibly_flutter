@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 Future<GoogleSignInAccount> getSignedInAccount(
+  
     GoogleSignIn googleSignIn) async {
   GoogleSignInAccount account = googleSignIn.currentUser;
   if (account == null) {
@@ -30,7 +31,6 @@ Future<FirebaseUser> signIntoGoogleFirebase(
   FirebaseAuth _auth = FirebaseAuth.instance;
   GoogleSignInAuthentication googleAuth =
       await googleSignInAccount.authentication;
-  print(googleAuth.accessToken);
   final AuthCredential credential = GoogleAuthProvider.getCredential(
     accessToken: googleAuth.accessToken,
     idToken: googleAuth.idToken,

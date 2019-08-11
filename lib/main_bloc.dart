@@ -143,7 +143,9 @@ class MainBloc extends Object with Validators {
         break;
     }
     //TODO: - VASSILI: Implement deleting (or "deleting") posts
-    http.delete(url);
+    http.delete(url).then((r) {
+      print(r);
+    });
   }
 
   /// Post like functions

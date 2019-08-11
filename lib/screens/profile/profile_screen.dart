@@ -1,18 +1,16 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 
+import 'package:edibly/bloc_helper/provider.dart';
+import 'package:edibly/custom/widgets.dart';
+import 'package:edibly/main_bloc.dart';
+import 'package:edibly/models/data.dart';
 import 'package:edibly/screens/common/full_screen_image.dart';
 import 'package:edibly/screens/post/post_preview_widget.dart';
 import 'package:edibly/screens/profile/profile_bloc.dart';
 import 'package:edibly/values/app_localizations.dart';
-import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/custom/widgets.dart';
-import 'package:edibly/models/data.dart';
-import 'package:edibly/main_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -161,9 +159,20 @@ class _ProfileScreen extends State<ProfileScreen> {
                                                     textColor:
                                                         Colors.deepOrangeAccent,
                                                     onPressed: () async {
-                                                      await MainBloc().getCurrentFirebaseUser().then((firebaseUser) async { 
-                                                          await ProfileBloc(uid: uid).getImage(firebaseUser);
-                                                    });})
+                                                      await MainBloc()
+                                                          .getCurrentFirebaseUser()
+                                                          .then(
+                                                              (firebaseUser) async {
+                                                        await ProfileBloc(
+                                                                uid: uid)
+                                                            .getImage(
+                                                                firebaseUser)
+                                                            .then((_) {
+                                                          setState(() {
+                                                          });
+                                                        });
+                                                      });
+                                                    })
                                                 : FutureBuilder<bool>(
                                                     future: ProfileBloc(
                                                             uid: uid)
@@ -175,7 +184,9 @@ class _ProfileScreen extends State<ProfileScreen> {
                                                     builder: (context, future) {
                                                       if (future.hasData) {
                                                         return BoldFlatButton(
-                                                            text: future.data ? "Unfollow" : "Follow",
+                                                            text: future.data
+                                                                ? "Unfollow"
+                                                                : "Follow",
                                                             textColor: Colors
                                                                 .deepOrangeAccent,
                                                             onPressed:
@@ -191,10 +202,8 @@ class _ProfileScreen extends State<ProfileScreen> {
                                                                           uid,
                                                                       isFollowing:
                                                                           future
-                                                                              .data
-                                                                      );
-                                                                      setState(() { 
-                                                                      });
+                                                                              .data);
+                                                              setState(() {});
                                                             });
                                                       }
                                                       return CircularProgressIndicator();
@@ -282,5 +291,5 @@ class _ProfileScreen extends State<ProfileScreen> {
   }
 
   //TODO: - move to bloc
-  
+
 }

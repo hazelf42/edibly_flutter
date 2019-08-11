@@ -58,7 +58,8 @@ class SearchScreen extends StatelessWidget {
       height: 200.0,
       child: GoogleMap(
         initialCameraPosition: CameraPosition(
-          target: currentLocationSnapshot.data,
+          //TODO: Change back afteer testing
+          target: LatLng(53.522385, -113.622810),
           zoom: 12.0,
         ),
         myLocationButtonEnabled: true,

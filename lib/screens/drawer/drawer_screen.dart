@@ -47,7 +47,7 @@ class DrawerScreen extends StatelessWidget {
                     width: 46.0,
                     height: 46.0,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2.0,
+                       strokeWidth: 2.0,
                     ),
                   )
                 : null,
@@ -593,7 +593,6 @@ class _MenuSwitchItem extends State<MenuSwitchItem> {
       ),
       child: InkWell(
         onTap: () async {
-          await onTap();
           setState(
             () {
               value = !value;

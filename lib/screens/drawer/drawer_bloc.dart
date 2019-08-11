@@ -1,16 +1,12 @@
-import 'dart:io';
-
-import 'package:firebase_database/firebase_database.dart';
+import 'package:edibly/bloc_helper/app_error.dart';
+import 'package:edibly/bloc_helper/validators.dart';
+import 'package:edibly/values/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:rxdart/rxdart.dart';
-import 'package:edibly/values/app_localizations.dart';
-
-import 'package:edibly/bloc_helper/validators.dart';
-import 'package:edibly/bloc_helper/app_error.dart';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
+import 'package:rxdart/rxdart.dart';
 
 enum UpdatePasswordState {
   INVALID_PASSWORD,
@@ -134,23 +130,6 @@ class DrawerBloc {
     return _firebaseAuth.signOut();
   }
 
-  void changeProfilePicture({
-    @required File photo,
-  }) async {
-    /// upload photo
-    String photoUrl;
-    if (photo != null) {
-      var request = new http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
-      request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
-      request.send().then((response) {
-        if (response.statusCode == 200) { print(response.toString()); }
-        else {
-          print(response.statusCode);
-        }
-        photoUrl = "http://edibly.vassi.li/images/${response.request}";
-      });
-    }
-  }
 
 
   /// Dispose function

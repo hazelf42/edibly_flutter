@@ -5,8 +5,6 @@ import 'package:edibly/screens/register/register_info_screen.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-import 'state_widget.dart';
-
 class RegisterScreen extends StatelessWidget {
   Widget firstNameField(
       RegisterBloc registerBloc, AppLocalizations localizations) {

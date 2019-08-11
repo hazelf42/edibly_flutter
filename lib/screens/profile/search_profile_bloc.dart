@@ -68,7 +68,6 @@ class SearchProfileBloc {
     if (keyword == null) keyword = _keyword;
     _keyword = keyword;
     _filteredRestaurants.add(null);
-    List<Data> filteredRestaurants = [];
     List<Data> profiles = [];
     //Vassilibase conversion: search restaurants, then filter.
     var url =

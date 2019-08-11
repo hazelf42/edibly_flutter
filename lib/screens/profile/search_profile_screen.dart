@@ -1,4 +1,5 @@
 import 'package:edibly/bloc_helper/provider.dart';
+import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 import 'profile_preview_widget.dart';
 import 'package:edibly/screens/profile/search_profile_bloc.dart';
@@ -17,9 +18,9 @@ class SearchProfileScreen extends StatelessWidget {
     final AppLocalizations localizations = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Search Profiles"),
-      ),
+        appBar: AppBar(
+          title: SingleLineText("Search Profiles"),
+        ),
         body: SafeArea(
             child: DisposableProvider<SearchProfileBloc>(
                 packageBuilder: (context) =>
@@ -47,48 +48,57 @@ class SearchProfileScreen extends StatelessWidget {
                           separatorBuilder: (context, position) {
                             return Container(height: 10.0);
                           },
-                          itemCount: listViewItemCount == 1 ? 2 : listViewItemCount-1,
+                          itemCount: listViewItemCount == 1
+                              ? 2
+                              : listViewItemCount - 1,
                           itemBuilder: (context, position) {
                             return Column(
                               children: <Widget>[
                                 Builder(builder: (context) {
-                                  if (position == 0) { 
-                                    
- return                                Card(
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 10.0),
-                                  child: Row(
-                                    children: <Widget>[
-                                      Expanded(
-                                        child: TextField(
-                                          autofocus: true,
-                                          onChanged: (keyword) { 
-                                            searchProfileBloc.autocomplete(keyword);
-                                          },
-                                          onSubmitted: (keyword) {
-                                            searchProfileBloc
-                                                .filterRestaurants(keyword);
-                                          },
-                                          decoration: InputDecoration(
-                                            border: InputBorder.none,
-                                            isDense: true,
-                                            hintText: "Search by name",
-                                            labelText: localizations.search,
-                                            prefixIcon: Icon(Icons.search),
+                                  if (position == 0) {
+                                    return Card(
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal: 10.0),
+                                      child: Row(
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: TextField(
+                                              autofocus: true,
+                                              onChanged: (keyword) {
+                                                if (keyword.length > 3){
+                                                  searchProfileBloc
+                                                      .autocomplete(keyword);}
+                                              },
+                                              onSubmitted: (keyword) {
+                                                searchProfileBloc
+                                                    .filterRestaurants(keyword);
+                                              },
+                                              decoration: InputDecoration(
+                                                border: InputBorder.none,
+                                                isDense: true,
+                                                hintText: "Search by name",
+                                                labelText: localizations.search,
+                                                prefixIcon: Icon(Icons.search),
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                );
-                                  }
-                                  else if (listViewItemCount == 1 &&
+                                    );
+                                  } else if (listViewItemCount == 1 &&
                                       filteredRestaurantsValueIsNull) {
-                                    return Container(
-                                      margin: const EdgeInsets.all(24.0),
-                                      child: CircularProgressIndicator(),
-                                    );} else if (filteredRestaurantsSnapshot.hasData && filteredRestaurantsSnapshot.data.length > 0) {
-                                    listViewItemCount++; 
+                                    return Padding(padding: EdgeInsets.all(10), child: Column(children: [
+                                      Icon(Icons.search),
+                                      SizedBox(height: 10),
+                                      Text(
+                                      "Search by name",
+                                      textAlign: TextAlign.center,)])
+                                      );
+                                  } else if (filteredRestaurantsSnapshot
+                                          .hasData &&
+                                      filteredRestaurantsSnapshot.data.length >
+                                          0) {
+                                    listViewItemCount++;
                                     return Container(
                                       margin: EdgeInsets.symmetric(
                                           horizontal: 10.0),
@@ -99,8 +109,21 @@ class SearchProfileScreen extends StatelessWidget {
                                             .elementAt(position - 1),
                                       ),
                                     );
+                                  } else if (filteredRestaurantsSnapshot
+                                          .data.length ==
+                                      0) {
+                                    return Padding(padding: EdgeInsets.all(10), child: Column(children: [
+                                      Icon(Icons.error_outline),
+                                      SizedBox(height: 10),
+                                      Text(
+                                      "No profiles found, please check your spelling and internet connection!",
+                                      textAlign: TextAlign.center,)])
+                                      );
                                   }
-                                  return Container();
+                                  return Container(
+                                    margin: const EdgeInsets.all(24.0),
+                                    child: CircularProgressIndicator(),
+                                  );
                                 }),
                               ],
                             );
