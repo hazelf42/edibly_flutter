@@ -649,7 +649,7 @@ class RestaurantScreen extends StatelessWidget {
     }
     dynamic featuredTip = restaurant.value['featured_tip'];
     return FutureBuilder<Response>(
-      future: get("http://edibly.vassi.li/api/profiles/${featuredTip['uid'].toString()}"),
+      future: get("http://base.edibly.ca/api/profiles/${featuredTip['uid'].toString()}"),
 
       //TODO: - change to post from tip
       builder: (context, response) {

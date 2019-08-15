@@ -156,7 +156,7 @@ class NewPostBloc {
     /// upload photo
     Future<String> photoUrl; 
     if (photo != null) {
-      var request =  http.MultipartRequest("POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+      var request =  http.MultipartRequest("POST", Uri.parse("http://base.edibly.ca/api/upload"));
         request.files.add(http.MultipartFile.fromBytes('file', await photo.readAsBytes(), contentType: MediaType('image', 'jpeg')));
        await request.send().then((response) {
         if (response.statusCode == 200) { photoUrl =  response.stream.bytesToString();}
@@ -217,7 +217,7 @@ class NewPostBloc {
     ///
     ///
 
-    http.post("http://edibly.vassi.li/api/reviews/add",
+    http.post("http://base.edibly.ca/api/reviews/add",
             body: json.encode(reviewBody))
         .then((http.Response response) {
       final int statusCode = response.statusCode;
@@ -343,7 +343,7 @@ class NewPostBloc {
   /// Other
   void getDishes() async {
     final url =
-        ('http://edibly.vassi.li/api/restaurants/' + restaurantKey + '/dishes');
+        ('http://base.edibly.ca/api/restaurants/' + restaurantKey + '/dishes');
     final response = await http.get(url);
     final dishesMap = json.decode(response.body).reversed;
 

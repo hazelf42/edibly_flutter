@@ -72,7 +72,7 @@ class RestaurantReviewsBloc {
     }
 
     /// network request
-    final url = "http://edibly.vassi.li/api/restaurants/$restaurantKey/reviews";
+    final url = "http://base.edibly.ca/api/restaurants/$restaurantKey/reviews";
     final response = await http.get(url);
     final allReviewsJson = json.decode(response.body);
     List<Data> allReviews = [];

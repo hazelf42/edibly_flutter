@@ -29,7 +29,7 @@ class _ProfileScreen extends State<ProfileScreen> {
   Widget _author(
       {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
     return FutureBuilder<http.Response>(
-      future: http.get("http://edibly.vassi.li/api/profiles/$uid"),
+      future: http.get("http://base.edibly.ca/api/profiles/$uid"),
       builder: (context, response) {
         Map<dynamic, dynamic> authorValue =
             (response.hasData) ? json.decode(response?.data?.body) : null;

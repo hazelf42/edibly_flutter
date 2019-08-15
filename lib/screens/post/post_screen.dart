@@ -61,65 +61,74 @@ class PostScreen extends StatelessWidget {
           builder: (context) {
             final PostBloc postBloc = Provider.of<PostBloc>(context);
             final AppLocalizations localizations = AppLocalizations.of(context);
-            return Container( child:
-                   RefreshIndicator(
-                    child: Column(
-                      children: <Widget>[
-                        Expanded(
-                          child: ListView.separated(
-                            padding: const EdgeInsets.only(
-                              top: 8.0,
-                              bottom: 8.0,
+            return Container(
+                alignment: Alignment.center,
+                child: StreamBuilder<List<Data>>(
+                    stream: postBloc.comments,
+                    builder: (context, postsSnapshot) {
+                      if (postsSnapshot?.data == null) {
+                        postBloc.getComments();
+                        return CircularProgressIndicator();
+                      }
+                      return RefreshIndicator(
+                        child: Column(
+                          children: <Widget>[
+                            Expanded(
+                              child: ListView.separated(
+                                padding: const EdgeInsets.only(
+                                  top: 8.0,
+                                  bottom: 8.0,
+                                ),
+                                separatorBuilder: (context, position) {
+                                  if (position == 0) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12.0,
+                                        horizontal: 16.0,
+                                      ),
+                                      child: Text(
+                                        localizations.comments,
+                                        style:
+                                            Theme.of(context).textTheme.title,
+                                      ),
+                                    );
+                                  }
+                                  return Divider();
+                                },
+                            itemCount: (postsSnapshot.data == null ? 0 : postsSnapshot.data.length) + 1,
+                                itemBuilder: (context, position) {
+                                  if (position == 0) {
+                                    return PostWidget(
+                                      uid: uid,
+                                      post: post,
+                                    );
+                                  }
+
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 4.0,
+                                      horizontal: 16.0,
+                                    ),
+                                    child: PostCommentWidget(
+                                      comment: post.value['comments']
+                                          .elementAt(position - 1),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
-                            separatorBuilder: (context, position) {
-                              if (position == 0) {
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12.0,
-                                    horizontal: 16.0,
-                                  ),
-                                  child: Text(
-                                    localizations.comments,
-                                    style: Theme.of(context).textTheme.title,
-                                  ),
-                                );
-                              }
-                              return Divider();
-                            },
-                            itemCount: (post.value['numcomments'] + 1),
-                            itemBuilder: (context, position) {
-                              if (position == 0) {
-                                return PostWidget(
-                                  uid: uid,
-                                  post: post,
-                                );
-                              }
-                            
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4.0,
-                                  horizontal: 16.0,
-                                ),
-                                child: PostCommentWidget(
-                                  comment: post.value['comments']
-                                      .elementAt(position - 1),
-                                ),
-                              );
-                            },
-                          ),
+                            Divider(
+                              height: 1.0,
+                            ),
+                            _textField(postBloc, localizations),
+                          ],
                         ),
-                        Divider(
-                          height: 1.0,
-                        ),
-                        _textField(postBloc, localizations),
-                      ],
-                    ),
-                    onRefresh: () {
-                      postBloc.clearComments();
-                      return Future.delayed(Duration(seconds: 1));
-                    },
-                  )
-            );
+                        onRefresh: () {
+                          postBloc.clearComments();
+                          return Future.delayed(Duration(seconds: 1));
+                        },
+                      );
+                    }));
           },
         ),
       ),
@@ -135,81 +144,83 @@ class PostCommentWidget extends StatelessWidget {
   });
 
   Widget _author(
-      {@required MainBloc mainBloc, @required AppLocalizations localizations, @required BuildContext context}) {
-        final authorValue = comment['profile'];
-        return Row(
-          children: <Widget>[
-            CircleAvatar(
-              radius: 18.0,
-              backgroundImage: (authorValue == null || authorValue['photo'] == null || authorValue['photo'] == "None") 
-                  ? null
-                  : NetworkImage(
-                      authorValue['photo']),
-              child: authorValue == null
-                  ? SizedBox(
-                      width: 36.0,
-                      height: 36.0,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.0,
-                      ),
-                    )
-                  : null,
-            ),
-            Container(
-              width: 16.0,
-            ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  authorValue == null
-                      ? Container()
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            SingleChildScrollView(
-                              physics: NeverScrollableScrollPhysics(),
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: <Widget>[
-                                  SingleLineText(
-                                    '${authorValue['firstname']} ${authorValue['lastname']}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                               //   SingleLineText(
-                             //       ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
-                                   // style: TextStyle(
-                                 //     color: Theme.of(context).hintColor,
-                                     // fontSize: 14,
-                                     // fontWeight: FontWeight.w600,
-                                    //),
-                                  //),
-                                ],
+      {@required MainBloc mainBloc,
+      @required AppLocalizations localizations,
+      @required BuildContext context}) {
+    final authorValue = comment['profile'];
+    return Row(
+      children: <Widget>[
+        CircleAvatar(
+          radius: 18.0,
+          backgroundImage: (authorValue == null ||
+                  authorValue['photo'] == null ||
+                  authorValue['photo'] == "None")
+              ? null
+              : NetworkImage(authorValue['photo']),
+          child: authorValue == null
+              ? SizedBox(
+                  width: 36.0,
+                  height: 36.0,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.0,
+                  ),
+                )
+              : null,
+        ),
+        Container(
+          width: 16.0,
+        ),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              authorValue == null
+                  ? Container()
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        SingleChildScrollView(
+                          physics: NeverScrollableScrollPhysics(),
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: <Widget>[
+                              SingleLineText(
+                                '${authorValue['firstname']} ${authorValue['lastname']}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                            Container(
-                              height: 4.0,
-                            ),
-                            SingleLineText(
-                              '${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(comment['timestamp'].toString())).toInt() * 1000))}',
-                              style: TextStyle(
-                                color: Theme.of(context).hintColor,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                              //   SingleLineText(
+                              //       ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                              // style: TextStyle(
+                              //     color: Theme.of(context).hintColor,
+                              // fontSize: 14,
+                              // fontWeight: FontWeight.w600,
+                              //),
+                              //),
+                            ],
+                          ),
                         ),
-                ],
-              ),
-            ),
-          ],
-        );
-      }
-  
+                        Container(
+                          height: 4.0,
+                        ),
+                        SingleLineText(
+                          '${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(comment['timestamp'].toString())).toInt() * 1000))}',
+                          style: TextStyle(
+                            color: Theme.of(context).hintColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -219,10 +230,7 @@ class PostCommentWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         _author(
-          mainBloc: mainBloc,
-          localizations: localizations,
-          context: context
-        ),
+            mainBloc: mainBloc, localizations: localizations, context: context),
         Container(
           height: 8.0,
         ),
@@ -313,7 +321,8 @@ class PostWidget extends StatelessWidget {
   Widget _author(
       {@required MainBloc mainBloc, @required AppLocalizations localizations}) {
     return FutureBuilder<http.Response>(
-      future: http.get("http://edibly.vassi.li/api/profiles/${post.value['profile']['uid'].toString()}"),
+      future: http.get(
+          "http://base.edibly.ca/api/profiles/${post.value['profile']['uid'].toString()}"),
       builder: (context, response) {
         Map<dynamic, dynamic> authorValue = post.value['profile'];
         return GestureDetector(
@@ -534,7 +543,9 @@ class PostWidget extends StatelessWidget {
   }
 
   Widget _tags() {
-    if ( post.value['tags'] == null || post.value['tags'] == [] || post.value['tags'].isEmpty) {
+    if (post.value['tags'] == null ||
+        post.value['tags'] == [] ||
+        post.value['tags'].isEmpty) {
       return Container(height: 0);
     }
     List<String> tags = dynamicTagArrayToTagList(post.value['tags']);
@@ -625,7 +636,7 @@ class PostWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Text(
-                        post.value['restaurant']['name'] ?? '',
+                      post.value['restaurant']['name'] ?? '',
                       style: Theme.of(context).textTheme.title,
                     ),
                     _restaurant(

@@ -150,7 +150,7 @@ class TipWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     
     return FutureBuilder<Response>(
-      future: get("http://edibly.vassi.li/api/profiles/${tip.value['uid'].toString()}"),
+      future: get("http://base.edibly.ca/api/profiles/${tip.value['uid'].toString()}"),
       builder: (context, response) {
         var authorValue = response.hasData ? json.decode(response.data.body) : null;
         return Row(

@@ -62,7 +62,7 @@ class DiscoverBloc {
     /// network request
     await getCurrentLocation().then((location) async {
       final response =
-          await http.post('http://edibly.vassi.li/api/restaurants/discover',
+          await http.post('http://base.edibly.ca/api/restaurants/discover',
               body: json.encode({
                 'lat': location.latitude,
                 'lon': location.longitude,
@@ -140,7 +140,7 @@ class DiscoverBloc {
     /// network request
 
     await http
-        .get('http://edibly.vassi.li/api/events')
+        .get('http://base.edibly.ca/api/events')
         .then((http.Response response) {
       final map = json.decode(response.body);
       map.forEach(
@@ -152,7 +152,7 @@ class DiscoverBloc {
         return;
       }
       final id = dataWithoutRating.value['rid'];
-      await (http.get('http://edibly.vassi.li/api/restaurants/$id'))
+      await (http.get('http://base.edibly.ca/api/restaurants/$id'))
           .then((http.Response response) {
         final restaurant = json.decode(response.body);
         Data dataWithRating =

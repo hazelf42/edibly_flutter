@@ -70,7 +70,7 @@ class RestaurantTipsBloc {
       _tipsInCurrentPage = 0; }
 
       /// network request
-      final url = "http://edibly.vassi.li/api/restaurants/$restaurantKey/tips";
+      final url = "http://base.edibly.ca/api/restaurants/$restaurantKey/tips";
       final response = await http.get(url);
       final allTips = json.decode(response.body);
       if (allTips.length > oldTipsLength+TIPS_PER_PAGE) {

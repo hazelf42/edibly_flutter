@@ -160,7 +160,7 @@ class SearchBloc {
     await getCurrentLocation().then((location) async {
       //TODO: - testing only
       location = LatLng(53.522385, 113.622810);
-    final response = await http.post('http://edibly.vassi.li/api/restaurants/nearby', body: json.encode({'lat' : location.latitude, 'lon' : location.longitude, 'radius' : 5000000000000000000}));
+    final response = await http.post('http://base.edibly.ca/api/restaurants/nearby', body: json.encode({'lat' : location.latitude, 'lon' : location.longitude, 'radius' : 5000000000000000000}));
     final map = json.decode(response.body);
     print(map);
     final restaurantsWithoutRatingMap = Map<dynamic, dynamic>();
@@ -191,7 +191,7 @@ class SearchBloc {
     List<Data> restaurantsToFilter = [];
     //Vassilibase conversion: search restaurants, then filter.
     var url =
-        "http://edibly.vassi.li/api/restaurants/search/" + toUrlFormat(keyword);
+        "http://base.edibly.ca/api/restaurants/search/" + toUrlFormat(keyword);
     await http.get(url).then((response) {
       final map = json.decode(response.body);
       map.forEach((r) => restaurantsToFilter.add(Data(r['rid'], r)));

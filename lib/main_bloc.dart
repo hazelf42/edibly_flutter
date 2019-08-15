@@ -73,7 +73,7 @@ class MainBloc extends Object with Validators {
       var value =
           json.encode({"glutenfree": "${_glutenFree.value == 0 ? 1 : 0}"});
       await http
-          .put("http://edibly.vassi.li/api/profiles/${(uid)}",
+          .put("http://base.edibly.ca/api/profiles/${(uid)}",
               body: value)
           .then((http.Response response) {
         print(response.statusCode);
@@ -98,7 +98,7 @@ class MainBloc extends Object with Validators {
       var value =
           json.encode({"veglevel": "${diet == Diet.VEGAN ? '2' : '1'}"});
       await http
-          .put("http://edibly.vassi.li/api/profiles/${(uid)}",
+          .put("http://base.edibly.ca/api/profiles/${(uid)}",
               body: value)
           .then((http.Response response) {
         print(response.statusCode);
@@ -110,7 +110,7 @@ class MainBloc extends Object with Validators {
 
   void _setCurrentUserInfoWithoutCallback(String uid, dynamic value) async {
     await http
-        .put("http://edibly.vassi.li/api/profiles/$uid", body: json.encode(value))
+        .put("http://base.edibly.ca/api/profiles/$uid", body: json.encode(value))
         .then((http.Response response) {
       print(response.statusCode);
     });
@@ -131,15 +131,15 @@ class MainBloc extends Object with Validators {
     switch (post.value['type']) {
       case 0:
         final id = post.value['rrid'];
-        url = "http://edibly.vassi.li/api/reviews/$id";
+        url = "http://base.edibly.ca/api/reviews/$id";
         break;
       case 1:
         final id = post.value['rpid'];
-        url = "http://edibly.vassi.li/api/pictures/$id";
+        url = "http://base.edibly.ca/api/pictures/$id";
         break;
       case 2:
         final id = post.value['rtid'];
-        url = "http://edibly.vassi.li/api/tips/$id";
+        url = "http://base.edibly.ca/api/tips/$id";
         break;
     }
     //TODO: - VASSILI: Implement deleting (or "deleting") posts
@@ -161,7 +161,7 @@ class MainBloc extends Object with Validators {
       type = "review";
     }
     await http
-        .post("http://edibly.vassi.li/api/like",
+        .post("http://base.edibly.ca/api/like",
             body: json.encode({
               'uid': uid,
               'type': type,
@@ -186,7 +186,7 @@ class MainBloc extends Object with Validators {
       type = "review";
     }
     await http
-        .post("http://edibly.vassi.li/api/unlike",
+        .post("http://base.edibly.ca/api/unlike",
             body: json.encode({
               'uid': uid,
               'type': type,

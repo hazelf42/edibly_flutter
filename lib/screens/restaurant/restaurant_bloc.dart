@@ -76,14 +76,14 @@ class RestaurantBloc {
   /// Other functions
   void getRestaurant() async {
     _restaurant.add(null);
-    final url = "http://edibly.vassi.li/api/restaurants/" + restaurantKey;
+    final url = "http://base.edibly.ca/api/restaurants/" + restaurantKey;
     final response = await http.get(url);
     final map = json.decode(response.body);
     Data restaurantData = Data(map['rid'], map);
     _restaurant.add(restaurantData);
     var featuredTip = [];
     final tipsResponse = await http.get(
-        'http://edibly.vassi.li/api/restaurants/' + restaurantKey + '/tips');
+        'http://base.edibly.ca/api/restaurants/' + restaurantKey + '/tips');
     final tipsMap = json.decode(tipsResponse.body);
     print(tipsMap);
     tipsMap.forEach((t) => t['featured'] == 1 ? featuredTip.add(t) : null);
@@ -94,7 +94,7 @@ class RestaurantBloc {
     }
     _restaurant.add(restaurantData);
 
-    //final tipsResponse = await http.get("http://edibly.vassi.li/api/restaurants/'+restaurantKey+'/tips');
+    //final tipsResponse = await http.get("http://base.edibly.ca/api/restaurants/'+restaurantKey+'/tips');
     //final tipsMap = json.decode(tipsResponse.body);
     //   _firebaseDatabase.reference().child('restaurants').child(restaurantKey).onValue.listen((event) async {
     //   if (event?.snapshot?.value != null) {
@@ -135,7 +135,7 @@ class RestaurantBloc {
       };
 
       http
-          .post("http://edibly.vassi.li/api/tips/add",
+          .post("http://base.edibly.ca/api/tips/add",
               body: json.encode(tipBody))
           .then((http.Response response) {
         final int statusCode = response.statusCode;
@@ -200,7 +200,7 @@ class RestaurantBloc {
     _pickedPhotoUploadState.add(PickedPhotoUploadState.TRYING);
 
         await getImageUrl(photo: _pickedPhoto.value).then((fileName) {
-       var imageUrl = "http://edibly.vassi.li/static/uploads/" +
+       var imageUrl = "http://base.edibly.ca/static/uploads/" +
             json.decode(fileName)['filename'];
       var reviewBody = {
         'uid': firebaseUserId,
@@ -210,7 +210,7 @@ class RestaurantBloc {
       };
 
       http
-          .post("http://edibly.vassi.li/api/reviews/add",
+          .post("http://base.edibly.ca/api/reviews/add",
               body: json.encode(reviewBody))
           .then((http.Response response) {
         final int statusCode = response.statusCode;
@@ -231,7 +231,7 @@ class RestaurantBloc {
     Future<String> photoUrl;
     if (photo != null) {
       var request = http.MultipartRequest(
-          "POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+          "POST", Uri.parse("http://base.edibly.ca/api/upload"));
       request.files.add(http.MultipartFile.fromBytes(
           'file', await photo.readAsBytes(),
           contentType: MediaType('image', 'jpeg')));
@@ -249,14 +249,14 @@ class RestaurantBloc {
   Future<Stream<Event>> getRestaurantBookmarkValue(
       String uid, String restaurantKey) async {
     final url =
-        "http://edibly.vassi.li/api/profiles/" + uid + "/" + restaurantKey;
+        "http://base.edibly.ca/api/profiles/" + uid + "/" + restaurantKey;
     final response = await http.get(url);
     return json.decode(response.body);
   }
 
   void getLastThreeRestaurantPhotos() async {
     final url =
-        'http://edibly.vassi.li/api/restaurants/' + restaurantKey + '/pictures';
+        'http://base.edibly.ca/api/restaurants/' + restaurantKey + '/pictures';
     final response = await http.get(url);
     List<Data> photos = [];
     final imagesMap = json.decode(response.body);

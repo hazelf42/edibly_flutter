@@ -119,7 +119,7 @@ class DrawerBloc {
   Future<http.Response> getVassilibaseUser(String uid) async {
     //Returns all other info: Name, diet, image, etc.
 
-    final url = "http://edibly.vassi.li/api/profiles/$uid";
+    final url = "http://base.edibly.ca/api/profiles/$uid";
     final response = await http.get(url).then((http.Response response ) {print(response);});
     return response;
   }

@@ -392,7 +392,7 @@ class DrawerScreen extends StatelessWidget {
           return Drawer(
               child: FutureBuilder<Response>(
                   future: get(
-                      'http://edibly.vassi.li/api/profiles/${_firebaseUser.uid}'),
+                      'http://base.edibly.ca/api/profiles/${_firebaseUser.uid}'),
                   builder: (context, snapshot) {
                     if (snapshot.hasData && snapshot.data.body != "null") {
                       var profile = json.decode(snapshot.data.body);

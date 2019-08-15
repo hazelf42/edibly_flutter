@@ -188,7 +188,7 @@ class RegisterBloc extends Object with Validators {
     Future<String> photoUrl;
     if (photo != null) {
       var request = http.MultipartRequest(
-          "POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+          "POST", Uri.parse("http://base.edibly.ca/api/upload"));
       request.files.add(http.MultipartFile.fromBytes(
           'file', await photo.readAsBytes(),
           contentType: MediaType('image', 'jpeg')));
@@ -218,7 +218,7 @@ class RegisterBloc extends Object with Validators {
           'glutenfree' : glutenFree ? 1 : 0,
           'uid': user.uid
         };
-    await http.post("http://edibly.vassi.li/api/profiles/add",
+    await http.post("http://base.edibly.ca/api/profiles/add",
 
         body: json.encode(body)).then((_) {return true; });
   }
@@ -230,7 +230,7 @@ class RegisterBloc extends Object with Validators {
       var lastName = nameList.removeLast();
 
 //Necessary?
-    await http.post("http://edibly.vassi.li/api/profiles/add",
+    await http.post("http://base.edibly.ca/api/profiles/add",
         body: json.encode({
           'firstname': nameList.join(" "),
           'lastname': lastName,
@@ -256,7 +256,7 @@ class RegisterBloc extends Object with Validators {
       }).then((_) {
         user.updateProfile(userUpdateInfo).then((_) async {
           await http
-              .post("http://edibly.vassi.li/api/profiles/add",
+              .post("http://base.edibly.ca/api/profiles/add",
                   body: json.encode({
                     'firstname': firstName,
                     'lastName': lastName,
@@ -275,7 +275,7 @@ class RegisterBloc extends Object with Validators {
       });
     } else {
       await http
-          .post("http://edibly.vassi.li/api/profiles/add",
+          .post("http://base.edibly.ca/api/profiles/add",
               body: json.encode({
                 'firstname': user.displayName[0],
                 'lastName': user.displayName[1],

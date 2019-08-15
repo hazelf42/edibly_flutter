@@ -50,7 +50,7 @@ class ProfileBloc {
   Future<bool> isFollowing({@required profileUid, @required currentUid}) async {
     bool a;
     await http
-        .get("http://edibly.vassi.li/api/profiles/$currentUid/following")
+        .get("http://base.edibly.ca/api/profiles/$currentUid/following")
         .then((response) {
       (json.decode(response.body)).forEach((profile) {
         if (profile['uid'] == profileUid) {
@@ -81,7 +81,7 @@ class ProfileBloc {
       if (isFollowing) {
         final body = {'uid': currentUid, 'follow': uid};
         http
-            .post("http://edibly.vassi.li/api/unfollow",
+            .post("http://base.edibly.ca/api/unfollow",
                 body: json.encode(body))
             .then((http.Response response) {
           final int statusCode = response.statusCode;
@@ -93,7 +93,7 @@ class ProfileBloc {
       } else {
         final body = {'uid': currentUid, 'follow': uid};
         http
-            .post("http://edibly.vassi.li/api/follow", body: json.encode(body))
+            .post("http://base.edibly.ca/api/follow", body: json.encode(body))
             .then((http.Response response) {
           final int statusCode = response.statusCode;
           if (statusCode < 200 || statusCode > 400) {
@@ -111,7 +111,7 @@ class ProfileBloc {
 
     if (photo != null) {
       var request = http.MultipartRequest(
-          "POST", Uri.parse("http://edibly.vassi.li/api/upload"));
+          "POST", Uri.parse("http://base.edibly.ca/api/upload"));
       request.files.add(http.MultipartFile.fromBytes(
           'file', await photo.readAsBytes(),
           contentType: MediaType('image', 'jpeg')));
@@ -121,10 +121,10 @@ class ProfileBloc {
           var bytesToString = await (response.stream.bytesToString());
           var newPhotoUrl = (json.decode(bytesToString))['filename'];
           UserUpdateInfo info = UserUpdateInfo();
-          var url =  "http://edibly.vassi.li/static/uploads/$newPhotoUrl";
+          var url =  "http://base.edibly.ca/static/uploads/$newPhotoUrl";
           info.photoUrl = url;
           await user.updateProfile(info);
-          await http.put("http://edibly.vassi.li/api/profiles/$uid",
+          await http.put("http://base.edibly.ca/api/profiles/$uid",
           body: json.encode({'photo' : url}));
           return url;
           
@@ -139,10 +139,10 @@ class ProfileBloc {
             //         UserUpdateInfo info;
             //         info.photoUrl = newPhotoUrl;
             //         user.updateProfile(info);
-            //         await http.put("http://edibly.vassi.li/api/profiles/${uid}",
+            //         await http.put("http://base.edibly.ca/api/profiles/${uid}",
             //             body: json.encode({
             //               'photo':
-            //                   ("http://edibly.vassi.li/static/uploads/$newPhotoUrl"),
+            //                   ("http://base.edibly.ca/static/uploads/$newPhotoUrl"),
             //             }));
             //       });
             //     });
@@ -161,7 +161,7 @@ class ProfileBloc {
     if (posts == null) posts = [];
 
     await http
-        .get('http://edibly.vassi.li/api/profiles/${uid}/feed')
+        .get('http://base.edibly.ca/api/profiles/${uid}/feed')
         .then((postResponse) {
       json.decode(postResponse.body).forEach((post) {
         posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
@@ -197,7 +197,7 @@ class ProfileBloc {
     //     _postsInCurrentPage = 0;
     //     print(uid);
     //     /// network request
-    //     await http.get("edibly.vassi.li/api/profiles/$uid/posts").then((response) {
+    //     await http.get("base.edibly.ca/api/profiles/$uid/posts").then((response) {
     //       /// increment number of posts in current page
     //       var snapshot = json.decode(response.body);
 

@@ -11,7 +11,7 @@ import 'package:edibly/values/app_localizations.dart';
 class FeedBloc {
   String feedType;
   AppLocalizations localizations;
-  
+
   FeedBloc({
     @required this.feedType,
   }) {
@@ -20,7 +20,7 @@ class FeedBloc {
   }
 
   /// Static variables
-  static const int POSTS_PER_PAGE = 5;
+  static const int POSTS_PER_PAGE = 10;
 
   /// Local  variables
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
@@ -55,7 +55,7 @@ class FeedBloc {
       _currentPage++;
       _postsInCurrentPage = 0;
     }
-  
+
     /// started fetching a page
     onChildAddedListener?.cancel();
     _fetchStarted = true;
@@ -77,70 +77,84 @@ class FeedBloc {
 
       if (feedType == 'nearby') {
         //TODO: - Actually make it posts from nearby lol
-        response = await http.get("http://edibly.vassi.li/api/posts");
-      
+        response = await http.get("http://base.edibly.ca/api/posts/0");
+
         final map = json.decode(response.body);
         map.forEach((post) {
-            posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
-          });
-      
-            } else if (feedType == 'following') {
+          posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
+          _postsInCurrentPage++;
+        });
+      } else if (feedType == 'following') {
         final currentUser = (await MainBloc().getCurrentFirebaseUser());
         await http
-            .get("http://edibly.vassi.li/api/profiles/${currentUser.uid}/feed")
+            .get("http://base.edibly.ca/api/profiles/${currentUser.uid}/feed/0")
             .then((postResponse) {
-              if (postResponse.body != "null"){
-          json.decode(postResponse.body).forEach((post) {
-            posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
-          });
-        }});
-
+          if (postResponse.body != "null") {
+            json.decode(postResponse.body).forEach((post) {
+              posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
+              _postsInCurrentPage++;
+            });
+          }
+        });
       }
-          _posts.add(posts);
-
+      _posts.add(posts);
     }
 
     /// if this is not the first page
     else {
-      Query query = _firebaseDatabase
-          .reference()
-          .child('feedPosts')
-          .orderByKey()
-          .endAt(posts.lastWhere((post) => post != null).key.toString())
-          .limitToLast(POSTS_PER_PAGE + 1);
-      onChildAddedListener = query.onChildAdded.listen((event) {
-        /// increment number of posts in current page
-        _postsInCurrentPage++;
+      /// make sure variables reflects this being the first page
+      _currentPage = 0;
+      _postsInCurrentPage = 0;
 
-        /// remove any null values, null values are shown as circular loaders
-        posts.remove(null);
+      /// network request
+      /// TODO: - Localization ?
+      http.Response response;
 
-        /// do not insert duplicate posts
-        if (event?.snapshot?.key != posts[oldPostsLength - 1].key) {
-          /// insert newly acquired post to the start of new page
-          posts.insert(oldPostsLength,
-              Data(event?.snapshot?.key, event?.snapshot?.value));
-        }
+      if (feedType == 'nearby') {
+        //TODO: - Actually make it posts from nearby lol
+        response = await http.get("http://base.edibly.ca/api/posts/$_currentPage");
 
-        /// if this was the last post in requested page, then show a circular loader at the end of page
+        final map = json.decode(response.body);
+        map.forEach((post) {
+          if (post['rrid'] ?? post['rtid'] != posts[oldPostsLength - 1].key) {
+            /// insert newly acquired post to the start of new page
+            posts.insert(oldPostsLength,
+                Data((post['rtid'] ?? post['rrid']).toString(), post));
+            _postsInCurrentPage++;
+          }
+        });
+      } else if (feedType == 'following') {
+        final currentUser = (await MainBloc().getCurrentFirebaseUser());
+        await http
+            .get("http://base.edibly.ca/api/profiles/${currentUser.uid}/feed/$_currentPage")
+            .then((postResponse) {
+          if (postResponse.body != "null") {
+            json.decode(postResponse.body).forEach((post) {
+              if (post['rrid'] ??
+                  post['rtid'] != posts[oldPostsLength - 1].key) {
+                /// insert newly acquired post to the start of new page
+                posts.insert(oldPostsLength,
+                    Data((post['rtid'] ?? post['rrid']).toString(), post));
+                _postsInCurrentPage++;
+              }
+            });
+          }
+        });
         if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1))
           posts.add(null);
 
         /// publish an update to the stream
         _posts.add(posts);
-        print(_posts);
-      });
-      query.onValue.listen((_) {
-        onChildAddedListener?.cancel();
-      });
-      query.onChildRemoved.listen((event) {
-        posts.removeWhere(
-            (post) => post != null && post.key == (event?.snapshot?.key ?? ''));
+      }
+      _currentPage++;
+      if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1))
+        posts.add(null);
 
-        /// publish an update to the stream
-        _posts.add(posts);
-      });
+      /// publish an update to the stream
+      _posts.add(posts);
     }
+
+    /// if this was the last post in requested page, then show a circular loader at the end of page
   }
 
   /// Dispose function

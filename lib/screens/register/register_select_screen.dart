@@ -15,9 +15,9 @@ class RegisterSelectScreen extends StatelessWidget {
     return SignInButton(Buttons.Google,
         text: "Continue with Google",
         onPressed: () async =>
-            await StateWidget.of(context).signInWithGoogle().then((_) async {
+            await StateWidget.of(context).signInWithGoogle ().then((_) async {
               await MainBloc().getCurrentFirebaseUser().then((user) {
-                if (user.metadata.lastSignInTimestamp == null) {
+                if ( (user.metadata.creationTimestamp - user.metadata.lastSignInTimestamp).abs() < 3000 || user.metadata.lastSignInTimestamp == null) {
                   Navigator.push(
                       context,
                       MaterialPageRoute(

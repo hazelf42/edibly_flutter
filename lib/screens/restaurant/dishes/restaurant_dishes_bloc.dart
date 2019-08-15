@@ -35,7 +35,7 @@ class RestaurantDishesBloc {
 
   void getDishes() async {
     final url =
-        ('http://edibly.vassi.li/api/restaurants/' + restaurantKey + '/dishes');
+        ('http://base.edibly.ca/api/restaurants/' + restaurantKey + '/dishes');
     final response = await http.get(url);
     final dishesMap = json.decode(response.body).reversed;
 

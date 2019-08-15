@@ -71,7 +71,7 @@ class SearchProfileBloc {
     List<Data> profiles = [];
     //Vassilibase conversion: search restaurants, then filter.
     var url =
-        "http://edibly.vassi.li/api/profiles/search/$keyword";
+        "http://base.edibly.ca/api/profiles/search/$keyword";
     await http.get(url).then((response) {
       final map = json.decode(response.body);
       map.forEach((p) => profiles.add(Data(p['uid'], p)));
@@ -87,7 +87,7 @@ class SearchProfileBloc {
     List<Data> profiles = [];
     //Vassilibase conversion: search restaurants, then filter.
     var url =
-        "http://edibly.vassi.li/api/profiles/complete/$keyword";
+        "http://base.edibly.ca/api/profiles/complete/$keyword";
     await http.get(url).then((response) {
       final map = json.decode(response.body);
       map.forEach((p) => profiles.add(Data(p['uid'], p)));
@@ -101,7 +101,7 @@ class SearchProfileBloc {
   }) async { 
     bool isFollowing;
     await http
-        .get("http://edibly.vassi.li/api/profiles/$currentUid/following"   )
+        .get("http://base.edibly.ca/api/profiles/$currentUid/following"   )
         .then((response) {
       (json.decode(response.body)).forEach((profile) {
         if (profile['uid'] == profileUid) {
@@ -130,7 +130,7 @@ class SearchProfileBloc {
       if (isFollowing) {
         final body = {'uid': currentUid, 'follow': profileUid};
         http
-            .post("http://edibly.vassi.li/api/unfollow",
+            .post("http://base.edibly.ca/api/unfollow",
                 body: json.encode(body))
             .then((http.Response response) {
           final int statusCode = response.statusCode;
@@ -142,7 +142,7 @@ class SearchProfileBloc {
       } else {
         final body = {'uid': currentUid, 'follow': profileUid };
         http
-            .post("http://edibly.vassi.li/api/follow", body: json.encode(body))
+            .post("http://base.edibly.ca/api/follow", body: json.encode(body))
             .then((http.Response response) {
           final int statusCode = response.statusCode;
           if (statusCode < 200 || statusCode > 400) {

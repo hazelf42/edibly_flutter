@@ -144,7 +144,7 @@ class NewPostDishesScreen extends StatelessWidget {
     String imageUrl;
     if (photo != null) {
       await newPostBloc.getImageUrl(photo: photo).then((fileName) {
-        imageUrl = "http://edibly.vassi.li/static/uploads/" +
+        imageUrl = "http://base.edibly.ca/static/uploads/" +
             json.decode(fileName)['filename'];
         newPostBloc
             .submit(
