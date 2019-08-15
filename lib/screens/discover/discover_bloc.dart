@@ -62,7 +62,7 @@ class DiscoverBloc {
     /// network request
     await getCurrentLocation().then((location) async {
       final response =
-          await http.post('http://base.edibly.ca/api/restaurants/discover',
+          await http.post('http://base.edibly.ca/api/restaurants/discover/0',
               body: json.encode({
                 'lat': location.latitude,
                 'lon': location.longitude,
