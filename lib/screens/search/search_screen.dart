@@ -28,30 +28,32 @@ class SearchScreen extends StatelessWidget {
     Set<Marker> markers = {};
     if (allRestaurantsSnapshot?.data != null) {
       allRestaurantsSnapshot.data.forEach((data) {
-        markers.add(Marker(
-          markerId: MarkerId(data.key),
-          position: LatLng(
-            double.parse((data.value['lat']/10000000).toString()),
-            double.parse((data.value['lon']/10000000).toString()),
-          ),
-          infoWindow: InfoWindow(
-            title: data.value['name'],
-            snippet: data.value['address'] ??
-                data.value['address1'] ??
-                data.value['address2'],
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RestaurantScreen(
-                        firebaseUserId: firebaseUser.uid,
-                        restaurantKey: data.key,
-                      ),
-                ),
-              );
-            },
-          ),
-        ));
+        if (data != null) {
+          markers.add(Marker(
+            markerId: MarkerId(data.key),
+            position: LatLng(
+              double.parse((data.value['lat'] / 10000000).toString()),
+              double.parse((data.value['lon'] / 10000000).toString()),
+            ),
+            infoWindow: InfoWindow(
+              title: data.value['name'],
+              snippet: data.value['address'] ??
+                  data.value['address1'] ??
+                  data.value['address2'],
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RestaurantScreen(
+                      firebaseUserId: firebaseUser.uid,
+                      restaurantKey: data.key,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ));
+        }
       });
     }
     return Container(
@@ -267,7 +269,7 @@ class SearchScreen extends StatelessWidget {
                       if (allRestaurantsSnapshot?.data == null) {
                         if (allRestaurantsSnapshot.connectionState ==
                             ConnectionState.waiting) {
-                          searchBloc.getAllRestaurants();
+                          searchBloc.getRestaurants();
                         }
                         return CircularProgressIndicator();
                       }
@@ -314,10 +316,9 @@ class SearchScreen extends StatelessWidget {
                                           children: <Widget>[
                                             Expanded(
                                               child: TextField(
-                                                onSubmitted:  (keyword) {
-                                                    searchBloc
-                                                        .filterRestaurants(
-                                                            keyword);
+                                                onSubmitted: (keyword) {
+                                                  searchBloc.filterRestaurants(
+                                                      keyword);
                                                 },
                                                 decoration: InputDecoration(
                                                   border: InputBorder.none,
@@ -390,6 +391,19 @@ class SearchScreen extends StatelessWidget {
                                     ],
                                   );
                                 }
+                                if (filteredRestaurantsSnapshot.data
+                                        .elementAt(position - 2) ==
+                                    null) {
+                                  searchBloc.getRestaurants();
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12.0,
+                                      horizontal: 16.0,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
                                 return Container(
                                   margin:
                                       EdgeInsets.symmetric(horizontal: 10.0),
@@ -404,7 +418,7 @@ class SearchScreen extends StatelessWidget {
                           },
                         ),
                         onRefresh: () {
-                          searchBloc.getAllRestaurants();
+                          searchBloc.getRestaurants();
                           return Future.delayed(Duration(seconds: 1));
                         },
                       );

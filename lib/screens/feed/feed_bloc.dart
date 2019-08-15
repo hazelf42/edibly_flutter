@@ -152,13 +152,13 @@ class FeedBloc {
             POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
           posts.add(null);
         }
+      posts.remove(null);
 
         /// publish an update to the stream
         _posts.add(posts);
       }
       _currentPage++;
-      if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1))
-        posts.add(null);
+      //if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) posts.add(null);
 
       /// publish an update to the stream
       _posts.add(posts);

@@ -43,6 +43,12 @@ class SearchBloc {
   final _restaurantLocation = BehaviorSubject<String>();
 
   /// Variables
+  // ~ pagination stuff ~
+  static const int POSTS_PER_PAGE = 9;
+  bool _fetchStarted = false;
+  int _postsInCurrentPage = 0;
+  int _currentPage = 0;
+
   int _filterRestaurantsCallCounter = 0;
   double _distanceFilterValue = -1;
   double _ratingFilterValue = -1;
@@ -154,33 +160,102 @@ class SearchBloc {
   }
 
   /// Other functions
-  void getAllRestaurants() async {
-    _allRestaurants.add(null);
-    List<Data> restaurantsWithoutRating = [];
-    await getCurrentLocation().then((location) async {
+  ///
+  ///
+  void getRestaurants() async {
+
+    if (_fetchStarted && _postsInCurrentPage < POSTS_PER_PAGE) {
+      return;
+    } else if (_postsInCurrentPage == POSTS_PER_PAGE) {
+      _currentPage++;
+      _postsInCurrentPage = 0;
+    }
+    _fetchStarted = true;
+    List<Data> restaurantsWithoutRating = _allRestaurants.value;
+    if (restaurantsWithoutRating == null) {
+      restaurantsWithoutRating = [];
+    }
+    // await getCurrentLocation().then((location) async {
+    //TODO: - testing only
+    var location = LatLng(53.522385, -113.622810);
+    if (restaurantsWithoutRating == null || restaurantsWithoutRating.isEmpty) {
+      /// make sure variables reflects this being the first page
+      _currentPage = 0;
+      _postsInCurrentPage = 0;
+
+      final response = await http.post(
+          'http://base.edibly.ca/api/restaurants/nearby/0',
+          body: json.encode({
+            'lat': location.latitude,
+            'lon': location.longitude,
+            'radius': 500000000000000
+          }));
+      //TODO: - ok so is this going to get them in order of how close they arE?? ? ? ?? ? ??
+      final map = json.decode(response.body);
+      final restaurantsWithoutRatingMap = Map<dynamic, dynamic>();
+      map.forEach((r) => restaurantsWithoutRatingMap[r['rid'].toString()] = r);
+
+      restaurantsWithoutRatingMap.forEach((key, value) {
+        value['distance'] = _distanceFromMeToDestination(LatLng(
+          double.parse((value['lat'] / 10000000).toString()),
+          double.parse((value['lon'] / 10000000).toString()),
+        ));
+        restaurantsWithoutRating.add(Data(key, value));
+        _postsInCurrentPage++;
+      });
+
+      restaurantsWithoutRating.sort((a, b) {
+        double diff = a.value['distance'] - b.value['distance'];
+        return diff < 0 ? -1 : (diff == 0 ? 0 : 1);
+      });
+
+      if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
+        restaurantsWithoutRating.add(null);
+      }
+      _allRestaurants.add(restaurantsWithoutRating);
+      //?
+
+    } else {
+      int oldPostsLength =
+          restaurantsWithoutRating.where((post) => post != null).length;
       //TODO: - testing only
-      location = LatLng(53.522385, 113.622810);
-    final response = await http.post('http://base.edibly.ca/api/restaurants/nearby', body: json.encode({'lat' : location.latitude, 'lon' : location.longitude, 'radius' : 5000000000000000000}));
-    final map = json.decode(response.body);
-    print(map);
-    final restaurantsWithoutRatingMap = Map<dynamic, dynamic>();
-    map.forEach((r) => restaurantsWithoutRatingMap[r['rid'].toString()] = r);
+      var location = LatLng(53.522385, -113.622810);
+      final response = await http.post(
+          'http://base.edibly.ca/api/restaurants/nearby/$_currentPage',
+          body: json.encode({
+            'lat': location.latitude,
+            'lon': location.longitude,
+            'radius': 500000000000000
+          }));
+      //TODO: - ok so is this going to get them in order of how close they arE?? ? ? ?? ? ??
+      final map = json.decode(response.body);
+      final restaurantsWithoutRatingMap = Map<dynamic, dynamic>();
+      map.forEach((r) => restaurantsWithoutRatingMap[r['rid'].toString()] = r);
 
-    restaurantsWithoutRatingMap.forEach((key, value) {
-      value['distance'] = _distanceFromMeToDestination(LatLng(
-        double.parse((value['lat']/10000000).toString()),
-        double.parse((value['lon']/10000000).toString()),
-      ));
-            restaurantsWithoutRating.add(Data(key, value));
+      restaurantsWithoutRatingMap.forEach((key, value) {
+        value['distance'] = _distanceFromMeToDestination(LatLng(
+          double.parse((value['lat'] / 10000000).toString()),
+          double.parse((value['lon'] / 10000000).toString()),
+        ));
+        restaurantsWithoutRating.add(Data(key, value));
+        _postsInCurrentPage++;
+      });
+    restaurantsWithoutRating.remove(null);
 
-    });
+      restaurantsWithoutRating.sort((a, b) {
+        double diff = a.value['distance'] - b.value['distance'];
+        return diff < 0 ? -1 : (diff == 0 ? 0 : 1);
+      });
+      print(_postsInCurrentPage);
+      if (_postsInCurrentPage == POSTS_PER_PAGE) {
+        restaurantsWithoutRating.add(null);
+      }
 
-        restaurantsWithoutRating.sort((a, b) {
-          double diff = a.value['distance'] - b.value['distance'];
-          return diff < 0 ? -1 : (diff == 0 ? 0 : 1);
-        });
-    _allRestaurants.add(restaurantsWithoutRating);
-    });
+      _allRestaurants.add(restaurantsWithoutRating);
+      _currentPage++;
+      _fetchStarted = true; //?
+    }
+    //});
   }
 
   void filterRestaurants(String keyword) async {
@@ -189,12 +264,16 @@ class SearchBloc {
     _filteredRestaurants.add(null);
     List<Data> filteredRestaurants = [];
     List<Data> restaurantsToFilter = [];
-    //Vassilibase conversion: search restaurants, then filter.
     var url =
         "http://base.edibly.ca/api/restaurants/search/" + toUrlFormat(keyword);
     await http.get(url).then((response) {
       final map = json.decode(response.body);
-      map.forEach((r) => restaurantsToFilter.add(Data(r['rid'], r)));
+      map.forEach(
+          (r) => restaurantsToFilter.add(Data(
+                r['rid'],
+                r,
+              )),
+          _postsInCurrentPage++);
 
       //TODO: - why isn't this being caleld?!?!?
       for (var data in restaurantsToFilter) {
@@ -244,18 +323,18 @@ class SearchBloc {
   Future<LatLng> getCurrentLocation() async {
     LatLng fallbackLatLng = LatLng(53.544406, -113.490915);
     LatLng latLng;
-    try {
-      Location location = Location();
-      if (location != null) {
-        LocationData locationData =
-            await location.getLocation().timeout(Duration(seconds: 10));
-        if (locationData != null) {
-          latLng = LatLng(locationData.latitude, locationData.longitude);
-        }
-      }
-    } catch (e) {
-      latLng = fallbackLatLng;
-    }
+    //try {
+    Location location = Location();
+    // if (location != null) {
+    //   LocationData locationData =
+    //       await location.getLocation().timeout(Duration(seconds: 10));
+    //     if (locationData != null) {
+    //       latLng = LatLng(locationData.latitude, locationData.longitude);
+    //     }
+    //   }
+    // } catch (e) {
+    latLng = fallbackLatLng;
+    // }
     LatLng locationToBeReturned = latLng == null ? fallbackLatLng : latLng;
     _myLocation = locationToBeReturned;
     return locationToBeReturned;
