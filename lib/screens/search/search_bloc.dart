@@ -314,7 +314,8 @@ class SearchBloc {
 
   void setRestaurantBookmarkValue(
       String uid, String restaurantKey, bool value) async {
-    final url = "http://base.edibly.ca/api/${value ? 'favourite' : 'unfavourite'}";
+    final url =
+        "http://base.edibly.ca/api/${value ? 'favourite' : 'unfavourite'}";
     final rid = int.parse(restaurantKey);
     await http
         .post(url, body: json.encode({'uid': uid, 'rid': rid}))

@@ -24,7 +24,7 @@ class BookmarksScreen extends StatelessWidget {
           return Container(
             color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
             alignment: Alignment.center,
-            child: StreamBuilder<List<Data>>(
+            child: StreamBuilder<List<dynamic>>(
               stream: searchBloc.bookmarkedRestaurants,
               builder: (context, restaurantsSnapshot) {
                 if (restaurantsSnapshot?.data == null) {
@@ -46,7 +46,7 @@ class BookmarksScreen extends StatelessWidget {
                               margin: EdgeInsets.symmetric(horizontal: 10.0),
                               child: RestaurantPreviewWidget(
                                 firebaseUser: firebaseUser,
-                                restaurant: restaurantsSnapshot.data.elementAt(position),
+                                restaurant: Data(restaurantsSnapshot.data.elementAt(position)['rid'], restaurantsSnapshot.data.elementAt(position))
                               ),
                             );
                           },
