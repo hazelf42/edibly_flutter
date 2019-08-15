@@ -37,19 +37,18 @@ class SearchBloc {
   final _distanceSlider = BehaviorSubject<double>();
   final _allRestaurants = BehaviorSubject<List<Data>>();
   final _filteredRestaurants = BehaviorSubject<List<Data>>();
-  final _bookmarkedRestaurants = BehaviorSubject<List<Data>>();
+  final _bookmarkedRestaurants = BehaviorSubject<List>();
   final _addReviewState = BehaviorSubject<AddReviewState>();
   final _restaurantName = BehaviorSubject<String>();
   final _restaurantLocation = BehaviorSubject<String>();
 
   /// Variables
   // ~ pagination stuff ~
-  static const int POSTS_PER_PAGE = 9;
+  static const int restaurants_PER_PAGE = 9;
   bool _fetchStarted = false;
-  int _postsInCurrentPage = 0;
+  int _restaurantsInCurrentPage = 0;
   int _currentPage = 0;
 
-  int _filterRestaurantsCallCounter = 0;
   double _distanceFilterValue = -1;
   double _ratingFilterValue = -1;
   LatLng _myLocation;
@@ -64,7 +63,7 @@ class SearchBloc {
 
   Stream<List<Data>> get filteredRestaurants => _filteredRestaurants.stream;
 
-  Stream<List<Data>> get bookmarkedRestaurants => _bookmarkedRestaurants.stream;
+  Stream<List> get bookmarkedRestaurants => _bookmarkedRestaurants.stream;
 
   Stream<AddReviewState> get addReviewState => _addReviewState.stream;
 
@@ -78,6 +77,16 @@ class SearchBloc {
     if (distanceFilterValue == null) distanceFilterValue = -1;
     if (distanceFilterValue >= 30) distanceFilterValue = -1;
     _distanceFilterValue = distanceFilterValue;
+  }
+
+  void getBookmarks(String uid) async {
+    await http
+        .get('http://base.edibly.ca/api/profiles/$uid/favourites')
+        .then((response) {
+      {
+        _bookmarkedRestaurants.add(json.decode(response.body));
+      }
+    });
   }
 
   void setRatingFilterValue() {
@@ -163,12 +172,11 @@ class SearchBloc {
   ///
   ///
   void getRestaurants() async {
-
-    if (_fetchStarted && _postsInCurrentPage < POSTS_PER_PAGE) {
+    if (_fetchStarted && _restaurantsInCurrentPage < restaurants_PER_PAGE) {
       return;
-    } else if (_postsInCurrentPage == POSTS_PER_PAGE) {
+    } else if (_restaurantsInCurrentPage == restaurants_PER_PAGE) {
       _currentPage++;
-      _postsInCurrentPage = 0;
+      _restaurantsInCurrentPage = 0;
     }
     _fetchStarted = true;
     List<Data> restaurantsWithoutRating = _allRestaurants.value;
@@ -181,7 +189,7 @@ class SearchBloc {
     if (restaurantsWithoutRating == null || restaurantsWithoutRating.isEmpty) {
       /// make sure variables reflects this being the first page
       _currentPage = 0;
-      _postsInCurrentPage = 0;
+      _restaurantsInCurrentPage = 0;
 
       final response = await http.post(
           'http://base.edibly.ca/api/restaurants/nearby/0',
@@ -201,7 +209,7 @@ class SearchBloc {
           double.parse((value['lon'] / 10000000).toString()),
         ));
         restaurantsWithoutRating.add(Data(key, value));
-        _postsInCurrentPage++;
+        _restaurantsInCurrentPage++;
       });
 
       restaurantsWithoutRating.sort((a, b) {
@@ -209,14 +217,15 @@ class SearchBloc {
         return diff < 0 ? -1 : (diff == 0 ? 0 : 1);
       });
 
-      if (_postsInCurrentPage == POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
+      if (_restaurantsInCurrentPage ==
+          restaurants_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
         restaurantsWithoutRating.add(null);
       }
       _allRestaurants.add(restaurantsWithoutRating);
       //?
 
     } else {
-      int oldPostsLength =
+      int oldrestaurantsLength =
           restaurantsWithoutRating.where((post) => post != null).length;
       //TODO: - testing only
       var location = LatLng(53.522385, -113.622810);
@@ -238,16 +247,16 @@ class SearchBloc {
           double.parse((value['lon'] / 10000000).toString()),
         ));
         restaurantsWithoutRating.add(Data(key, value));
-        _postsInCurrentPage++;
+        _restaurantsInCurrentPage++;
       });
-    restaurantsWithoutRating.remove(null);
+      restaurantsWithoutRating.remove(null);
 
       restaurantsWithoutRating.sort((a, b) {
         double diff = a.value['distance'] - b.value['distance'];
         return diff < 0 ? -1 : (diff == 0 ? 0 : 1);
       });
-      print(_postsInCurrentPage);
-      if (_postsInCurrentPage == POSTS_PER_PAGE) {
+      print(_restaurantsInCurrentPage);
+      if (_restaurantsInCurrentPage == restaurants_PER_PAGE) {
         restaurantsWithoutRating.add(null);
       }
 
@@ -260,22 +269,26 @@ class SearchBloc {
 
   void filterRestaurants(String keyword) async {
     if (keyword == null) keyword = _keyword;
+    _currentPage = 0;
     _keyword = keyword;
     _filteredRestaurants.add(null);
+
     List<Data> filteredRestaurants = [];
     List<Data> restaurantsToFilter = [];
-    var url =
-        "http://base.edibly.ca/api/restaurants/search/" + toUrlFormat(keyword);
+    //TODO: use autofill from api :|
+    var url = "http://base.edibly.ca/api/restaurants/search/" +
+        toUrlFormat(keyword) +
+        "/$_currentPage";
     await http.get(url).then((response) {
       final map = json.decode(response.body);
-      map.forEach(
-          (r) => restaurantsToFilter.add(Data(
-                r['rid'],
-                r,
-              )),
-          _postsInCurrentPage++);
+      map.forEach((r) {
+        restaurantsToFilter.add(Data(
+          r['rid'],
+          r,
+        ));
+        _restaurantsInCurrentPage++;
+      });
 
-      //TODO: - why isn't this being caleld?!?!?
       for (var data in restaurantsToFilter) {
         /// rating filter
         if (_ratingFilterValue == -1 ||
@@ -297,27 +310,17 @@ class SearchBloc {
       }
       _filteredRestaurants.add(restaurantsToFilter);
     });
-    // if (currentFilterRestaurantsCallCount == _filterRestaurantsCallCounter - 1) {
-    // }
-  }
-
-  Stream<Event> getRestaurantBookmarkValue(String uid, String restaurantKey) {
-    return _firebaseDatabase
-        .reference()
-        .child('starredRestaurants')
-        .child(uid)
-        .child(restaurantKey)
-        .onValue;
   }
 
   void setRestaurantBookmarkValue(
-      String uid, String restaurantKey, bool value) {
-    _firebaseDatabase
-        .reference()
-        .child('starredRestaurants')
-        .child(uid)
-        .child(restaurantKey)
-        .set(value ? 1 : 0);
+      String uid, String restaurantKey, bool value) async {
+    final url = "http://base.edibly.ca/api/${value ? 'favourite' : 'unfavourite'}";
+    final rid = int.parse(restaurantKey);
+    await http
+        .post(url, body: json.encode({'uid': uid, 'rid': rid}))
+        .then((response) => print(response.statusCode));
+    _bookmarkedRestaurants.add([]);
+    getBookmarks(uid);
   }
 
   Future<LatLng> getCurrentLocation() async {
@@ -352,54 +355,6 @@ class SearchBloc {
                     p)) /
             2;
     return 12742 * asin(sqrt(a));
-  }
-
-  void getBookmarkedRestaurants() async {
-    _bookmarkedRestaurants.add(null);
-    _firebaseDatabase
-        .reference()
-        .child('starredRestaurants')
-        .child(firebaseUser.uid)
-        .onValue
-        .listen((event) async {
-      List<String> bookmarkKeys = [];
-      List<Data> restaurantsWithRating = [];
-      List<Data> restaurantsWithoutRating = [];
-      if (event?.snapshot?.value != null) {
-        Map<dynamic, dynamic> bookmarks = event.snapshot.value;
-        bookmarks.forEach((key, value) {
-          if (value.toString() == '1') bookmarkKeys.add(key);
-        });
-      }
-
-      await Future.forEach(bookmarkKeys, (String restaurantKey) async {
-        DataSnapshot restaurantSnapshot = await _firebaseDatabase
-            .reference()
-            .child('restaurants')
-            .child(restaurantKey)
-            .once();
-        restaurantsWithoutRating
-            .add(Data(restaurantSnapshot.key, restaurantSnapshot.value));
-        return null;
-      });
-
-      await Future.forEach(restaurantsWithoutRating,
-          (Data dataWithoutRating) async {
-        DataSnapshot ratingSnapshot = await _firebaseDatabase
-            .reference()
-            .child('restaurantRatings')
-            .child(dataWithoutRating.key)
-            .once();
-        Data dataWithRating =
-            Data(dataWithoutRating.key, dataWithoutRating.value);
-        try {
-          dataWithRating.value['rating'] = ratingSnapshot?.value;
-          restaurantsWithRating.add(dataWithRating);
-        } catch (_) {}
-        return null;
-      });
-      _bookmarkedRestaurants.add(restaurantsWithRating);
-    });
   }
 
   //I am dumb and bad at coding

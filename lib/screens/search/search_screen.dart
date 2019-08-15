@@ -270,11 +270,12 @@ class SearchScreen extends StatelessWidget {
                         if (allRestaurantsSnapshot.connectionState ==
                             ConnectionState.waiting) {
                           searchBloc.getRestaurants();
+                          searchBloc.getBookmarks(firebaseUser.uid);
                         }
                         return CircularProgressIndicator();
                       }
                       return RefreshIndicator(
-                        child: StreamBuilder<List<Data>>(
+                        child: StreamBuilder<List<Data>>( 
                           stream: searchBloc.filteredRestaurants,
                           initialData: allRestaurantsSnapshot?.data,
                           builder: (context, filteredRestaurantsSnapshot) {

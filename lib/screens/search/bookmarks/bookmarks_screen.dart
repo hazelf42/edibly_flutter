@@ -29,7 +29,7 @@ class BookmarksScreen extends StatelessWidget {
               builder: (context, restaurantsSnapshot) {
                 if (restaurantsSnapshot?.data == null) {
                   if (restaurantsSnapshot.connectionState == ConnectionState.waiting) {
-                    searchBloc.getBookmarkedRestaurants();
+                    searchBloc.getBookmarks(firebaseUser.uid);
                   }
                   return CircularProgressIndicator();
                 }
@@ -76,7 +76,7 @@ class BookmarksScreen extends StatelessWidget {
                           ),
                         ),
                   onRefresh: () {
-                    searchBloc.getBookmarkedRestaurants();
+                    searchBloc.getBookmarks(firebaseUser.uid);
                     return Future.delayed(Duration(seconds: 1));
                   },
                 );

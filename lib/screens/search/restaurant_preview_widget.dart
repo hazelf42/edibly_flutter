@@ -4,6 +4,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import 'package:edibly/screens/restaurant/restaurant_screen.dart';
 import 'package:edibly/screens/search/search_bloc.dart';
@@ -13,18 +15,20 @@ import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 
 class RestaurantPreviewWidget extends StatelessWidget {
+  final List bookmarksList;
   final FirebaseUser firebaseUser;
   final Data restaurant;
 
   RestaurantPreviewWidget({
     @required this.firebaseUser,
     @required this.restaurant,
+    this.bookmarksList,
   }) : super(key: Key(restaurant.key.toString()));
 
   List<Data> dynamicTagArrayToTagList(dynamic dynamicTagArray) {
     List<Data> tagList = [];
     if (dynamicTagArray != null) {
-      List<dynamic>map = dynamicTagArray;
+      List<dynamic> map = dynamicTagArray;
       map.forEach((tag) {
         tagList.add(Data(tag['text'], tag['num']));
       });
@@ -55,7 +59,8 @@ class RestaurantPreviewWidget extends StatelessWidget {
               width: 8.0,
             ),
             SingleLineText(
-              (double.parse(value['averagerating'].toString()) / 2.0).toStringAsFixed(1),
+              (double.parse(value['averagerating'].toString()) / 2.0)
+                  .toStringAsFixed(1),
               style: TextStyle(
                 color: Theme.of(context).hintColor,
               ),
@@ -68,19 +73,29 @@ class RestaurantPreviewWidget extends StatelessWidget {
 
   Widget _address() {
     if (restaurant?.value == null ||
-        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']) == null) {
+        (restaurant.value['address'] ??
+                restaurant.value['address1'] ??
+                restaurant.value['address2']) ==
+            null) {
       return Container();
     }
     return Container(
       margin: const EdgeInsets.only(top: 4.0),
       child: Text(
-        (restaurant.value['address'] ?? restaurant.value['address1'] ?? restaurant.value['address2']).toString().trim() ?? '',
+        (restaurant.value['address'] ??
+                    restaurant.value['address1'] ??
+                    restaurant.value['address2'])
+                .toString()
+                .trim() ??
+            '',
       ),
     );
   }
 
   Widget _tags({@required BuildContext context, @required dynamic value}) {
-    if (value == null || value['tags'].length == 0 || value['tags'].toString().isEmpty) {
+    if (value == null ||
+        value['tags'].length == 0 ||
+        value['tags'].toString().isEmpty) {
       return Container();
     }
     List<Data> tags = dynamicTagArrayToTagList(value['tags']);
@@ -95,24 +110,34 @@ class RestaurantPreviewWidget extends StatelessWidget {
         },
         itemCount: tags.length,
         itemBuilder: (context, position) {
-          return CustomTag('${tags.elementAt(position).key} (${tags.elementAt(position).value})');
+          return CustomTag(
+              '${tags.elementAt(position).key} (${tags.elementAt(position).value})');
         },
       ),
     );
   }
 
-  Widget _bookmarkButton({@required SearchBloc searchBloc}) {
-    return StreamBuilder<Event>(
-      stream: searchBloc.getRestaurantBookmarkValue(firebaseUser.uid, restaurant.key.toString()),
-      builder: (context, bookmarkValueSnapshot) {
-        bool bookmarked = bookmarkValueSnapshot?.data?.snapshot?.value == 1;
+  Widget _bookmarkButton({@required SearchBloc searchBloc, @required context}) {
+    bool bookmarked = false;
+    return StreamBuilder(
+      stream: searchBloc.bookmarkedRestaurants,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        if (snapshot.data != null) {
+        snapshot.data.forEach((r) =>
+            (r['rid'].toString() == restaurant.key) ? bookmarked = true : null);
+        }
+
         return IconButton(
           icon: Icon(
             bookmarked ? Icons.bookmark : Icons.bookmark_border,
-            color: bookmarked ? AppColors.primarySwatch.shade600 : Theme.of(context).disabledColor,
+            color: bookmarked
+                ? AppColors.primarySwatch.shade600
+                : Theme.of(context).disabledColor,
           ),
           onPressed: () {
-            searchBloc.setRestaurantBookmarkValue(firebaseUser.uid, restaurant.key.toString(), !bookmarked);
+            searchBloc.setRestaurantBookmarkValue(
+                firebaseUser.uid, restaurant.key.toString(), !bookmarked);
+            bookmarked = !bookmarked;
           },
         );
       },
@@ -131,7 +156,9 @@ class RestaurantPreviewWidget extends StatelessWidget {
       child: Container(
         width: 70.0,
         height: 70.0,
-        margin: (restaurant.value['tags'].length > 0) ? EdgeInsets.only(top: 10) : null,
+        margin: (restaurant.value['tags'].length > 0)
+            ? EdgeInsets.only(top: 10)
+            : null,
         color: Colors.white,
         child: CachedNetworkImage(
           imageUrl: restaurant.value['photo'] ?? '',
@@ -160,9 +187,9 @@ class RestaurantPreviewWidget extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => RestaurantScreen(
-                  firebaseUserId: firebaseUser.uid,
-                  restaurantKey: restaurant.key.toString(),
-                ),
+              firebaseUserId: firebaseUser.uid,
+              restaurantKey: restaurant.key.toString(),
+            ),
           ),
         );
       },
@@ -208,7 +235,8 @@ class RestaurantPreviewWidget extends StatelessWidget {
                             ),
                           ),
                         ),
-                        _bookmarkButton(searchBloc: searchBloc),
+                        _bookmarkButton(
+                            searchBloc: searchBloc, context: context),
                       ],
                     ),
                     _tags(
