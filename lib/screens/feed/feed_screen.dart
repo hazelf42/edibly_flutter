@@ -120,7 +120,7 @@ Widget feedScreenBody(BuildContext context, String feedType) {
                       ),
                       itemCount: postsSnapshot.data.length,
                       itemBuilder: (context, position) {
-                        if (postsSnapshot.data.elementAt(position) == null) {
+                        if (postsSnapshot.data.elementAt(position) == null || position == postsSnapshot.data.length-1) {
                           feedBloc.getPosts(feedType);
                           return Container(
                             padding: const EdgeInsets.symmetric(
