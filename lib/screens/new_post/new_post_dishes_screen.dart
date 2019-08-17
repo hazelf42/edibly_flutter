@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:edibly/screens/restaurant/restaurant_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
@@ -157,7 +158,7 @@ class NewPostDishesScreen extends StatelessWidget {
           if (succeeded) {
             Navigator.of(context).pop();
             Navigator.of(context).pop();
-            Navigator.of(context).pop(true);
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => RestaurantScreen(firebaseUserId: firebaseUserId, restaurantKey: restaurantKey)));
           } else {
             Scaffold.of(context).showSnackBar(
                 SnackBar(content: Text(localizations.networkRequestFailed)));

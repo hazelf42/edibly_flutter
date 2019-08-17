@@ -123,7 +123,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
       stream: searchBloc.bookmarkedRestaurants,
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         if (snapshot.data != null) {
-          snapshot.data.forEach((r) => (r['rid'].toString() == restaurant.key)
+          snapshot.data.forEach((r) => (r['rid'].toString() == restaurant.key.toString())
               ? bookmarked = true
               : null);
         }

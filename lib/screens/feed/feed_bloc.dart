@@ -138,8 +138,7 @@ class FeedBloc {
             .then((postResponse) {
           if (postResponse.body != "null") {
             json.decode(postResponse.body).forEach((post) {
-              if (post['rrid'] ??
-                  post['rtid'] != posts[oldPostsLength - 1].key) {
+              if (post['rrid']  != posts[oldPostsLength - 1].key) {
                 /// insert newly acquired post to the start of new page
                 posts.insert(oldPostsLength,
                     Data((post['rtid'] ?? post['rrid']).toString(), post));

@@ -177,7 +177,7 @@ class MainBloc extends Object with Validators {
       @required String uid,
       @required int postType}) async {
     var type = "";
-    //TODO :- I'm dumb and bad at coding
+    // I'm dumb and bad at coding
     if (postType == 0) {
       type = "review";
     } else if (postType == 2) {

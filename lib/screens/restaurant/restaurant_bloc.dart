@@ -1,15 +1,15 @@
-import 'dart:io';
 import 'dart:convert';
-
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:rxdart/rxdart.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
-import 'package:edibly/values/app_localizations.dart';
+import 'dart:io';
 
 import 'package:edibly/models/data.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:rxdart/rxdart.dart';
+import 'package:uuid/uuid.dart';
 
 enum PickedPhotoUploadState {
   SUCCESSFUL,
@@ -27,8 +27,7 @@ enum AddTipState {
 }
 
 class RestaurantBloc {
-  
-   AppLocalizations localizations;
+  AppLocalizations localizations;
   final String firebaseUserId;
   final String restaurantKey;
 
@@ -82,15 +81,31 @@ class RestaurantBloc {
     Data restaurantData = Data(map['rid'], map);
     _restaurant.add(restaurantData);
     var featuredTip = [];
-    final tipsResponse = await http.get(
-        'http://base.edibly.ca/api/restaurants/' + restaurantKey + '/tips');
-    final tipsMap = json.decode(tipsResponse.body);
-    print(tipsMap);
-    tipsMap.forEach((t) => t['featured'] == 1 ? featuredTip.add(t) : null);
-    if (featuredTip.length == 0 && tipsMap.length != 0) {
-      featuredTip.add(tipsMap[0]);
+
+    if (restaurantData.value['tip'] != null) {
+      featuredTip.add({
+        'text': restaurantData.value['tip'],
+        'profile': {
+          'photo':
+              'https://media.gettyimages.com/photos/carrot-picture-id172278932?s=612x612',
+          'firstname': "Edibly",
+          'lastname': ""
+        }
+      });
       restaurantData.value['featured_tip'] = featuredTip[0];
-      print(restaurantData.value);
+    } else {
+      await http
+          .get('http://base.edibly.ca/api/restaurants/' +
+              restaurantKey +
+              '/tips')
+          .then((tipsResponse) {
+        final tipsMap = json.decode(tipsResponse.body);
+        tipsMap.forEach((t) => t['featured'] == 1 ? featuredTip.add(t) : null);
+        if (featuredTip.length == 0 && tipsMap.length != 0) {
+          featuredTip.add(tipsMap[0]);
+          restaurantData.value['featured_tip'] = featuredTip[0];
+        }
+      });
     }
     _restaurant.add(restaurantData);
 
@@ -193,57 +208,47 @@ class RestaurantBloc {
     // });
   }
 
-  Future<bool> submitPhoto({@required String restaurantName}) async {
+  Future<void> uploadPhoto({@required String restaurantName}) async {
+    File pickedPhoto = _pickedPhoto.value;
+    if (pickedPhoto == null) return;
+
     PickedPhotoUploadState pickedPhotoUploadState =
         _pickedPhotoUploadState.value;
-    if (pickedPhotoUploadState == PickedPhotoUploadState.TRYING) return false;
+    if (pickedPhotoUploadState == PickedPhotoUploadState.TRYING) return;
     _pickedPhotoUploadState.add(PickedPhotoUploadState.TRYING);
 
-        await getImageUrl(photo: _pickedPhoto.value).then((fileName) {
-       var imageUrl = "http://base.edibly.ca/static/uploads/" +
-            json.decode(fileName)['filename'];
-      var reviewBody = {
-        'uid': firebaseUserId,
-        'rid': restaurantKey,
-        'postType': 0,
-        'photo': imageUrl
-      };
-
-      http
-          .post("http://base.edibly.ca/api/reviews/add",
-              body: json.encode(reviewBody))
-          .then((http.Response response) {
-        final int statusCode = response.statusCode;
-
-        if (statusCode < 200 || statusCode > 400 || reviewBody == null) {
-          _pickedPhotoUploadState.add(PickedPhotoUploadState.FAILED);
+    String imageUuid = Uuid().v1();
+    StorageReference storageReference = FirebaseStorage.instance.ref();
+    storageReference
+        .child('restaurants')
+        .child(restaurantKey)
+        .child('$imageUuid.jpg')
+        .putFile(pickedPhoto)
+        .onComplete
+        .then((storageTaskSnapshot) async {
+      await storageTaskSnapshot.ref.getDownloadURL().then((downloadUrl) async {
+        if (downloadUrl == null || downloadUrl.isEmpty) {
+          _pickedPhotoUploadState.addError(PickedPhotoUploadState.FAILED);
+          return;
         }
+        await http
+            .post("http://base.edibly.ca/api/reviews/add",
+                body: json.encode({
+                  'uid': firebaseUserId,
+                  'rid': int.parse(restaurantKey),
+                  'stars': 0,
+                  'review': "",
+                  'tags': [],
+                  'photo': downloadUrl
+                }))
+            .then((response) {
+          print(response.body);
+        });
         _pickedPhotoUploadState.add(PickedPhotoUploadState.SUCCESSFUL);
+      }).catchError((error) {
+        _pickedPhotoUploadState.addError(PickedPhotoUploadState.FAILED);
       });
-      return true;
     });
-  }
-
-  Future<String> getImageUrl({
-    @required File photo,
-  }) async {
-    /// upload photo
-    Future<String> photoUrl;
-    if (photo != null) {
-      var request = http.MultipartRequest(
-          "POST", Uri.parse("http://base.edibly.ca/api/upload"));
-      request.files.add(http.MultipartFile.fromBytes(
-          'file', await photo.readAsBytes(),
-          contentType: MediaType('image', 'jpeg')));
-      await request.send().then((response) {
-        if (response.statusCode == 200) {
-          photoUrl = response.stream.bytesToString();
-        } else {
-          SnackBar(content: Text("An error occurred."));
-        }
-      });
-    }
-    return photoUrl;
   }
 
   Future<Stream<Event>> getRestaurantBookmarkValue(
@@ -260,7 +265,7 @@ class RestaurantBloc {
     final response = await http.get(url);
     List<Data> photos = [];
     final imagesMap = json.decode(response.body);
-    var i = 0;
+
     imagesMap.asMap().forEach((index, r) => photos.add(Data(index, r)));
     //photos = (photos.reversed); photos = photos.sublist(0,3);
     if (photos.length > 3) {

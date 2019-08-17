@@ -2,17 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 import 'package:edibly/models/data.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:edibly/values/app_localizations.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import '../../main_bloc.dart';
-import 'dart:typed_data';
 
 class ProfileBloc {
   final String uid;
@@ -81,8 +78,7 @@ class ProfileBloc {
       if (isFollowing) {
         final body = {'uid': currentUid, 'follow': uid};
         http
-            .post("http://base.edibly.ca/api/unfollow",
-                body: json.encode(body))
+            .post("http://base.edibly.ca/api/unfollow", body: json.encode(body))
             .then((http.Response response) {
           final int statusCode = response.statusCode;
           if (statusCode < 200 || statusCode > 400) {
@@ -104,64 +100,39 @@ class ProfileBloc {
       }
     }
   }
-
+  
   Future<String> getImage(FirebaseUser user) async {
     var photo = await ImagePicker.pickImage(source: ImageSource.gallery);
-    Future<String> string;
 
     if (photo != null) {
-      var request = http.MultipartRequest(
-          "POST", Uri.parse("http://base.edibly.ca/api/upload"));
-      request.files.add(http.MultipartFile.fromBytes(
-          'file', await photo.readAsBytes(),
-          contentType: MediaType('image', 'jpeg')));
-      return await request.send().then((response) async {
-        if (response.statusCode == 200) {
-          print("OK!");
-          var bytesToString = await (response.stream.bytesToString());
-          var newPhotoUrl = (json.decode(bytesToString))['filename'];
-          UserUpdateInfo info = UserUpdateInfo();
-          var url =  "http://base.edibly.ca/static/uploads/$newPhotoUrl";
-          info.photoUrl = url;
-          await user.updateProfile(info);
-          await http.put("http://base.edibly.ca/api/profiles/$uid",
-          body: json.encode({'photo' : url}));
-          return url;
-          
-          
-          //     }); else if (response.statusCode == 413) {
-            //     String path;
-            //     await FlutterImageCompress.compressAndGetFile(
-            //             photo.absolute.path, path, quality: 88)
-            //         .then((file) {
-            //       response.stream.bytesToString().then((newPhotoUrl) async {
-            //         newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
-            //         UserUpdateInfo info;
-            //         info.photoUrl = newPhotoUrl;
-            //         user.updateProfile(info);
-            //         await http.put("http://base.edibly.ca/api/profiles/${uid}",
-            //             body: json.encode({
-            //               'photo':
-            //                   ("http://base.edibly.ca/static/uploads/$newPhotoUrl"),
-            //             }));
-            //       });
-            //     });
-            //   }
-            // });
-        } else {
-          print("uh oh");
-        }
+      
+      StorageReference ref =
+          FirebaseStorage().ref().child(user.uid).child("profilePicture");
+      StorageUploadTask uploadTask = ref.putFile(photo);
+
+      return await uploadTask.onComplete.then((downloadUrl) async {
+        return await downloadUrl.ref.getDownloadURL().then((url) async {
+          var response = await http.put("http://base.edibly.ca/api/profiles/${user.uid}", body: json.encode(
+            {'photo' : url}
+          )
+        );
+        print(response.statusCode);
+        UserUpdateInfo updateInfo = UserUpdateInfo();
+        updateInfo.photoUrl = url;
+        await user.updateProfile(updateInfo);
       });
+    });
     }
-    // return string;
+    return null;
   }
+  // return string;
 
   void getPosts() async {
     List<Data> posts = _posts.value;
     if (posts == null) posts = [];
 
     await http
-        .get('http://base.edibly.ca/api/profiles/${uid}/feed')
+        .get('http://base.edibly.ca/api/profiles/${uid}/posts')
         .then((postResponse) {
       json.decode(postResponse.body).forEach((post) {
         posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));
@@ -174,7 +145,7 @@ class ProfileBloc {
     //   //   return;
     //   // }
 
-    //   // /// if page is fully loaded then start loading next page
+    //   // /// if page is fully loaded then staprofrt loading next page
     //   // else if (_postsInCurrentPage ==
     //   //     POSTS_PER_PAGE + (_currentPage == 0 ? 0 : 1)) {
     //   //   _currentPage++;
@@ -266,6 +237,47 @@ class ProfileBloc {
     //   });
     // }
   }
+
+//Oh boy I cannot be bothered to integrate this with the backend rn.
+//It's firebase time
+
+  //     "POST", Uri.parse("http://base.edibly.ca/api/upload"));
+  // request.files.add(http.MultipartFile.fromBytes(
+  //     'file', await photo.readAsBytes(),
+  //     contentType: MediaType('image', 'jpeg')));
+  // return await request.send().then((response) async {
+  //   print(response.statusCode);
+  //   if (response.statusCode == 200) {
+  //     print("OK!");
+  //     var bytesToString = await (response.stream.bytesToString());
+  //     var newPhotoUrl = (json.decode(bytesToString))['filename'];
+  //     UserUpdateInfo info = UserUpdateInfo();
+  //     var url = "http://base.edibly.ca/static/uploads/$newPhotoUrl";
+  //     info.photoUrl = url;
+  //     await user.updateProfile(info);
+  //     await http.put("http://base.edibly.ca/api/profiles/$uid",
+  //         body: json.encode({'photo': url}));
+  //     return url;
+  //   } else if (response.statusCode == 413) {
+  //     String path;
+  //     await FlutterImageCompress.compressAndGetFile(
+  //             photo.absolute.path, path,
+  //             quality: 88)
+  //         .then((file) {
+  //       response.stream.bytesToString().then((newPhotoUrl) async {
+  //         newPhotoUrl = (json.decode(newPhotoUrl))['filename'];
+  //         UserUpdateInfo info;
+  //         info.photoUrl = newPhotoUrl;
+  //         user.updateProfile(info);
+  //         await http.put("http://base.edibly.ca/api/profiles/${uid}",
+  //             body: json.encode({
+  //               'photo':
+  //                   ("http://base.edibly.ca/static/uploads/$newPhotoUrl"),
+  //             }));
+  //       });
+  //     });
+  //   }
+  // });
 
   /// Dispose function
   void dispose() {

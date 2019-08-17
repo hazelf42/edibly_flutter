@@ -110,7 +110,7 @@ class _ProfileScreen extends State<ProfileScreen> {
         child: Builder(
           builder: (context) {
             final MainBloc mainBloc = Provider.of<MainBloc>(context);
-            final ProfileBloc feedBloc = Provider.of<ProfileBloc>(context);
+            final ProfileBloc profileBloc = Provider.of<ProfileBloc>(context);
             return FutureBuilder<FirebaseUser>(
               future: mainBloc.getCurrentFirebaseUser(),
               builder: (context, firebaseUserSnapshot) {
@@ -120,11 +120,11 @@ class _ProfileScreen extends State<ProfileScreen> {
                       : Colors.grey.shade300,
                   alignment: Alignment.center,
                   child: StreamBuilder<List<Data>>(
-                    stream: feedBloc.posts,
+                    stream: profileBloc.posts,
                     builder: (context, postsSnapshot) {
                       if (firebaseUserSnapshot?.data == null ||
                           postsSnapshot?.data == null) {
-                        feedBloc.getPosts();
+                        profileBloc.getPosts();
                         return CircularProgressIndicator();
                       }
                       return RefreshIndicator(
@@ -244,7 +244,7 @@ class _ProfileScreen extends State<ProfileScreen> {
                                   if (postsSnapshot.data
                                           .elementAt(position - 1) ==
                                       null) {
-                                    feedBloc.getPosts();
+                                    profileBloc.getPosts();
                                     return Container(
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 12.0,
@@ -274,8 +274,8 @@ class _ProfileScreen extends State<ProfileScreen> {
                           ],
                         ),
                         onRefresh: () {
-                          feedBloc.clearPosts();
-                          feedBloc.getPosts();
+                          profileBloc.clearPosts();
+                          profileBloc.getPosts();
                           return Future.delayed(Duration(seconds: 1));
                         },
                       );

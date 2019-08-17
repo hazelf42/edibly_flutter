@@ -32,21 +32,30 @@ class RestaurantTipsScreen extends StatelessWidget {
       body: MultiProvider(
         providers: [
           DisposableProvider<RestaurantBloc>(
-              packageBuilder: (context) => RestaurantBloc(firebaseUserId: firebaseUserId, restaurantKey: restaurantKey)),
-          DisposableProvider<RestaurantTipsBloc>(packageBuilder: (context) => RestaurantTipsBloc(restaurantKey: restaurantKey)),
+              packageBuilder: (context) => RestaurantBloc(
+                  firebaseUserId: firebaseUserId,
+                  restaurantKey: restaurantKey)),
+          DisposableProvider<RestaurantTipsBloc>(
+              packageBuilder: (context) =>
+                  RestaurantTipsBloc(restaurantKey: restaurantKey)),
         ],
         child: Builder(
           builder: (context) {
-            final RestaurantBloc restaurantBloc = Provider.of<RestaurantBloc>(context);
-            final RestaurantTipsBloc restaurantTipsBloc = Provider.of<RestaurantTipsBloc>(context);
+            final RestaurantBloc restaurantBloc =
+                Provider.of<RestaurantBloc>(context);
+            final RestaurantTipsBloc restaurantTipsBloc =
+                Provider.of<RestaurantTipsBloc>(context);
             return Container(
-              color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? null
+                  : Colors.grey.shade300,
               alignment: Alignment.center,
               child: StreamBuilder<List<Data>>(
                 stream: restaurantTipsBloc.tips,
                 builder: (context, tipsSnapshot) {
                   if (tipsSnapshot?.data == null) {
-                    if (tipsSnapshot.connectionState == ConnectionState.waiting) {
+                    if (tipsSnapshot.connectionState ==
+                        ConnectionState.waiting) {
                       restaurantTipsBloc.getTips();
                     }
                     return CircularProgressIndicator();
@@ -86,7 +95,8 @@ class RestaurantTipsScreen extends StatelessWidget {
                                 restaurantTipsBloc.getTips();
                               });
                             },
-                            child: SingleLineText(localizations.addTip.toUpperCase()),
+                            child: SingleLineText(
+                                localizations.addTip.toUpperCase()),
                           ),
                         ],
                       ),
@@ -114,15 +124,16 @@ class RestaurantTipsScreen extends StatelessWidget {
                             child: CircularProgressIndicator(),
                           );
                         }
-                        return Container(
+                        return Card(
+                            child: Container(
                           margin: const EdgeInsets.symmetric(
-                            vertical: 5.0,
-                            horizontal: 4.0,
+                            vertical: 8.0,
+                            horizontal: 5.0,
                           ),
                           child: TipWidget(
                             tip: tipsSnapshot.data.elementAt(position),
                           ),
-                        );
+                        ));
                       },
                     ),
                     onRefresh: () {
@@ -148,73 +159,70 @@ class TipWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
-    return FutureBuilder<Response>(
-      future: get("http://base.edibly.ca/api/profiles/${tip.value['uid'].toString()}"),
-      builder: (context, response) {
-        var authorValue = response.hasData ? json.decode(response.data.body) : null;
-        return Row(
-          children: <Widget>[
-            CircleAvatar(
-              radius: 18.0,
-              backgroundImage: authorValue == null ? null : NetworkImage(authorValue['photo'] ?? authorValue['photoURL'] ?? ''),
-              child: authorValue == null
-                  ? SizedBox(
-                      width: 36.0,
-                      height: 36.0,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.0,
-                      ),
-                    )
-                  : null,
-            ),
-            Container(
-              width: 16.0,
-            ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  authorValue == null
-                      ? Container()
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            SingleChildScrollView(
-                              physics: NeverScrollableScrollPhysics(),
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: <Widget>[
-                                  SingleLineText(
-                                    '${authorValue['firstname']} ${authorValue['lastname']}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  SingleLineText(
-                                    //' (${authorValue['dietName']}${(authorValue['gluten'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
-                                    'Hello',
-                                    style: TextStyle(
-                                      color: Theme.of(context).hintColor,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+    var authorValue = tip.value['profile'];
+    return Row(
+      children: <Widget>[
+        CircleAvatar(
+          radius: 18.0,
+          backgroundImage: authorValue == null
+              ? null
+              : NetworkImage(
+                  authorValue['photo'] ?? authorValue['photoURL'] ?? ''),
+          child: authorValue == null
+              ? SizedBox(
+                  width: 36.0,
+                  height: 36.0,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.0,
+                  ),
+                )
+              : null,
+        ),
+        Container(
+          width: 16.0,
+        ),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              authorValue == null
+                  ? Container()
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        SingleChildScrollView(
+                          physics: NeverScrollableScrollPhysics(),
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: <Widget>[
+                              SingleLineText(
+                                '${authorValue['firstname']} ${authorValue['lastname']}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                            Container(height: 6.0),
-                            Text(tip.value['text'] ?? ''),
-                          ],
+                              SingleLineText(
+                                //' (${authorValue['dietName']}${(authorValue['gluten'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                                'Hello',
+                                style: TextStyle(
+                                  color: Theme.of(context).hintColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
+                        Container(height: 6.0),
+                        Text(tip.value['text'] ?? ''),
+                      ],
+                    ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

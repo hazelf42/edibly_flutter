@@ -63,7 +63,7 @@ class PostScreen extends StatelessWidget {
             final AppLocalizations localizations = AppLocalizations.of(context);
             return Container(
                 alignment: Alignment.center,
-                child: StreamBuilder<List<Data>>(
+                child: StreamBuilder<List<dynamic>>(
                     stream: postBloc.comments,
                     builder: (context, postsSnapshot) {
                       if (postsSnapshot?.data == null) {
@@ -95,7 +95,10 @@ class PostScreen extends StatelessWidget {
                                   }
                                   return Divider();
                                 },
-                            itemCount: (postsSnapshot.data == null ? 0 : postsSnapshot.data.length) + 1,
+                                itemCount: (postsSnapshot.data == null
+                                        ? 0
+                                        : postsSnapshot.data.length) +
+                                    1,
                                 itemBuilder: (context, position) {
                                   if (position == 0) {
                                     return PostWidget(
@@ -103,7 +106,6 @@ class PostScreen extends StatelessWidget {
                                       post: post,
                                     );
                                   }
-
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 4.0,
@@ -125,7 +127,7 @@ class PostScreen extends StatelessWidget {
                         ),
                         onRefresh: () {
                           postBloc.clearComments();
-                          return Future.delayed(Duration(seconds: 1));
+                          postBloc.getComments();
                         },
                       );
                     }));
@@ -207,7 +209,8 @@ class PostCommentWidget extends StatelessWidget {
                           height: 4.0,
                         ),
                         SingleLineText(
-                          '${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(comment['timestamp'].toString())).toInt() * 1000))}',
+                          (comment['timestamp'] != null) ? 
+                          '${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(comment['timestamp'].toString())).toInt() * 1000))}' : "Now",
                           style: TextStyle(
                             color: Theme.of(context).hintColor,
                             fontSize: 12,

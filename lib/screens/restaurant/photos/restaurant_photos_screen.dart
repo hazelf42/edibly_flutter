@@ -40,7 +40,7 @@ class RestaurantPhotosScreen extends StatelessWidget {
             final RestaurantPhotosBloc restaurantPhotosBloc = Provider.of<RestaurantPhotosBloc>(context);
             return Container(
               alignment: Alignment.center,
-              child: StreamBuilder<Data>(
+              child: StreamBuilder<List<Data>>(
                 stream: restaurantPhotosBloc.restaurantPhotos,
                 builder: (context, restaurantSnapshot) {
                   if (restaurantSnapshot?.data == null) {
@@ -48,7 +48,7 @@ class RestaurantPhotosScreen extends StatelessWidget {
                       restaurantPhotosBloc.getRestaurantPhotos();
                     }
                     return CircularProgressIndicator();
-                  } else if (restaurantSnapshot?.data != null && restaurantSnapshot.data.value == null) {
+                  } else if (restaurantSnapshot?.data == null) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -86,23 +86,23 @@ class RestaurantPhotosScreen extends StatelessWidget {
                       ),
                     );
                   } else {
-                    Map<dynamic, dynamic> restaurantPhotosMap = restaurantSnapshot.data.value;
+                    List<Data> restaurantPhotosMap = restaurantSnapshot.data;
                     return GridView.builder(
                       itemCount: restaurantPhotosMap.length,
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
                       itemBuilder: (context, position) {
                         return GestureDetector(
-                          key: Key(restaurantPhotosMap.entries.elementAt(position).key),
+                          key: Key((restaurantPhotosMap.elementAt(position).key).toString()),
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => RestaurantPhotoScreen(
                                     restaurantName: restaurantName,
-                                    photoUrl: restaurantPhotosMap.entries.elementAt(position).value['imageUrl'],
+                                    photoUrl: restaurantPhotosMap[position].value['photo'],
                                   ),
                             ));
                           },
                           child: CachedNetworkImage(
-                            imageUrl: restaurantPhotosMap.entries.elementAt(position).value['imageUrl'],
+                            imageUrl: restaurantPhotosMap[position].value['photo'],
                             fit: BoxFit.cover,
                             placeholder: (context, imageUrl) {
                               return Container(

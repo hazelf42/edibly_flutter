@@ -200,22 +200,13 @@ class NewPostBloc {
     /// create post value
     var reviewBody = {
       'uid': firebaseUserId,
-      'rid': restaurantKey,
+      'rid': int.parse(restaurantKey),
       'text': review,
       'stars': rating,
       'postType': 0,
       'tags': tags,
       'photo': photoUrl ?? null
     };
-    // var photoValue = {
-    //   'uid': firebaseUserId,
-    //   'rid': restaurantKey,
-    //   'photo': photoUrl
-    // };
-
-    /// start writing to database
-    ///
-    ///
 
     http.post("http://base.edibly.ca/api/reviews/add",
             body: json.encode(reviewBody))

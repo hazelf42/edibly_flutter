@@ -1,6 +1,8 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'package:edibly/models/data.dart';
 
@@ -18,21 +20,24 @@ class RestaurantPhotosBloc {
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
 
   /// Subjects
-  final _restaurantPhotos = BehaviorSubject<Data>();
+  final _restaurantPhotos = BehaviorSubject<List<Data>>();
 
   /// Stream getters
-  Stream<Data> get restaurantPhotos => _restaurantPhotos.stream;
+  Stream<List<Data>> get restaurantPhotos => _restaurantPhotos.stream;
 
   /// Other functions
   void getRestaurantPhotos() async {
-    _firebaseDatabase.reference().child('restaurantImages').child(restaurantKey).onValue.listen((event) async {
-      if (event?.snapshot?.value != null) {
-        try {
-          Data restaurantPhotosData = Data(event.snapshot.key, event.snapshot.value);
-          _restaurantPhotos..add(restaurantPhotosData);
-        } catch (_) {}
+    List<Data> restaurantPhotosData = [];
+    http
+        .get("http://base.edibly.ca/api/restaurants/$restaurantKey/pictures")
+        .then((response) {
+      if (response.body != null) {
+        (json.decode(response.body)).forEach((r) {
+          restaurantPhotosData.add(Data(r['rrid'], r));
+        });
+        _restaurantPhotos..add(restaurantPhotosData);
       } else {
-        _restaurantPhotos..add(Data(null, null));
+        _restaurantPhotos..add([Data(null, null)]);
       }
     });
   }

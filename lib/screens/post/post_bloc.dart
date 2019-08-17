@@ -28,10 +28,10 @@ class PostBloc {
   StreamSubscription onChildAddedListener;
 
   /// Subjects
-  final _comments = BehaviorSubject<List<Data>>();
+  final _comments = BehaviorSubject<List<dynamic>>();
 
   /// Stream getters
-  Stream<List<Data>> get comments => _comments.stream;
+  Stream<List<dynamic>> get comments => _comments.stream;
 
   /// Other functions
   void clearComments() {
@@ -39,8 +39,7 @@ class PostBloc {
   }
 
    void getComments() async {
-
-     List<Data> comments = _comments.value;
+     List<dynamic> comments = _comments.value;
      if (comments == null) comments = [];
         comments = post.value['comments'];
         _comments.add(post.value['comments']);
@@ -48,14 +47,22 @@ class PostBloc {
   }
 
   void addComment(String comment, String uid) async {
-    var value = json.encode({
+    var value = {
       'comment': comment,
       'uid': uid,
-    });
-    await http.post("http://base.edibly.ca/api/reviews/${post.key}/comment", body: value).then((http.Response response) { 
+    };
+    var newComment = {
+      'comment': comment,
+      'profile' :  json.decode((await http.get("http://base.edibly.ca/api/profiles/$uid")).body),
+    };
+    await http.post("http://base.edibly.ca/api/reviews/${post.key}/comment", body: json.encode(value)).then((http.Response response) { 
       if (response.statusCode < 200 || response.statusCode > 400) {
         SnackBar(content: Text("Your comment could not be posted."));
       } else {
+        List<dynamic> comments = _comments.value;
+        if (comments == null) comments = [];
+        comments.add(newComment);
+        _comments.add(comments);
         print("Comment successfully added");
       }
     });

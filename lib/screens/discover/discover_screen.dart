@@ -111,8 +111,8 @@ class DiscoverScreen extends StatelessWidget {
                 markers.add(Marker(
                   markerId: MarkerId(data.key),
                   position: LatLng(
-                    double.parse(data.value['lat'].toString()),
-                    double.parse((data.value['lon'] / 10).toString()),
+              double.parse((data.value['lat'] / 10000000).toString()),
+              double.parse((data.value['lon'] / 10000000).toString()),
                   ),
                   infoWindow: InfoWindow(
                     title: data.value['name'],

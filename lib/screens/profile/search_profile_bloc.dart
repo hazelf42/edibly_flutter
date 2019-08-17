@@ -87,7 +87,8 @@ class SearchProfileBloc {
     List<Data> profiles = [];
     //Vassilibase conversion: search restaurants, then filter.
     var url =
-        "http://base.edibly.ca/api/profiles/complete/$keyword";
+        "http://base.edibly.ca/api/profiles/complete/${toUrlFormat(keyword)}";
+        print(url);
     await http.get(url).then((response) {
       final map = json.decode(response.body);
       map.forEach((p) => profiles.add(Data(p['uid'], p)));

@@ -1,25 +1,23 @@
 import 'dart:io';
-import 'dart:convert';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:http/http.dart';
-import 'package:smooth_star_rating/smooth_star_rating.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 
-import 'package:edibly/screens/restaurant/reviews/restaurant_reviews_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:edibly/bloc_helper/provider.dart';
+import 'package:edibly/custom/widgets.dart';
+import 'package:edibly/main_bloc.dart';
+import 'package:edibly/models/data.dart';
+import 'package:edibly/screens/new_post/new_post_screen.dart';
 import 'package:edibly/screens/restaurant/dishes/restaurant_dishes_screen.dart';
 import 'package:edibly/screens/restaurant/photos/restaurant_photos_screen.dart';
-import 'package:edibly/screens/restaurant/tips/restaurant_tips_screen.dart';
 import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
-import 'package:edibly/screens/new_post/new_post_screen.dart';
-import 'package:edibly/values/app_localizations.dart';
-import 'package:edibly/bloc_helper/provider.dart';
+import 'package:edibly/screens/restaurant/reviews/restaurant_reviews_screen.dart';
+import 'package:edibly/screens/restaurant/tips/restaurant_tips_screen.dart';
 import 'package:edibly/values/app_colors.dart';
-import 'package:edibly/custom/widgets.dart';
-import 'package:edibly/models/data.dart';
-import 'package:edibly/main_bloc.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:smooth_star_rating/smooth_star_rating.dart';
 
 class RestaurantScreen extends StatelessWidget {
   final String firebaseUserId;
@@ -33,9 +31,9 @@ class RestaurantScreen extends StatelessWidget {
   List<Data> dynamicTagArrayToTagList(dynamic dynamicTagArray) {
     List<Data> tagList = [];
     if (dynamicTagArray != null) {
-      Map<dynamic, dynamic> map = dynamicTagArray;
-      map.forEach((key, value) {
-        tagList.add(Data(key, value));
+      final map = dynamicTagArray;
+      map.forEach((value) {
+        tagList.add(Data(value['num'], value));
       });
     }
     return tagList;
@@ -233,12 +231,10 @@ class RestaurantScreen extends StatelessWidget {
                             )
                           : FlatButton(
                               child: Text(localizations.add.toUpperCase()),
-                              onPressed: !pickedPhotoSnapshot.hasData
-                                  ? null
-                                  : () {
-                                      restaurantBloc.submitPhoto(
-                                          restaurantName: restaurantName);
-                                    },
+                              onPressed: () async {
+                                await restaurantBloc.uploadPhoto(
+                                    restaurantName: restaurantName);
+                              },
                             )
                     ],
                   );
@@ -266,46 +262,33 @@ class RestaurantScreen extends StatelessWidget {
     if (image != null) restaurantBloc.setPickedPhoto(image);
   }
 
-  Widget _rating(
-      {@required BuildContext context,
-      @required RestaurantBloc restaurantBloc}) {
-    return StreamBuilder<Data>(
-        stream: restaurantBloc.rating,
-        builder: (context, snapshot) {
-          if (snapshot?.data == null) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              restaurantBloc.getRating();
-            }
-            return Container();
-          }
-          if (snapshot?.data?.value == null) return Container();
-          return Container(
-            margin: const EdgeInsets.only(top: 4.0),
-            child: Row(
-              children: <Widget>[
-                SmoothStarRating(
-                  allowHalfRating: true,
-                  starCount: 5,
-                  rating: snapshot.data.value['rating'] / 2.0 - 0.1,
-                  size: 16.0,
-                  color: AppColors.primarySwatch.shade900,
-                  borderColor: AppColors.primarySwatch.shade900,
-                ),
-                Container(
-                  width: 8.0,
-                ),
-                SingleLineText(
-                  (double.parse(snapshot.data.value['rating'].toString()) /
-                          2.0)
-                      .toStringAsFixed(1),
-                  style: TextStyle(
-                    color: Theme.of(context).hintColor,
-                  ),
-                ),
-              ],
+  Widget _rating({@required BuildContext context, @required Data restaurant}) {
+    final avgRating = restaurant.value['averagerating'];
+    if (avgRating == null) return Container();
+    return Container(
+      margin: const EdgeInsets.only(top: 4.0),
+      child: Row(
+        children: <Widget>[
+          SmoothStarRating(
+            allowHalfRating: true,
+            starCount: 5,
+            rating: avgRating / 2.0 - 0.1,
+            size: 16.0,
+            color: AppColors.primarySwatch.shade900,
+            borderColor: AppColors.primarySwatch.shade900,
+          ),
+          Container(
+            width: 8.0,
+          ),
+          SingleLineText(
+            (avgRating / 2.0).toStringAsFixed(1),
+            style: TextStyle(
+              color: Theme.of(context).hintColor,
             ),
-          );
-        });
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _address({@required Data restaurant}) {
@@ -329,36 +312,30 @@ class RestaurantScreen extends StatelessWidget {
     );
   }
 
-  Widget _tags(
-      {@required BuildContext context,
-      @required RestaurantBloc restaurantBloc}) {
-    return StreamBuilder<Data>(
-        stream: restaurantBloc.rating,
-        builder: (context, snapshot) {
-          if (snapshot?.data == null) {
-            return Container();
-          }
-          if (snapshot?.data?.value == null) return Container();
-          dynamic tagDict = snapshot?.data?.value['tags'];
-          if (tagDict == null) return Container();
-          List<Data> tags = dynamicTagArrayToTagList(tagDict);
-          tags.sort((a, b) => b.value - a.value);
-          return Container(
-            height: 32.0,
-            margin: const EdgeInsets.only(top: 12.0, right: 12.0),
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              separatorBuilder: (context, position) {
-                return Container(width: 8.0, height: 1.0);
-              },
-              itemCount: tags.length,
-              itemBuilder: (context, position) {
-                return CustomTag(
-                    '${tags.elementAt(position).key} (${tags.elementAt(position).value})');
-              },
-            ),
-          );
-        });
+  Widget _tags({@required BuildContext context, @required Data restaurant}) {
+    final value = restaurant.value;
+    if (value == null ||
+        value['tags'].length == 0 ||
+        value['tags'].toString().isEmpty) {
+      return Container();
+    }
+    List<Data> tags = dynamicTagArrayToTagList(value['tags']);
+    tags.sort((a, b) => b.value['num'] - a.value['num']);
+    return Container(
+      height: 32.0,
+      margin: const EdgeInsets.only(top: 6.0, right: 12.0),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        separatorBuilder: (context, position) {
+          return Container(width: 8.0, height: 1.0);
+        },
+        itemCount: tags.length,
+        itemBuilder: (context, position) {
+          return CustomTag(
+              '${tags.elementAt(position).value['text']} (${tags.elementAt(position).value['num']})');
+        },
+      ),
+    );
   }
 
   Widget _coverImage({@required Data restaurant}) {
@@ -436,7 +413,7 @@ class RestaurantScreen extends StatelessWidget {
                         ),
                         _rating(
                           context: context,
-                          restaurantBloc: restaurantBloc,
+                          restaurant: restaurant,
                         ),
                         _address(restaurant: restaurant),
                       ],
@@ -450,7 +427,7 @@ class RestaurantScreen extends StatelessWidget {
               ),
               _tags(
                 context: context,
-                restaurantBloc: restaurantBloc,
+                restaurant: restaurant,
               ),
             ],
           ),
@@ -476,10 +453,10 @@ class RestaurantScreen extends StatelessWidget {
               final addedNewPost = await Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => NewPostScreen(
-                        firebaseUserId: firebaseUserId,
-                        restaurantName: restaurantName,
-                        restaurantKey: restaurantKey,
-                      ),
+                    firebaseUserId: firebaseUserId,
+                    restaurantName: restaurantName,
+                    restaurantKey: restaurantKey,
+                  ),
                 ),
               );
               if (addedNewPost != null &&
@@ -648,99 +625,98 @@ class RestaurantScreen extends StatelessWidget {
       );
     }
     dynamic featuredTip = restaurant.value['featured_tip'];
-    return FutureBuilder<Response>(
-      future: get("http://base.edibly.ca/api/profiles/${featuredTip['uid'].toString()}"),
-
-      //TODO: - change to post from tip
-      builder: (context, response) {
-        Map<dynamic, dynamic> authorValue = (response.hasData) ?  json.decode(response?.data?.body) : null;
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    Map<dynamic, dynamic> authorValue = featuredTip['profile'];
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            SingleLineText(
+              localizations.featuredTip.toUpperCase(),
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12.0,
+              ),
+            ),
+            Container(height: 10.0),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                SingleLineText(
-                  localizations.featuredTip.toUpperCase(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12.0,
-                  ),
+                CircleAvatar(
+                  radius: 18.0,
+                  backgroundImage: authorValue == null
+                      ? null
+                      : NetworkImage(authorValue['photo'] ?? ''),
+                  child: authorValue == null
+                      ? SizedBox(
+                          width: 34.0,
+                          height: 34.0,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.0,
+                          ),
+                        )
+                      : null,
                 ),
-                Container(height: 10.0),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    CircleAvatar(
-                      radius: 18.0,
-                      backgroundImage: authorValue == null
-                          ? null
-                          : NetworkImage(authorValue['photo'] ?? ''),
-                      child: authorValue == null
-                          ? SizedBox(
-                              width: 34.0,
-                              height: 34.0,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.0,
-                              ),
-                            )
-                          : null,
-                    ),
-                    Container(
-                      width: 16.0,
-                    ),
-                    Expanded(
-                      child: authorValue == null
-                          ? Container()
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                SingleChildScrollView(
-                                  physics: NeverScrollableScrollPhysics(),
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: <Widget>[
-                                      SingleLineText(
-                                        '${authorValue['firstname']} ${authorValue['lastname']}',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SingleLineText(
-                                    ((authorValue['veglevel'] == 1) ? '${localizations.vegetarian}' : '${localizations.vegan}') + " " + ((authorValue['glutenfree'] == 1) ? 'glutenfree' : ''),
-                                        style: TextStyle(
-                                          color: Theme.of(context).hintColor,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
+                Container(
+                  width: 16.0,
+                ),
+                Expanded(
+                  child: authorValue == null
+                      ? Container()
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            SingleChildScrollView(
+                              physics: NeverScrollableScrollPhysics(),
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: <Widget>[
+                                  SingleLineText(
+                                    '${authorValue['firstname']} ${authorValue['lastname']}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                                featuredTip['text'] != null
-                                    ? Container(
-                                        margin: const EdgeInsets.only(top: 4.0),
-                                        child: Text(
-                                          featuredTip['text'],
-                                          style: TextStyle(fontSize: 13.0),
-                                        ),
-                                      )
-                                    : Container(),
-                              ],
+                                  SingleLineText(
+                                    ((authorValue['veglevel'] == 1)
+                                            ? '${localizations.vegetarian}'
+                                            : '${localizations.vegan}') +
+                                        " " +
+                                        ((authorValue['glutenfree'] == 1)
+                                            ? 'glutenfree'
+                                            : ''),
+                                    style: TextStyle(
+                                      color: Theme.of(context).hintColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                    ),
-                    Container(
-                      width: 24.0,
-                    ),
-                  ],
+                            featuredTip['text'] != null
+                                ? Container(
+                                    margin: const EdgeInsets.only(top: 4.0),
+                                    child: Text(
+                                      featuredTip['text'],
+                                      style: TextStyle(fontSize: 13.0),
+                                    ),
+                                  )
+                                : Container(),
+                          ],
+                        ),
+                ),
+                Container(
+                  width: 24.0,
                 ),
               ],
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
@@ -763,10 +739,10 @@ class RestaurantScreen extends StatelessWidget {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => RestaurantPhotosScreen(
-                      firebaseUserId: firebaseUserId,
-                      restaurantName: restaurantName,
-                      restaurantKey: restaurantKey,
-                    ),
+                  firebaseUserId: firebaseUserId,
+                  restaurantName: restaurantName,
+                  restaurantKey: restaurantKey,
+                ),
               ),
             );
           },
@@ -802,9 +778,9 @@ class RestaurantScreen extends StatelessWidget {
     final AppLocalizations localizations = AppLocalizations.of(context);
     return DisposableProvider<RestaurantBloc>(
       packageBuilder: (context) => RestaurantBloc(
-            firebaseUserId: firebaseUserId,
-            restaurantKey: restaurantKey,
-          ),
+        firebaseUserId: firebaseUserId,
+        restaurantKey: restaurantKey,
+      ),
       child: Builder(
         builder: (context) {
           final MainBloc mainBloc = Provider.of<MainBloc>(context);
@@ -858,10 +834,10 @@ class RestaurantScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         RestaurantDishesScreen(
-                                          restaurantName: restaurantSnapshot
-                                              .data.value['name'],
-                                          restaurantKey: restaurantKey,
-                                        ),
+                                      restaurantName:
+                                          restaurantSnapshot.data.value['name'],
+                                      restaurantKey: restaurantKey,
+                                    ),
                                   ),
                                 );
                               },
@@ -879,11 +855,11 @@ class RestaurantScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         RestaurantReviewsScreen(
-                                          firebaseUserId: firebaseUserId,
-                                          restaurantName: restaurantSnapshot
-                                              .data.value['name'],
-                                          restaurantKey: restaurantKey,
-                                        ),
+                                      firebaseUserId: firebaseUserId,
+                                      restaurantName:
+                                          restaurantSnapshot.data.value['name'],
+                                      restaurantKey: restaurantKey,
+                                    ),
                                   ),
                                 );
                               },
@@ -900,11 +876,11 @@ class RestaurantScreen extends StatelessWidget {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (context) => RestaurantTipsScreen(
-                                          firebaseUserId: firebaseUserId,
-                                          restaurantName: restaurantSnapshot
-                                              .data.value['name'],
-                                          restaurantKey: restaurantKey,
-                                        ),
+                                      firebaseUserId: firebaseUserId,
+                                      restaurantName:
+                                          restaurantSnapshot.data.value['name'],
+                                      restaurantKey: restaurantKey,
+                                    ),
                                   ),
                                 );
                               },
@@ -922,11 +898,11 @@ class RestaurantScreen extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         RestaurantPhotosScreen(
-                                          firebaseUserId: firebaseUserId,
-                                          restaurantName: restaurantSnapshot
-                                              .data.value['name'],
-                                          restaurantKey: restaurantKey,
-                                        ),
+                                      firebaseUserId: firebaseUserId,
+                                      restaurantName:
+                                          restaurantSnapshot.data.value['name'],
+                                      restaurantKey: restaurantKey,
+                                    ),
                                   ),
                                 );
                               },

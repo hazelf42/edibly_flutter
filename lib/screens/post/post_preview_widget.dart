@@ -333,7 +333,8 @@ class _PostPreviewWidget extends State<PostPreviewWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  post.value['restaurant']['name'] ?? '',
+                  post.value['restaurant'] != null ?
+                  post.value['restaurant']['name'] : post.value['restaurantName'],
                   style: Theme.of(context).textTheme.title,
                 ),
                 _rating(
