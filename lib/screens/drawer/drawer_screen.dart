@@ -218,14 +218,14 @@ class DrawerScreen extends StatelessWidget {
             ),
             FlatButton(
               child: Text(localizations.logOut.toUpperCase()),
-              onPressed: () => {
-                drawerBloc.logOut(),
-                Navigator.of(context).pop(),
+              onPressed: () {
+                drawerBloc.logOut();
+                Navigator.of(context).pop();
                 Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (context) => LoginScreen(),
                     ),
-                    (Route<dynamic> route) => false)
+                    (Route<dynamic> route) => false);
               },
             ),
           ],

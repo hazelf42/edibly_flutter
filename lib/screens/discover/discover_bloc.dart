@@ -1,16 +1,14 @@
-import 'dart:math';
 import 'dart:convert';
+import 'dart:math';
 
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
-import 'package:location/location.dart';
-import 'package:rxdart/rxdart.dart';
-import 'package:http/http.dart' as http;
-
-import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/models/data.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:rxdart/rxdart.dart';
 
 class DiscoverBloc {
   final AppLocalizations localizations;
@@ -87,13 +85,10 @@ class DiscoverBloc {
 
           dataWithRating.value['averagerating'] =
               dataWithoutRating.value['averagerating'];
-          dataWithRating.value['lat'] =
-              (dataWithRating.value['lat'] / 10000000);
-          dataWithRating.value['lon'] = (dataWithRating.value['lon'] / 10000000);
           dataWithRating.value['distance'] =
               _distanceFromMeToDestination(LatLng(
-            double.parse((dataWithRating.value['lat']).toString()),
-            double.parse((dataWithRating.value['lon']).toString()),
+          double.parse((dataWithRating.value['lat'] / 10000000).toString()),
+          double.parse((dataWithRating.value['lon'] / 10000000).toString()),
           ));
           restaurantsWithExtraData.add(dataWithRating);
         }
@@ -104,7 +99,7 @@ class DiscoverBloc {
       List<Data> nearbyRestaurants = restaurantsWithExtraData
           .take(10)
           //TODO: Filter ratings
-          .toList(); //|| r.value['averagerating'] >= 7).take(10).toList();
+          .toList(); //
       if (nearbyRestaurants.isNotEmpty) {
         _nearbyRestaurants.add(nearbyRestaurants);
       } else {
@@ -167,10 +162,9 @@ class DiscoverBloc {
             double.parse(dataWithRating.value['lon'].toString()),
           ));
 
-          //TODO: - reenable this once you are able to add events
-          // if (DateTime.fromMillisecondsSinceEpoch(
-          //         dataWithRating.value['end'] * 1000)
-          //     .isAfter(DateTime.now()))
+          if (DateTime.fromMillisecondsSinceEpoch(
+                  dataWithRating.value['end'] * 1000)
+              .isAfter(DateTime.now()))
           eventsWithExtraData.add(dataWithRating);
         } catch (_) {}
       });
@@ -194,18 +188,18 @@ class DiscoverBloc {
   Future<LatLng> getCurrentLocation() async {
     LatLng fallbackLatLng = LatLng(53.544406, -113.490915);
     LatLng latLng;
-    try {
-      Location location = Location();
-      if (location != null) {
-        LocationData locationData =
-            await location.getLocation().timeout(Duration(seconds: 1000));
-        if (locationData != null) {
-          latLng = LatLng(locationData.latitude, locationData.longitude);
-        }
-      }
-    } catch (e) {
+    // try {
+    //   Location location = Location();
+    //   if (location != null) {
+    //     LocationData locationData =
+    //         await location.getLocation().timeout(Duration(seconds: 1000));
+    //     if (locationData != null) {
+    //       latLng = LatLng(locationData.latitude, locationData.longitude);
+    //     }
+    //   }
+  //  } catch (e) {
       latLng = fallbackLatLng;
-    }
+    //}
     LatLng locationToBeReturned = latLng == null ? fallbackLatLng : latLng;
     _myLocation = locationToBeReturned;
     _location.add(locationToBeReturned);

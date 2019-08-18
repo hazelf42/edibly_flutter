@@ -142,7 +142,6 @@ class MainBloc extends Object with Validators {
         url = "http://base.edibly.ca/api/tips/$id";
         break;
     }
-    //TODO: - VASSILI: Implement deleting (or "deleting") posts
     http.delete(url).then((r) {
       print(r);
     });

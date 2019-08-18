@@ -17,7 +17,7 @@ import 'package:edibly/models/data.dart';
 
 class DiscoverScreen extends StatelessWidget {
   final FirebaseUser firebaseUser;
-  
+
   DiscoverScreen({@required this.firebaseUser});
 
   Widget _header(String header) {
@@ -45,8 +45,7 @@ class DiscoverScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
           height: 50,
           child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               SingleLineText(
                 header,
@@ -111,8 +110,8 @@ class DiscoverScreen extends StatelessWidget {
                 markers.add(Marker(
                   markerId: MarkerId(data.key),
                   position: LatLng(
-              double.parse((data.value['lat'] / 10000000).toString()),
-              double.parse((data.value['lon'] / 10000000).toString()),
+                    double.parse((data.value['lat'] / 10000000).toString()),
+                    double.parse((data.value['lon'] / 10000000).toString()),
                   ),
                   infoWindow: InfoWindow(
                     title: data.value['name'],
@@ -207,6 +206,7 @@ class DiscoverScreen extends StatelessWidget {
           return _loader(height: 200);
         } else {
           return Container(
+            height: 200,
             padding: const EdgeInsets.symmetric(horizontal: 6.0),
             child: ListView.separated(
               separatorBuilder: (context, index) {

@@ -84,7 +84,6 @@ class RegisterInfoScreen extends StatelessWidget {
                       await user.data.updateProfile(UserUpdateInfo().photoUrl =
                           await registerBloc.getImageUrl(photo: image));
                     }
-                    ;
                   },
                   itemBuilder: (BuildContext context) =>
                       <PopupMenuEntry<ImageSource>>[

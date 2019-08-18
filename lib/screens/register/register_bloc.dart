@@ -4,14 +4,12 @@ import 'dart:io';
 import 'package:edibly/bloc_helper/validators.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 
 enum RegisterState {
   EMAIL_IN_USE,
@@ -27,14 +25,7 @@ class RegisterBloc extends Object with Validators {
   RegisterBloc({@required this.localizations});
 
   /// Local  variables
-  final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
-  final List<String> _defaultPhotos = [
-    'https://i.imgur.com/UNBOnUa.png',
-    'https://i.imgur.com/fkzgNDn.png',
-    'https://i.imgur.com/rsdDzFO.png',
-    'https://i.imgur.com/3AbGr5v.png',
-    'https://i.imgur.com/092Far6.png',
-  ];
+
 
   /// Subjects
   final _registerState = BehaviorSubject<RegisterState>();

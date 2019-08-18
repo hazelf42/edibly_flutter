@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:edibly/models/data.dart';
 import 'package:edibly/values/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:rxdart/rxdart.dart';
 
@@ -64,7 +62,6 @@ class SearchProfileBloc {
   /// Other functions
   
   void filterRestaurants(String keyword) async {
-    AppLocalizations localizations;
     if (keyword == null) keyword = _keyword;
     _keyword = keyword;
     _filteredRestaurants.add(null);

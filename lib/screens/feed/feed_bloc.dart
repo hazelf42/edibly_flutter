@@ -106,7 +106,6 @@ class FeedBloc {
       /// make sure variables reflects this being the first page
 
       /// network request
-      /// TODO: - Localization ?
       http.Response response;
 
       if (feedType == 'nearby') {

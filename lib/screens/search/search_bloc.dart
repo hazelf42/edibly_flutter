@@ -228,7 +228,6 @@ class SearchBloc {
       int oldrestaurantsLength =
           restaurantsWithoutRating.where((post) => post != null).length;
       //TODO: - testing only
-      var location = LatLng(53.522385, -113.622810);
       final response = await http.post(
           'http://base.edibly.ca/api/restaurants/nearby/$_currentPage',
           body: json.encode({
@@ -327,18 +326,18 @@ class SearchBloc {
   Future<LatLng> getCurrentLocation() async {
     LatLng fallbackLatLng = LatLng(53.544406, -113.490915);
     LatLng latLng;
-    //try {
+    try {
     Location location = Location();
-    // if (location != null) {
-    //   LocationData locationData =
-    //       await location.getLocation().timeout(Duration(seconds: 10));
-    //     if (locationData != null) {
-    //       latLng = LatLng(locationData.latitude, locationData.longitude);
-    //     }
-    //   }
-    // } catch (e) {
+    if (location != null) {
+      LocationData locationData =
+          await location.getLocation().timeout(Duration(seconds: 10));
+        if (locationData != null) {
+          latLng = LatLng(locationData.latitude, locationData.longitude);
+        }
+      }
+    } catch (e) {
     latLng = fallbackLatLng;
-    // }
+    }
     LatLng locationToBeReturned = latLng == null ? fallbackLatLng : latLng;
     _myLocation = locationToBeReturned;
     return locationToBeReturned;

@@ -81,7 +81,7 @@ class RestaurantTipsBloc {
         allTipsSublist.forEach((t) => tips.add(Data(t['rtid'], t)));
         //tips.add(null);
       } else {
-        return;
+        tips = [];
       }
         _tips.add(tips);
       } 

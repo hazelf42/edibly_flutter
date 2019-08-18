@@ -97,7 +97,7 @@ class RestaurantReviewsBloc {
       });
       reviews.add(null);
     } else {
-      return;
+      reviews = [];
     }
     _reviews.add(reviews);
   }

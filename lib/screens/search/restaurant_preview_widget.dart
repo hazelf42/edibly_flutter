@@ -1,18 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:smooth_star_rating/smooth_star_rating.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:edibly/bloc_helper/provider.dart';
+import 'package:edibly/custom/widgets.dart';
+import 'package:edibly/models/data.dart';
+import 'package:edibly/screens/restaurant/restaurant_screen.dart';
+import 'package:edibly/screens/search/search_bloc.dart';
+import 'package:edibly/values/app_colors.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import 'package:edibly/screens/restaurant/restaurant_screen.dart';
-import 'package:edibly/screens/search/search_bloc.dart';
-import 'package:edibly/bloc_helper/provider.dart';
-import 'package:edibly/values/app_colors.dart';
-import 'package:edibly/custom/widgets.dart';
-import 'package:edibly/models/data.dart';
+import 'package:smooth_star_rating/smooth_star_rating.dart';
 
 class RestaurantPreviewWidget extends StatelessWidget {
   final List bookmarksList;

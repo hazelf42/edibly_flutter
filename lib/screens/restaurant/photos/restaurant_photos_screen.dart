@@ -48,7 +48,7 @@ class RestaurantPhotosScreen extends StatelessWidget {
                       restaurantPhotosBloc.getRestaurantPhotos();
                     }
                     return CircularProgressIndicator();
-                  } else if (restaurantSnapshot?.data == null) {
+                  } else if (restaurantSnapshot?.data == null || restaurantSnapshot.data.length == 0) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,

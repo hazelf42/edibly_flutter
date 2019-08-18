@@ -82,7 +82,7 @@ class RestaurantBloc {
     _restaurant.add(restaurantData);
     var featuredTip = [];
 
-    if (restaurantData.value['tip'] != null) {
+    if (restaurantData.value['tip'] != null && restaurantData.value['tip'] != "") {
       featuredTip.add({
         'text': restaurantData.value['tip'],
         'profile': {

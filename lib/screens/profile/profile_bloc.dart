@@ -132,7 +132,7 @@ class ProfileBloc {
     if (posts == null) posts = [];
 
     await http
-        .get('http://base.edibly.ca/api/profiles/${uid}/posts')
+        .get('http://base.edibly.ca/api/profiles/$uid/posts')
         .then((postResponse) {
       json.decode(postResponse.body).forEach((post) {
         posts.add(Data((post['rtid'] ?? post['rrid']).toString(), post));

@@ -1,15 +1,11 @@
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:edibly/screens/restaurant/tips/restaurant_tips_bloc.dart';
-import 'package:edibly/screens/restaurant/restaurant_screen.dart';
-import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
-import 'package:edibly/values/app_localizations.dart';
 import 'package:edibly/bloc_helper/provider.dart';
 import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
-import 'package:edibly/main_bloc.dart';
-import 'package:http/http.dart';
+import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
+import 'package:edibly/screens/restaurant/restaurant_screen.dart';
+import 'package:edibly/screens/restaurant/tips/restaurant_tips_bloc.dart';
+import 'package:edibly/values/app_localizations.dart';
+import 'package:flutter/material.dart';
 
 class RestaurantTipsScreen extends StatelessWidget {
   final String firebaseUserId;
