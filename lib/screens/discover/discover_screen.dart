@@ -208,7 +208,6 @@ class DiscoverScreen extends StatelessWidget {
         } else {
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 6.0),
-            height: 187.0,
             child: ListView.separated(
               separatorBuilder: (context, index) {
                 if (index == 0 ||

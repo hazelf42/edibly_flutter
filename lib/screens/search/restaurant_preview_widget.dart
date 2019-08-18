@@ -157,9 +157,6 @@ class RestaurantPreviewWidget extends StatelessWidget {
       child: Container(
         width: 70.0,
         height: 70.0,
-        margin: (restaurant.value['tags'].length > 0)
-            ? EdgeInsets.only(top: 10)
-            : null,
         color: Colors.white,
         child: CachedNetworkImage(
           imageUrl: restaurant.value['photo'] ?? '',

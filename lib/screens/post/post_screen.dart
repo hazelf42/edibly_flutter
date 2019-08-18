@@ -209,8 +209,9 @@ class PostCommentWidget extends StatelessWidget {
                           height: 4.0,
                         ),
                         SingleLineText(
-                          (comment['timestamp'] != null) ? 
-                          '${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(comment['timestamp'].toString())).toInt() * 1000))}' : "Now",
+                          (comment['timestamp'] != null)
+                              ? '${TimeAgo.format(DateTime.fromMillisecondsSinceEpoch((double.parse(comment['timestamp'].toString())).toInt() * 1000))}'
+                              : "Now",
                           style: TextStyle(
                             color: Theme.of(context).hintColor,
                             fontSize: 12,
@@ -229,17 +230,31 @@ class PostCommentWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final MainBloc mainBloc = Provider.of<MainBloc>(context);
     final AppLocalizations localizations = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        _author(
-            mainBloc: mainBloc, localizations: localizations, context: context),
-        Container(
-          height: 8.0,
-        ),
-        Text(comment['comment']),
-      ],
-    );
+    return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfileScreen(
+                uid: comment['profile']['uid'],
+              ),
+            ),
+          );
+        },
+        behavior: HitTestBehavior.translucent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            _author(
+                mainBloc: mainBloc,
+                localizations: localizations,
+                context: context),
+            Container(
+              height: 8.0,
+            ),
+            Text(comment['comment']),
+          ],
+        ));
   }
 }
 
