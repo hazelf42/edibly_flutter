@@ -40,7 +40,6 @@ class RestaurantDishesBloc {
     final dishesMap = json.decode(response.body).reversed;
 
     //TODO: - Dish reviews
-    List<Data> dishesWithoutRating = [];
     List<Data> dishesWithRating = [];
     dishesMap.forEach((d) => dishesWithRating.add(Data(d['did'], d)));
     _dishes.add(dishesWithRating);

@@ -158,7 +158,7 @@ class NewPostDishesScreen extends StatelessWidget {
           if (succeeded) {
             Navigator.of(context).pop();
             Navigator.of(context).pop();
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => RestaurantScreen(firebaseUserId: firebaseUserId, restaurantKey: restaurantKey)));
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => RestaurantScreen(firebaseUserId: firebaseUserId, restaurantKey: restaurantKey, restaurantName: restaurantName,)));
           } else {
             Scaffold.of(context).showSnackBar(
                 SnackBar(content: Text(localizations.networkRequestFailed)));

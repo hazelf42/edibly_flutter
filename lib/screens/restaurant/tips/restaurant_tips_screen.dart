@@ -200,8 +200,9 @@ class TipWidget extends StatelessWidget {
                                 ),
                               ),
                               SingleLineText(
-                                //' (${authorValue['dietName']}${(authorValue['gluten'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
-                                'Hello',
+                                authorValue['veglevel'] == 2
+                                    ? "🌱"
+                                    : "🥕",
                                 style: TextStyle(
                                   color: Theme.of(context).hintColor,
                                   fontSize: 14,

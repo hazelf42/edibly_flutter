@@ -40,14 +40,15 @@ class DrawerScreen extends StatelessWidget {
         children: <Widget>[
           CircleAvatar(
             radius: 24.0,
-            backgroundImage:
-                profile == null ? null : NetworkImage(_firebaseUser.photoUrl ?? ''),
+            backgroundImage: profile == null
+                ? null
+                : NetworkImage(_firebaseUser.photoUrl ?? ''),
             child: profile == null
                 ? SizedBox(
                     width: 46.0,
                     height: 46.0,
                     child: CircularProgressIndicator(
-                       strokeWidth: 2.0,
+                      strokeWidth: 2.0,
                     ),
                   )
                 : null,
@@ -447,8 +448,8 @@ class DrawerScreen extends StatelessWidget {
                           ),
                           Divider(),
                           MenuSelector(
-                            option1Text: localizations.vegetarian,
-                            option2Text: localizations.vegan,
+                            option1Text: "🥕" + localizations.vegetarian,
+                            option2Text: localizations.vegan + "🌱",
                             selectedOption: profile['veglevel'] == 1
                                 ? MenuSelectorOption.option1
                                 : MenuSelectorOption.option2,
@@ -483,7 +484,7 @@ class DrawerScreen extends StatelessWidget {
                           ),
                         ],
                       );
-                    } else if (snapshot.  hasData &&
+                    } else if (snapshot.hasData &&
                         snapshot.data.body == "null") {
                       drawerBloc.logOut();
                     }
@@ -552,6 +553,7 @@ class MenuItem extends StatelessWidget {
   }
 }
 
+
 class MenuSwitchItem extends StatefulWidget {
   final GestureTapCallback onTap;
   final IconData iconData;
@@ -593,6 +595,7 @@ class _MenuSwitchItem extends State<MenuSwitchItem> {
       ),
       child: InkWell(
         onTap: () async {
+          await onTap();
           setState(
             () {
               value = !value;
@@ -642,7 +645,6 @@ class _MenuSwitchItem extends State<MenuSwitchItem> {
     );
   }
 }
-
 enum MenuSelectorOption {
   option1,
   option2,

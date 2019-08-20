@@ -399,8 +399,7 @@ class PostWidget extends StatelessWidget {
                                         ),
                                       ),
                                       SingleLineText(
-                                        "Hello",
-                                        // ' (${authorValue['dietName']}${(authorValue['isGlutenFree'] as bool ? ', ${localizations.glutenFree.toLowerCase()}' : '')})',
+                                                                            authorValue['veglevel'] == 2 ? "🌱" : "🥕",
                                         style: TextStyle(
                                           color: Theme.of(context).hintColor,
                                           fontSize: 14,
@@ -645,6 +644,7 @@ class PostWidget extends StatelessWidget {
                       builder: (context) => RestaurantScreen(
                         firebaseUserId: uid,
                         restaurantKey: post.value['rid'].toString(),
+                        restaurantName: "Restaurant",
                       ),
                     ),
                   );

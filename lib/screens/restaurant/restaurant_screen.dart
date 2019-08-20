@@ -6,9 +6,10 @@ import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/main_bloc.dart';
 import 'package:edibly/models/data.dart';
 import 'package:edibly/screens/new_post/new_post_screen.dart';
-import 'package:edibly/screens/restaurant/dishes/restaurant_dishes_screen.dart';
+import 'package:edibly/screens/restaurant/dishes/restaurant_dishes_bloc.dart';
 import 'package:edibly/screens/restaurant/photos/restaurant_photos_screen.dart';
 import 'package:edibly/screens/restaurant/restaurant_bloc.dart';
+import 'package:edibly/screens/restaurant/restaurant_dishes_preview.dart';
 import 'package:edibly/screens/restaurant/reviews/restaurant_reviews_screen.dart';
 import 'package:edibly/screens/restaurant/tips/restaurant_tips_screen.dart';
 import 'package:edibly/values/app_colors.dart';
@@ -22,10 +23,12 @@ import 'package:smooth_star_rating/smooth_star_rating.dart';
 class RestaurantScreen extends StatelessWidget {
   final String firebaseUserId;
   final String restaurantKey;
+  final String restaurantName;
 
   RestaurantScreen({
     @required this.firebaseUserId,
     @required this.restaurantKey,
+    @required this.restaurantName,
   });
 
   List<Data> dynamicTagArrayToTagList(dynamic dynamicTagArray) {
@@ -629,16 +632,38 @@ class RestaurantScreen extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 12.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            SingleLineText(
-              localizations.featuredTip.toUpperCase(),
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 12.0,
-              ),
+            Row(
+              children: [
+                Expanded(
+                    child:
+                        SingleLineText(localizations.featuredTip.toUpperCase(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12.0,
+                            ))),
+                FlatButton(
+                  child: Text("See all",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12.0,
+                      )),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => RestaurantTipsScreen(
+                          firebaseUserId: firebaseUserId,
+                          restaurantName: restaurant.value['name'],
+                          restaurantKey: restaurantKey,
+                        ),
+                      ),
+                    );
+                  },
+                )
+              ],
             ),
             Container(height: 10.0),
             Row(
@@ -681,13 +706,7 @@ class RestaurantScreen extends StatelessWidget {
                                     ),
                                   ),
                                   SingleLineText(
-                                    ((authorValue['veglevel'] == 1)
-                                            ? '${localizations.vegetarian}'
-                                            : '${localizations.vegan}') +
-                                        " " +
-                                        ((authorValue['glutenfree'] == 1)
-                                            ? 'glutenfree'
-                                            : ''),
+                                    authorValue['veglevel'] == 2 ? "🌱" : "🥕",
                                     style: TextStyle(
                                       color: Theme.of(context).hintColor,
                                       fontSize: 12,
@@ -775,6 +794,8 @@ class RestaurantScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    int veglevel = 2;
+    int hasMenu = 0;
     final AppLocalizations localizations = AppLocalizations.of(context);
     return DisposableProvider<RestaurantBloc>(
       packageBuilder: (context) => RestaurantBloc(
@@ -787,9 +808,7 @@ class RestaurantScreen extends StatelessWidget {
           final RestaurantBloc restaurantBloc =
               Provider.of<RestaurantBloc>(context);
           return Scaffold(
-            appBar: AppBar(
-              title: SingleLineText(localizations.restaurant),
-            ),
+            appBar: AppBar(title: SingleLineText(restaurantName)),
             body: GestureDetector(
               onTap: () {
                 // call this method here to hide soft keyboard
@@ -813,13 +832,32 @@ class RestaurantScreen extends StatelessWidget {
                                 context: context,
                                 restaurantBloc: restaurantBloc,
                                 restaurant: restaurantSnapshot?.data),
-                            _featuredTip(
-                              context: context,
-                              mainBloc: mainBloc,
-                              restaurantBloc: restaurantBloc,
-                              localizations: localizations,
-                              restaurant: restaurantSnapshot?.data,
-                            ),
+                            veglevel == 0
+                                ? _featuredTip(
+                                    context: context,
+                                    mainBloc: mainBloc,
+                                    restaurantBloc: restaurantBloc,
+                                    localizations: localizations,
+                                    restaurant: restaurantSnapshot?.data,
+                                  )
+                                : Card(
+                                    child: Container(
+                                        padding: EdgeInsets.all(10),
+                                        child: Row(children: [
+                                          Image(
+                                              image: AssetImage(veglevel == 1
+                                                  ? 'assets/drawables/2.0x/veggiegreen.png'
+                                                  : "assets/drawables/2.0x/vegangreen.png"), width: 30, height: 30),
+                                          SizedBox(width: 50),
+                                          Expanded(child:Text(
+                                              veglevel == 1
+                                                  ? "Vegetarian"
+                                                  : "Vegan",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w400,
+                                                fontSize: 18.0,
+                                              )))
+                                        ]))),
                             Container(height: 6.0),
                             _buttonBar(
                               context: context,
@@ -827,27 +865,6 @@ class RestaurantScreen extends StatelessWidget {
                               localizations: localizations,
                               restaurantName:
                                   restaurantSnapshot.data.value['name'],
-                            ),
-                            ListTile(
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        RestaurantDishesScreen(
-                                      restaurantName:
-                                          restaurantSnapshot.data.value['name'],
-                                      restaurantKey: restaurantKey,
-                                    ),
-                                  ),
-                                );
-                              },
-                              title: SingleLineText(localizations.menu),
-                              leading: Icon(Icons.restaurant_menu),
-                              trailing: Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16.0,
-                                color: Theme.of(context).disabledColor,
-                              ),
                             ),
                             ListTile(
                               onTap: () {
@@ -871,27 +888,14 @@ class RestaurantScreen extends StatelessWidget {
                                 color: Theme.of(context).disabledColor,
                               ),
                             ),
-                            ListTile(
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => RestaurantTipsScreen(
-                                      firebaseUserId: firebaseUserId,
-                                      restaurantName:
-                                          restaurantSnapshot.data.value['name'],
-                                      restaurantKey: restaurantKey,
-                                    ),
-                                  ),
-                                );
-                              },
-                              title: SingleLineText(localizations.tips),
-                              leading: Icon(Icons.info),
-                              trailing: Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16.0,
-                                color: Theme.of(context).disabledColor,
-                              ),
-                            ),
+                            hasMenu == 1
+                                ? Container(
+                                    height: 200,
+                                    child: RestaurantDishesPreviewScreen(
+                                        restaurantKey: restaurantKey,
+                                        restaurantName: restaurantSnapshot
+                                            .data.value['name']))
+                                : Container(),
                             ListTile(
                               onTap: () {
                                 Navigator.of(context).push(

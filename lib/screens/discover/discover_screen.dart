@@ -125,6 +125,7 @@ class DiscoverScreen extends StatelessWidget {
                           builder: (context) => RestaurantScreen(
                             firebaseUserId: firebaseUser.uid,
                             restaurantKey: data.key,
+                            restaurantName: data.value['name'],
                           ),
                         ),
                       );

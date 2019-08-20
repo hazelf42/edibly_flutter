@@ -131,8 +131,8 @@ class RegisterInfoScreen extends StatelessWidget {
       stream: registerBloc.vegan,
       builder: (context, snapshot) {
         return MenuSelector(
-          option1Text: localizations.vegan,
-          option2Text: localizations.vegetarian,
+          option1Text: localizations.vegan + "🌱",
+          option2Text: "🥕" + localizations.vegetarian,
           selectedOption: snapshot?.data ?? true
               ? MenuSelectorOption.option1
               : MenuSelectorOption.option2,

@@ -106,13 +106,9 @@ class _PostPreviewWidget extends State<PostPreviewWidget> {
                                   ),
                                 ),
                                 SingleLineText(
-                                  ((authorValue['veglevel'] == 1)
-                                          ? '${localizations.vegetarian}'
-                                          : '${localizations.vegan}') +
-                                      " " +
-                                      ((authorValue['glutenfree'] == 1)
-                                          ? 'glutenfree'
-                                          : ''),
+                                  authorValue['veglevel'] == 2
+                                      ? "🌱"
+                                      : "🥕",
                                   style: TextStyle(
                                     color: Theme.of(context).hintColor,
                                     fontSize: 14,
@@ -333,8 +329,9 @@ class _PostPreviewWidget extends State<PostPreviewWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  post.value['restaurant'] != null ?
-                  post.value['restaurant']['name'] : post.value['restaurantName'],
+                  post.value['restaurant'] != null
+                      ? post.value['restaurant']['name']
+                      : post.value['restaurantName'],
                   style: Theme.of(context).textTheme.title,
                 ),
                 _rating(

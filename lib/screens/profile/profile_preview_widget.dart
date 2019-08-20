@@ -40,7 +40,7 @@ class _ProfilePreviewWidget extends State<ProfilePreviewWidget> {
         return IconButton(
           icon: Icon(
             //TODO: Change to person_check
-            following ? Icons.person_outline : Icons.person_add,
+            following ? Icons.check : Icons.person_add,
             color: !following ? AppColors.primarySwatch.shade600 : Theme.of(context).disabledColor,
           ),
           onPressed: () async {

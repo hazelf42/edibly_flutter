@@ -150,6 +150,7 @@ class RestaurantPreviewWidget extends StatelessWidget {
             builder: (context) => RestaurantScreen(
                   firebaseUserId: firebaseUser.uid,
                   restaurantKey: restaurant.key,
+                  restaurantName: restaurant.value['name'],
                 ),
           ),
         );

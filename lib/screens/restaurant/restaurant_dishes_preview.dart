@@ -9,11 +9,13 @@ import 'package:edibly/custom/widgets.dart';
 import 'package:edibly/models/data.dart';
 import 'package:edibly/main_bloc.dart';
 
-class RestaurantDishesScreen extends StatelessWidget {
+import 'dishes/restaurant_dishes_screen.dart';
+
+class RestaurantDishesPreviewScreen extends StatelessWidget {
   final String restaurantName;
   final String restaurantKey;
 
-  RestaurantDishesScreen({
+  RestaurantDishesPreviewScreen({
     @required this.restaurantName,
     @required this.restaurantKey,
   });
@@ -50,7 +52,9 @@ class RestaurantDishesScreen extends StatelessWidget {
             height: 12.0,
           ),
           Text(
-            diet == Diet.VEGAN ? localizations.noVeganOptionsText : localizations.noVegetarianOptionsText,
+            diet == Diet.VEGAN
+                ? localizations.noVeganOptionsText
+                : localizations.noVegetarianOptionsText,
             style: TextStyle(
               fontSize: 15.0,
               color: Theme.of(context).hintColor,
@@ -64,7 +68,8 @@ class RestaurantDishesScreen extends StatelessWidget {
                     onPressed: () {
                       restaurantDishesBloc.setForcedDiet(Diet.VEGETARIAN);
                     },
-                    child: SingleLineText(localizations.showVegetarianOptions.toUpperCase()),
+                    child: SingleLineText(
+                        localizations.showVegetarianOptions.toUpperCase()),
                   ),
                 )
               : Container(),
@@ -101,30 +106,61 @@ class RestaurantDishesScreen extends StatelessWidget {
       separatorBuilder: (context, position) {
         if (position == 0) {
           return Container(
-            color: Theme.of(context).primaryColor,
-            padding: const EdgeInsets.symmetric(
-              vertical: 12.0,
-              horizontal: 10.0,
-            ),
-            margin: const EdgeInsets.only(bottom: 8.0),
-            child: SingleLineText(
-              diet == Diet.VEGAN ? localizations.vegan : localizations.vegetarian,
-              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-          );
-          //TODO: - Can be made sorting  ? ?? ? ? ? ? 
-        } else if (dishes.elementAt(position - 1).value["${_dietToConstantString(diet)}level"] == 2 &&
-            dishes.elementAt(position).value["${_dietToConstantString(diet)}level"] == 1) {
+              color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.transparent
+                      : Theme.of(context).primaryColor,
+              child: ListTile(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => RestaurantDishesScreen(
+                        restaurantName: restaurantName,
+                        restaurantKey: restaurantKey,
+                      ),
+                    ),
+                  );
+                },
+                title: SingleLineText(
+                    diet == Diet.VEGAN
+                        ? "Vegan " + localizations.menu
+                        : "Vegetarian " + localizations.menu,
+                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey
+                      : Colors.white)),
+                leading: Icon(Icons.restaurant_menu, color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey
+                      : Colors.white70),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16.0,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey
+                      : Colors.white70,
+                ),
+              ));
+          //TODO: - Can be made sorting  ? ?? ? ? ? ?
+        } else if (dishes
+                    .elementAt(position - 1)
+                    .value["${_dietToConstantString(diet)}level"] ==
+                2 &&
+            dishes
+                    .elementAt(position)
+                    .value["${_dietToConstantString(diet)}level"] ==
+                1) {
           return Container(
-            color: Theme.of(context).primaryColor,
             padding: const EdgeInsets.symmetric(
               vertical: 12.0,
               horizontal: 10.0,
             ),
             margin: const EdgeInsets.only(top: 16.0, bottom: 8.0),
             child: SingleLineText(
-              diet == Diet.VEGAN ? localizations.veganUponRequest : localizations.vegetarianUponRequest,
-              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
+              diet == Diet.VEGAN
+                  ? localizations.veganUponRequest
+                  : localizations.vegetarianUponRequest,
+              style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
           );
         }
@@ -137,6 +173,7 @@ class RestaurantDishesScreen extends StatelessWidget {
           return Container();
         }
         return Container(
+          color: Colors.white,
           padding: const EdgeInsets.symmetric(
             vertical: 5.0,
             horizontal: 10.0,
@@ -150,13 +187,8 @@ class RestaurantDishesScreen extends StatelessWidget {
   }
 
   _loadingView() {
-    return Scaffold(
-      appBar: AppBar(
-        title: SingleLineText(restaurantName),
-      ),
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
+    return Center(
+      child: CircularProgressIndicator(),
     );
   }
 
@@ -164,19 +196,24 @@ class RestaurantDishesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations localizations = AppLocalizations.of(context);
     return DisposableProvider<RestaurantDishesBloc>(
-      packageBuilder: (context) => RestaurantDishesBloc(restaurantKey: restaurantKey),
+      packageBuilder: (context) =>
+          RestaurantDishesBloc(restaurantKey: restaurantKey),
       child: Builder(
         builder: (context) {
           final MainBloc mainBloc = Provider.of<MainBloc>(context);
-          final RestaurantDishesBloc restaurantDishesBloc = Provider.of<RestaurantDishesBloc>(context);
+          final RestaurantDishesBloc restaurantDishesBloc =
+              Provider.of<RestaurantDishesBloc>(context);
           return Container(
-            color: Theme.of(context).brightness == Brightness.dark ? null : Colors.grey.shade300,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? null
+                : Colors.grey.shade300,
             alignment: Alignment.center,
             child: StreamBuilder<List<Data>>(
               stream: restaurantDishesBloc.dishes,
               builder: (context, dishesSnapshot) {
                 if (dishesSnapshot?.data == null) {
-                  if (dishesSnapshot.connectionState == ConnectionState.waiting) {
+                  if (dishesSnapshot.connectionState ==
+                      ConnectionState.waiting) {
                     restaurantDishesBloc.getDishes();
                   }
                   return _loadingView();
@@ -196,65 +233,38 @@ class RestaurantDishesScreen extends StatelessWidget {
                       builder: (context, forcedDietSnapshot) {
                         /// what diet have user chosen?
                         Diet diet = originalDietSnapshot?.data;
-                        if (forcedDietSnapshot.hasData) diet = forcedDietSnapshot?.data;
+                        if (forcedDietSnapshot.hasData)
+                          diet = forcedDietSnapshot?.data;
                         if (diet == null) diet = Diet.VEGETARIAN;
 
                         /// only get relevant dishes considering the diet
                         List<Data> filteredDishes = [];
                         if (diet == Diet.VEGETARIAN) {
-                          dishesSnapshot.data.forEach((d) => (d.value['vegetarianlevel'] >= 1) ? filteredDishes.add(d) : null);
-                          filteredDishes.sort((a,b) {
-                            return a.value['vegetarianlevel'].compareTo(b.value['vegetarianlevel']);
+                          dishesSnapshot.data.forEach((d) =>
+                              (d.value['vegetarianlevel'] >= 1)
+                                  ? filteredDishes.add(d)
+                                  : null);
+                          filteredDishes.sort((a, b) {
+                            return a.value['vegetarianlevel']
+                                .compareTo(b.value['vegetarianlevel']);
                           });
                         } else {
-                          dishesSnapshot.data.forEach((d) => (d.value['veganlevel'] >= 1) ? filteredDishes.add(d) : null);
-                          filteredDishes.sort((a,b) {
-                            return b.value['veganlevel'].compareTo(a.value['veganlevel']);
+                          dishesSnapshot.data.forEach((d) =>
+                              (d.value['veganlevel'] >= 1)
+                                  ? filteredDishes.add(d)
+                                  : null);
+                          filteredDishes.sort((a, b) {
+                            return b.value['veganlevel']
+                                .compareTo(a.value['veganlevel']);
                           });
                         }
-                
-                        return DefaultTabController(
-                          length: 3,
-                          initialIndex: 1,
-                          child: Scaffold(
-                            appBar: AppBar(
-                              bottom: TabBar(
-                                indicatorWeight: 3.0,
-                                indicatorColor: Theme.of(context).brightness == Brightness.dark ? null : Colors.white,
-                                tabs: [
-                                  Tab(icon: Icon(Icons.local_pizza), text: localizations.appetizers),
-                                  Tab(icon: Icon(Icons.restaurant), text: localizations.entrees),
-                                  Tab(icon: Icon(Icons.fastfood), text: localizations.sides),
-                                ],
-                              ),
-                            ),
-                            body: TabBarView(
-                              //TODO: - Hide tabs when no dishes available for appetizers, sides
-                              children: [
-                                listView(
-                                  diet: diet,
-                                  context: context,
-                                  localizations: localizations,
-                                  restaurantDishesBloc: restaurantDishesBloc,
-                                  dishes: filteredDishes.where((d) => d.value['category'][0].toString().toLowerCase() == 'a').toList(),
-                                ),
-                                listView(
-                                  diet: diet,
-                                  context: context,
-                                  localizations: localizations,
-                                  restaurantDishesBloc: restaurantDishesBloc,
-                                  dishes: filteredDishes.where((d) => (d.value['category'][0].toString().toLowerCase() != 'a' || d.value['category'].toString().toLowerCase() != 'd')).toList(),
-                                ),
-                                listView(
-                                  diet: diet,
-                                  context: context,
-                                  localizations: localizations,
-                                  restaurantDishesBloc: restaurantDishesBloc,
-                                  dishes: filteredDishes.where((d) => d.value['category'][0].toString().toLowerCase() == 'd' || d.value['category'][0].toString().toLowerCase() == 's').toList(),
-                                ),
-                              ],
-                            ),
-                          ),
+
+                        return listView(
+                          diet: diet,
+                          context: context,
+                          localizations: localizations,
+                          restaurantDishesBloc: restaurantDishesBloc,
+                          dishes: filteredDishes.toList(),
                         );
                       },
                     );
@@ -278,7 +288,10 @@ class DishWidget extends StatelessWidget {
     if (dish.value['rating'] == null) {
       return Container();
     }
-    double rating = (dish.value['rating']['isGoodCount'] / (dish.value['rating']['isBadCount'] + dish.value['rating']['isGoodCount'])) * 5;
+    double rating = (dish.value['rating']['isGoodCount'] /
+            (dish.value['rating']['isBadCount'] +
+                dish.value['rating']['isGoodCount'])) *
+        5;
     if (rating < 1) rating = 1;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +326,8 @@ class DishWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Container(
+      child: Row(
       children: <Widget>[
         Expanded(
           child: Column(
@@ -339,6 +353,6 @@ class DishWidget extends StatelessWidget {
           ),
         ),
       ],
-    );
+    ));
   }
 }

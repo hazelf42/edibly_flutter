@@ -82,14 +82,14 @@ class RestaurantBloc {
     _restaurant.add(restaurantData);
     var featuredTip = [];
 
-    if (restaurantData.value['tip'] != null && restaurantData.value['tip'] != "") {
+    if (restaurantData.value['tip'] != null && restaurantData.value['tip'] != ""  && restaurantData.value['tip'] != "None") {
       featuredTip.add({
         'text': restaurantData.value['tip'],
         'profile': {
-          'photo':
-              'https://media.gettyimages.com/photos/carrot-picture-id172278932?s=612x612',
+          'photo': 'https://hmp.me/cpff',
           'firstname': "Edibly",
-          'lastname': ""
+          'lastname': "",
+          'veglevel' : 2
         }
       });
       restaurantData.value['featured_tip'] = featuredTip[0];
