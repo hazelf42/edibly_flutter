@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:rxdart/rxdart.dart';
+import 'package:location/location.dart';
 
 class DiscoverBloc {
   final AppLocalizations localizations;
@@ -62,8 +63,8 @@ class DiscoverBloc {
       final response =
           await http.post('http://base.edibly.ca/api/restaurants/discover/0',
               body: json.encode({
-                'lat': location.latitude,
-                'lon': location.longitude,
+                'lat': location.latitude*10000000,
+                'lon': location.longitude*100000000,
                 'radius': 5000000000000000000
               }));
       final map = json.decode(response.body);
@@ -154,8 +155,8 @@ class DiscoverBloc {
             Data(dataWithoutRating.value['eid'], dataWithoutRating.value);
         try {
           dataWithRating.value['rname'] = restaurant['name'];
-          dataWithRating.value['lat'] = restaurant['lat'];
-          dataWithRating.value['lon'] = restaurant['lon'] / 10;
+          dataWithRating.value['lat'] = restaurant['lat']/10000000;
+          dataWithRating.value['lon'] = restaurant['lon']/10000000;
           dataWithRating.value['distance'] =
               _distanceFromMeToDestination(LatLng(
             double.parse(dataWithRating.value['lat'].toString()),
@@ -188,18 +189,18 @@ class DiscoverBloc {
   Future<LatLng> getCurrentLocation() async {
     LatLng fallbackLatLng = LatLng(53.544406, -113.490915);
     LatLng latLng;
-    // try {
-    //   Location location = Location();
-    //   if (location != null) {
-    //     LocationData locationData =
-    //         await location.getLocation().timeout(Duration(seconds: 1000));
-    //     if (locationData != null) {
-    //       latLng = LatLng(locationData.latitude, locationData.longitude);
-    //     }
-    //   }
-  //  } catch (e) {
+    try {
+      Location location = Location();
+      if (location != null) {
+        LocationData locationData =
+            await location.getLocation().timeout(Duration(seconds: 1000));
+        if (locationData != null) {
+          latLng = LatLng(locationData.latitude, locationData.longitude);
+        }
+      }
+   } catch (e) {
       latLng = fallbackLatLng;
-    //}
+    }
     LatLng locationToBeReturned = latLng == null ? fallbackLatLng : latLng;
     _myLocation = locationToBeReturned;
     _location.add(locationToBeReturned);

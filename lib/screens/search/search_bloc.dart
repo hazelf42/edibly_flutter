@@ -183,9 +183,9 @@ class SearchBloc {
     if (restaurantsWithoutRating == null) {
       restaurantsWithoutRating = [];
     }
-    // await getCurrentLocation().then((location) async {
+    await getCurrentLocation().then((location) async {
     //TODO: - testing only
-    var location = LatLng(53.522385, -113.622810);
+    //var location = LatLng(53.522385, -113.622810);
     if (restaurantsWithoutRating == null || restaurantsWithoutRating.isEmpty) {
       /// make sure variables reflects this being the first page
       _currentPage = 0;
@@ -231,8 +231,8 @@ class SearchBloc {
       final response = await http.post(
           'http://base.edibly.ca/api/restaurants/nearby/$_currentPage',
           body: json.encode({
-            'lat': location.latitude,
-            'lon': location.longitude,
+            'lat': location.latitude*10000000,
+            'lon': location.longitude*10000000,
             'radius': 500000000000000
           }));
       //TODO: - ok so is this going to get them in order of how close they arE?? ? ? ?? ? ??
@@ -263,7 +263,7 @@ class SearchBloc {
       _currentPage++;
       _fetchStarted = true; //?
     }
-    //});
+    });
   }
 
   void filterRestaurants(String keyword) async {

@@ -832,7 +832,7 @@ class RestaurantScreen extends StatelessWidget {
                                 context: context,
                                 restaurantBloc: restaurantBloc,
                                 restaurant: restaurantSnapshot?.data),
-                            veglevel == 0
+                            restaurantSnapshot.data.value['veglevel'] == 0
                                 ? _featuredTip(
                                     context: context,
                                     mainBloc: mainBloc,
@@ -856,7 +856,8 @@ class RestaurantScreen extends StatelessWidget {
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w400,
                                                 fontSize: 18.0,
-                                              )))
+                                              )),
+)
                                         ]))),
                             Container(height: 6.0),
                             _buttonBar(
@@ -888,7 +889,7 @@ class RestaurantScreen extends StatelessWidget {
                                 color: Theme.of(context).disabledColor,
                               ),
                             ),
-                            hasMenu == 1
+                            restaurantSnapshot.data.value['hasmenu'] == 1
                                 ? Container(
                                     height: 200,
                                     child: RestaurantDishesPreviewScreen(
