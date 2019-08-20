@@ -61,8 +61,7 @@ class SearchScreen extends StatelessWidget {
       height: 200.0,
       child: GoogleMap(
         initialCameraPosition: CameraPosition(
-          //TODO: Change back afteer testing
-          target: LatLng(53.522385, -113.622810),
+          target: currentLocationSnapshot.data,
           zoom: 12.0,
         ),
         myLocationButtonEnabled: true,
@@ -276,7 +275,7 @@ class SearchScreen extends StatelessWidget {
                         return CircularProgressIndicator();
                       }
                       return RefreshIndicator(
-                        child: StreamBuilder<List<Data>>( 
+                        child: StreamBuilder<List<Data>>(
                           stream: searchBloc.filteredRestaurants,
                           initialData: allRestaurantsSnapshot?.data,
                           builder: (context, filteredRestaurantsSnapshot) {

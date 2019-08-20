@@ -194,8 +194,8 @@ class SearchBloc {
       final response = await http.post(
           'http://base.edibly.ca/api/restaurants/nearby/0',
           body: json.encode({
-            'lat': location.latitude,
-            'lon': location.longitude,
+            'lat': location.latitude * 10000000,
+            'lon': location.longitude * 10000000,
             'radius': 500000000000000
           }));
       //TODO: - ok so is this going to get them in order of how close they arE?? ? ? ?? ? ??
