@@ -65,7 +65,8 @@ class ProfileBloc {
 
   Future<bool> followUser(
       {
-      //This function also unfollows profiles if the user is already following them because im a lazy goon who doesnt know whats good for me
+      //This function also unfollows profiles if the user is already following them because im a lazy goon who doesnt 
+      //know whats good for me
       @required String currentUid,
       @required String profileUid,
       @required bool isFollowing}) async {

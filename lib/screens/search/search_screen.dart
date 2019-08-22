@@ -75,6 +75,64 @@ class SearchScreen extends StatelessWidget {
     );
   }
 
+  void _addReview({
+    @required BuildContext context,
+    @required SearchBloc searchBloc,
+    @required AppLocalizations localizations,
+
+  }){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          title: Text("Request a Restaurant"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Column(children: <Widget>[
+                TextField(
+                  autocorrect: false,
+                  textCapitalization: TextCapitalization.words,
+                  
+                )
+              ],)
+            ],
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(localizations.cancel.toUpperCase()),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text(localizations.reset.toUpperCase()),
+              onPressed: () {
+                searchBloc.setDistanceSliderValue(30);
+                searchBloc.setRatingSliderValue(0);
+                searchBloc.setDistanceFilterValue();
+                searchBloc.setRatingFilterValue();
+                searchBloc.filterRestaurants(null);
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text(localizations.search.toUpperCase()),
+              onPressed: () {
+                searchBloc.setDistanceFilterValue();
+                searchBloc.setRatingFilterValue();
+                searchBloc.filterRestaurants(null);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _openFilters({
     @required BuildContext context,
     @required SearchBloc searchBloc,
@@ -230,7 +288,9 @@ class SearchScreen extends StatelessWidget {
           ),
           Container(height: 12.0),
           RaisedButton(
-            onPressed: () {},
+            onPressed: () async {
+              await SearchBloc(firebaseUser: firebaseUser).addReview(localizations: localizations);
+            },
             color: AppColors.primarySwatch.shade400,
             child: Text(
               localizations.addReview,
@@ -283,10 +343,10 @@ class SearchScreen extends StatelessWidget {
                                 filteredRestaurantsSnapshot?.data == null;
                             int listViewItemCount =
                                 (filteredRestaurantsValueIsNull
-                                        ? 0
+                                        ? 1
                                         : filteredRestaurantsSnapshot
                                             .data.length) +
-                                    2;
+                                    3;
                             return ListView.separated(
                               padding: const EdgeInsets.only(bottom: 10.0),
                               separatorBuilder: (context, position) {
@@ -294,7 +354,7 @@ class SearchScreen extends StatelessWidget {
                               },
                               itemCount: listViewItemCount,
                               itemBuilder: (context, position) {
-                                if (position == listViewItemCount) {
+                                if (position == listViewItemCount -1) {
                                   return _footer(
                                     context: context,
                                     localizations: localizations,
@@ -317,6 +377,7 @@ class SearchScreen extends StatelessWidget {
                                           children: <Widget>[
                                             Expanded(
                                               child: TextField(
+                                                autocorrect: false,
                                                 onSubmitted: (keyword) {
                                                   searchBloc.filterRestaurants(
                                                       keyword);
@@ -363,28 +424,7 @@ class SearchScreen extends StatelessWidget {
                                         } else if (listViewItemCount == 2) {
                                           return Container(
                                             margin: const EdgeInsets.all(24.0),
-                                            child: Column(
-                                              children: <Widget>[
-                                                Icon(
-                                                  Icons.warning,
-                                                  color: Theme.of(context)
-                                                      .hintColor,
-                                                  size: 48.0,
-                                                ),
-                                                Container(
-                                                  height: 12.0,
-                                                ),
-                                                Text(
-                                                  localizations
-                                                      .noRestaurantsFound,
-                                                  style: TextStyle(
-                                                    fontSize: 18.0,
-                                                    color: Theme.of(context)
-                                                        .hintColor,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                            child: _footer(context: context, localizations: localizations),
                                           );
                                         }
                                         return Container();
@@ -392,7 +432,7 @@ class SearchScreen extends StatelessWidget {
                                     ],
                                   );
                                 }
-                                if (filteredRestaurantsSnapshot.data
+                                if (filteredRestaurantsSnapshot.data == null || filteredRestaurantsSnapshot.data
                                         .elementAt(position - 2) ==
                                     null) {
                                   searchBloc.getRestaurants();

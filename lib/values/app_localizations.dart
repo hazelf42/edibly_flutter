@@ -245,10 +245,10 @@ class AppLocalizations {
 
   String get yourCanWriteYourReviewHere => Intl.message('You can write your review here.');
 
-  String get searchScreenFooterTitleText => Intl.message('That is all for now.');
+  String get searchScreenFooterTitleText => Intl.message("That's all for now.");
 
   String get searchScreenFooterDescriptionText => Intl.message(
-      'Our database is small, but growing! Adding a review for a new restaurant is quick and easy. We will do the rest on our end.');
+      "Our database is small, but growing! Adding a review for a new restaurant is quick and easy. We'll do the rest on our end.");
 
   String get vegetarianUponRequest => Intl.message('Vegetarian upon request');
 
