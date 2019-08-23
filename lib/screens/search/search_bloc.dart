@@ -117,7 +117,7 @@ class SearchBloc {
     @required AppLocalizations localizations,
   }) async {
     final restaurantName = _restaurantName.value;
-    final restaurantLocation = _restaurantLocation.value;
+    final restaurantLocation = "Location";
     final addReviewState = _addReviewState.value;
 
     if (addReviewState == AddReviewState.TRYING) return null;
@@ -154,12 +154,14 @@ class SearchBloc {
           'name': restaurantName,
           'location': restaurantLocation,
         }).catchError((error) {
+          print(error);
           _addReviewState.addError(AddReviewState.FAILED);
           return null;
         });
         _addReviewState.addError(AddReviewState.SUCCESSFUL);
         return Data(restaurantKey, restaurantName);
       }).catchError((error) {
+          print(error);
         _addReviewState.addError(AddReviewState.FAILED);
       });
     } else if (credentialsAreEmpty) {

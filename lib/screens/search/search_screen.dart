@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:edibly/screens/new_post/new_post_screen.dart';
 
 class SearchScreen extends StatelessWidget {
   final FirebaseUser firebaseUser;
@@ -79,56 +80,83 @@ class SearchScreen extends StatelessWidget {
     @required BuildContext context,
     @required SearchBloc searchBloc,
     @required AppLocalizations localizations,
-
-  }){
+  }) {
+    // return object of type Dialog
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return AlertDialog(
-          title: Text("Request a Restaurant"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Column(children: <Widget>[
-                TextField(
-                  autocorrect: false,
-                  textCapitalization: TextCapitalization.words,
-                  
-                )
-              ],)
-            ],
-          ),
-          contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
-          actions: <Widget>[
-            FlatButton(
-              child: Text(localizations.cancel.toUpperCase()),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            FlatButton(
-              child: Text(localizations.reset.toUpperCase()),
-              onPressed: () {
-                searchBloc.setDistanceSliderValue(30);
-                searchBloc.setRatingSliderValue(0);
-                searchBloc.setDistanceFilterValue();
-                searchBloc.setRatingFilterValue();
-                searchBloc.filterRestaurants(null);
-                Navigator.of(context).pop();
-              },
-            ),
-            FlatButton(
-              child: Text(localizations.search.toUpperCase()),
-              onPressed: () {
-                searchBloc.setDistanceFilterValue();
-                searchBloc.setRatingFilterValue();
-                searchBloc.filterRestaurants(null);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
+      builder: (context) {
+        TextEditingController textController = TextEditingController();
+
+        final searchBloc = SearchBloc(firebaseUser: firebaseUser);
+        return StreamBuilder<AddReviewState>(
+            stream: searchBloc.addReviewState,
+            builder: (context, snapshot) {
+              if (snapshot.data == AddReviewState.SUCCESSFUL) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Navigator.of(context).pop(true);
+                });
+              }
+              return AlertDialog(
+                title: Text("Add a Restaurant"),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    TextField(
+                      controller: textController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        errorText: snapshot.hasError
+                            ? localizations.errorEmptyTextField
+                            : null,
+                        hintText: "Restaurant Name",
+                        isDense: true,
+                      ),
+                      keyboardType: TextInputType.text,
+                      onChanged: (value) {
+                        searchBloc.setAddReviewState(AddReviewState.IDLE);
+                      },
+                      maxLines: 2,
+                      enabled:
+                          snapshot.data == AddReviewState.TRYING ? false : true,
+                    ),
+                  ],
+                ),
+                contentPadding:
+                    const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 0.0),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text(localizations.cancel.toUpperCase()),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                      child: Text(localizations.add.toUpperCase()),
+                      onPressed: snapshot.data == AddReviewState.TRYING
+                          ? null
+                          : () {
+                              searchBloc.setRestaurantName(textController.text);
+                              searchBloc
+                                  .addReview(
+                                localizations: localizations,
+                              )
+                                  .then((restaurantData) {
+                                if (textController.text.length > 0) {
+                                  Navigator.of(context).pop();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => NewPostScreen(
+                                          firebaseUserId: firebaseUser.uid,
+                                          restaurantName: textController.text,
+                                          restaurantKey: restaurantData.key),
+                                    ),
+                                  );
+                                }
+                              });
+                            })
+                ],
+              );
+            });
       },
     );
   }
@@ -289,7 +317,10 @@ class SearchScreen extends StatelessWidget {
           Container(height: 12.0),
           RaisedButton(
             onPressed: () async {
-              await SearchBloc(firebaseUser: firebaseUser).addReview(localizations: localizations);
+              _addReview(
+                  context: context,
+                  searchBloc: SearchBloc(firebaseUser: firebaseUser),
+                  localizations: localizations);
             },
             color: AppColors.primarySwatch.shade400,
             child: Text(
@@ -354,7 +385,7 @@ class SearchScreen extends StatelessWidget {
                               },
                               itemCount: listViewItemCount,
                               itemBuilder: (context, position) {
-                                if (position == listViewItemCount -1) {
+                                if (position == listViewItemCount - 1) {
                                   return _footer(
                                     context: context,
                                     localizations: localizations,
@@ -424,7 +455,9 @@ class SearchScreen extends StatelessWidget {
                                         } else if (listViewItemCount == 2) {
                                           return Container(
                                             margin: const EdgeInsets.all(24.0),
-                                            child: _footer(context: context, localizations: localizations),
+                                            child: _footer(
+                                                context: context,
+                                                localizations: localizations),
                                           );
                                         }
                                         return Container();
@@ -432,9 +465,10 @@ class SearchScreen extends StatelessWidget {
                                     ],
                                   );
                                 }
-                                if (filteredRestaurantsSnapshot.data == null || filteredRestaurantsSnapshot.data
-                                        .elementAt(position - 2) ==
-                                    null) {
+                                if (filteredRestaurantsSnapshot.data == null ||
+                                    filteredRestaurantsSnapshot.data
+                                            .elementAt(position - 2) ==
+                                        null) {
                                   searchBloc.getRestaurants();
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
